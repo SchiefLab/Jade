@@ -1,0 +1,18 @@
+{ "root_outdir": "/Users/jadolfbr/Documents/projects/antibody_design/general_modules/test_outdir",
+  "flags_files":["flags_1", "flags_2", "flags_2"],
+  "flags":["-ex1", "-ex2", "-ignore_unrecognized_res", "no_output"],
+  "in_paths": [{
+    "root": "/Users/jadolfbr/Documents/projects/antibody_design/general_modules",
+    "paths": [
+      "instructions",
+      "flags_files"
+    ]
+  },
+  {
+    "root": "/Users/jadolfbr/Documents/projects/antibody_design/general_modules2",
+    "paths": [
+      "instructions2",
+      "flags_files2"
+    ]
+  }]
+}
