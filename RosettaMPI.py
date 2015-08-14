@@ -2,11 +2,11 @@ import json
 import os
 import sys
 import re
-from optparse import OptionParser, IndentedHelpFormatter
+import argparse
 
 
 
-class SetupRosettaOptionsGeneral:
+class SetupRosettaOptionsGeneral(object):
     """
     Class for setting up more general Rosetta options for benchmarking and repeatable runs on different clusters.  Useful for benchmarking.
     """
@@ -149,44 +149,168 @@ class SetupRosettaOptionsGeneral:
         return repr(self.json_dict)
 
 
-class RunRosettaMPI:
-    def __init__(self, setup_subclass = None):
+class RunRosetta(object):
+    def __init__(self):
 
+        self.base_options = None
+        self.extra_options = None
 
+        self._add_args()
         self._parse_args()
+        self._setup_base_options()
+        self._resolve_options()
+
+    def run(self, **kwargs):
+        pass
+
+    def _add_args(self):
+        self.parser = argparse.ArgumentParser()
+        self.parser.add_argument("--np",
+                               default = 101)
+
+        self.parser.add_argument("--nstruct")
+
+        self.parser.add_argument("--platform",
+                               default="linux")
+
+        self.parser.add_argument("--compiler", "-c",
+                               default = "gcc")
+
+        self.parser.add_argument("--job_manager",
+                               default="slurm",
+                               help="Job Manager to launch job.  Options are: [slurm,qsub,local,print_only]")
+
+        self.parser.add_argument("--json_base",
+                               default = "json_cluster/RAbD_vax.json",
+                               help = "JSON file for setting up base paths/etc. for the cluster.")
+
+        self.parser.add_argument("--out_prefix_override")
+
+        self.parser.add_argument("--out_path_override")
+
+        self.parser.add_argument("--job_name_override")
+
+        self.parser.add_argument("--exp_name",
+                                 help = "Define the experiment name.  Usually defined in benchmarking for derived classes.")
+
+        self.parser.add_argument("--program",
+                                 help = "Define the Rosetta program to use.")
+
 
     def _parse_args(self):
-        parser = OptionParser()
+        self.options = self.parser.parse_args()
 
-        parser.add_option("--np")
-        parser.add_option("--nstruct")
-        parser.add_option("--platform",
-                          default="linux")
+    def _setup_base_options(self):
+        if not self.options.json_base:
+            sys.exit("No Base Json Given.  This is required for general cluster settings.")
+        self.base_options = SetupRosettaOptionsGeneral(self.options.json_base)
 
-        parser.add_option("--compliler", "-c",
-                          default = "gcc")
+    def _set_extra_options(self, extra_options):
+        self.extra_options = extra_options
+        if not isinstance(extra_options, SetupRosettaOptionsGeneral):
+            sys.exit()
 
-        parser.add_option("--job_manager",
-                          default="slurm")
+    def _resolve_options(self):
 
-        parser.add_option("--base_json")
+        #Define Conflict resolutions for base class
+        def _set_nstruct():
+            if self.options.nstruct:
+                pass
+            elif self.extra_options.get_nstruct():
+                self.options.nstruct = str(self.extra_options.get_nstruct())
+            elif self.base_options.get_nstruct():
+                self.options.nstruct = str(self.base_options.get_nstruct())
 
-        parser.add_option("--app")
+        #Resolve options overrides
+        _set_nstruct()
 
-        options, args = parser.parse_args(sys.argv)
+    def get_job_name(self, *args, **kwargs):
+        if self.options.job_name_override:
+            return self.options.job_name_override
+        elif self.extra_options:
 
-    def get_full_app_name(self):
-        return self.app + ".mpi."+self.platform + self.compiler+"release"
+            job_name = self.extra_options.get_exp()
+            return job_name
+
+    def get_make_log_dir(self, *args, **kwargs):
+        name = self._get_out_prefix()+"_"+l_chain
+        log_path = self.base_options.get_make_log_dir()+"/"+name
+        if not os.path.exists(log_path):
+            os.mkdir(log_path)
+        return log_path
+
+    def get_make_queue_dir(self):
+        log_path = self.base_options.get_make_log_dir()+"/queue_out"
+        if not os.path.exists(log_path):
+            return log_path
+
+    def get_make_out_path(self, mintype):
+        s = self.base_options.get_root()+"/decoys"
+        if not os.path.exists(s):
+            os.mkdir(s)
+
+        s = s + "/"+self._get_out_prefix()
+        if not os.path.exists(s):
+            os.mkdir(s)
+        return s
 
 
-    def run(self):
-        pass
-        #Create MPI Job Setup.
+    def get_output_string(self, **kwargs):
+        s = self._get_program()
 
-        #Create temp script directory in root_outdir
+        s = s + " -out:prefix "+self._get_out_prefix(mintype)+"."+" -out:suffix _"+l_chain+" -antibody:light_chain "+l_chain
 
-        #Add -separate_outputs
 
+        #Nstruct
+        s = s + " -nstruct " + str(self.options.nstruct)
+
+        #Outpath
+        s = s + " -out:path:all " + self.get_make_out_path(mintype)
+        s = s + self.base_options.get_base_rosetta_flag_string()
+
+        #Decoys
+        s = s + " -l "+self.options.dataset+"."+l_chain+".PDBLIST.txt"
+
+        #Log Dir:
+        s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir(mintype, l_chain)
+
+        #Graft Rounds
+        s = s + " -outer_cycle_rounds " + str(self.options.outer_cycle_rounds)
+
+        #Instructions
+        s = s + " -cdr_instructions " + mintype+".instructions.txt"
+
+        #For these benchmarks, there are only a single root directory.
+        s = s + self.rabd_options.get_base_rosetta_flag_string(self.base_options.json_dict["in_paths"][0]["root"])
+
+        return s
+
+    def get_out_prefix(self, mintype):
+        if self.options.out_prefix_override:
+            return self.options.out_prefix_override+"."
+
+        s = ""
+        if self.options.with_antigen:
+            s = "with_antigen"
+        else:
+            s = "without_antigen"
+
+        if self.options.dock:
+            s = s +".dock"
+        else:
+            s = s +".no_dock"
+
+        s = s + "."+self.rabd_options.get_exp()+"."+self.options.dataset
+
+
+        if self.options.paper_ab_db:
+            s = s+"-paper_db"
+        else:
+            s = s+"-newest_db"
+
+        s = s +"."+mintype+"."+self.options.outer_cycle_rounds
+
+        return s
 
 if __name__ == "__main__":
     #For Testing:
