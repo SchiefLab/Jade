@@ -1,8 +1,8 @@
+from rosetta import *
 
 
 ##### These are all for same length poses #####
 
-from rosetta import *
 
 def align_to_second_pose_save_pdb( pose_name, pose, second_pose, outdir, overhang=0, stem_align = False):
 

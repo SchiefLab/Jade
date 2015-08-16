@@ -19,7 +19,7 @@ import time
 rosetta.init()
 
 opts = [ 'app' , '-database' , os.path.abspath( os.environ['PYROSETTA_DATABASE'] ) , '-ex1' , '-ex2' , '-constant_seed', \
-        '-dun10', '-use_bicubic_interpolation', '-ignore_unrecognized_res', '-use_input_sc']
+         '-ignore_unrecognized_res', '-use_input_sc']
 
 # '-relax:constrain_relax_to_start_coords'
 args = rosetta.utility.vector1_string()
@@ -56,12 +56,6 @@ parser.add_option("--relax_whole_structure", '-m',
     action = "store_true",
     default = False,
     help = "Relax the whole structure?  Default is to only relax chain under question.  If no region is set, will default to true"
-)
-
-parser.add_option("--use_real_elec", '-e',
-    action = "store_true",
-    default = False,
-    help = "Use Coulumbic Electrostatics instead of pair term?"
 )
 
 parser.add_option("--alanine_scan", "-a",
@@ -103,11 +97,8 @@ pose = Pose()
 pose_from_pdb(pose, options.pdb)
 
 #Create the Scorefunction
-scorefxn = create_score_function("score12prime")
+scorefxn = create_score_function("talaris2014")
 scorefxn.set_weight(chainbreak, 100)
-if options.use_real_elec:
-    scorefxn.set_weight(fa_pair, 0)
-    scorefxn.set_weight(hack_elec, .49)
     
 
 #Create the objects we need
@@ -187,9 +178,9 @@ for i in range(rosetta_start, rosetta_end+1):
         rel.apply(pose)
         
         #Output Results
-        OUTFILE.write(pdb_location + " "+residue+" "+repr(scorefxn(pose))+" "+repr(scorefxn(pose) - native_relaxed_energy)+"\n")
+        OUTFILE.write(pdb_location + " "+residue+" "+repr(scorefxn(pose))+" "+repr(scorefxn(pose) -         native_relaxed_energy)+"\n")
         
 	OUTFILE.flush()
-        pose.dump_pdb(options.outpath+"/mutant_"+pdbSP[0]+"_"+pdbSP[1]+"_"+residue+".pdb")
+    pose.dump_pdb(options.outpath+"/mutant_"+pdbSP[0]+"_"+pdbSP[1]+"_"+residue+".pdb")
         
 OUTFILE.close()
