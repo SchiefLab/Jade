@@ -1,0 +1,59 @@
+package require psfgen
+
+set pdb [lindex $argv 0]
+puts $pdb
+
+set protein [lindex $argv 1]
+
+resetpsf
+
+set DIR "/Users/Madsci/Desktop/Lab_Primary/Docking/Input_Data_and_Structures/BenOct26/Final/formated"
+
+puts $DIR
+#/Applications/VMD\ 1.8.7.app/Contents/vmd/vmd_MACOSXX86 -dispdev text -e /Users/Madsci/Desktop/Lab_Primary/My_Scripts/Docking/January_Working/Add_Hydrogens.pgn -args /Users/Madsci/Desktop/Lab_Primary/Docking/Input_Data_and_Structures/BenOct26/Final/formated/new_8fab.pdb new_8fab
+
+
+#Main Mac: /Users/Madsci/Desktop/Lab_Primary/Dynamics/NAMD/Topologies/Charmm_c35b2_c36a2/top_all27_prot_lipid.rtf
+#Topology Laptop:/home/madsci/Desktop/Lab_Primary/Dynamics/NAMD/Topologies/Charmm_c35b2_c36a2/top_all27_prot_lipid.rtf
+#Topology Lab:
+#PDB Dir: /Users/Madsci/Desktop/Lab_Primary/Docking/Input_Data_and_Structures/BenOct26/Final/formated
+#pdb : new_8fab
+
+#PDB Dir laptop: /home/madsci/Desktop/Lab_Primary/Dynamics/NAMD/PDBs/1NDG
+
+mol new $pdb
+
+set chainL [atomselect top "chain L"]
+set chainH [atomselect top "chain H"]
+
+$chainL writepdb $DIR/chain_L.pdb
+$chainH writepdb $DIR/chain_H.pdb
+
+
+topology /Users/Madsci/Desktop/Lab_Primary/Dynamics/NAMD/Topologies/top_all27_prot_lipid.inp
+
+pdbalias residue HIS HSE
+pdbalias atom ILE CD1 CD
+
+set pdbfilenameL "${DIR}/chain_L.pdb"
+set pdbfilenameH "${DIR}/chain_H.pdb"
+
+puts $pdbfilenameL
+#needs to determine number of chains.
+#needs to parse the letter of the chains into seperate files so we don't have to do it by hand....which I might be able to do the vmd stuff for...
+#needs to remove the seperate chains or put them into a seperate folder for organization.
+
+segment L {pdb ${pdbfilenameL}}
+segment H {pdb ${pdbfilenameH}}
+
+coordpdb ${pdbfilenameL} L
+coordpdb ${pdbfilenameH} H
+
+
+
+guesscoord
+
+
+writepdb ${DIR}/Hydrated/new_${protein}.pdb
+
+exit
