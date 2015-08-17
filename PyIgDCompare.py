@@ -30,22 +30,22 @@ sys.path.append(p); #Allows all modules to use all other modules, without needin
 
 #PyIgD
 import PyIgDAnalyze as analyze_strat
-from modules.ClustalRunner import *
-from modules.StatementCreator import *
-from modules.cdr_data.CDRData import *
-from modules.cdr_data.CDRDataTypes import *
-from modules.decoy_data.DecoyData import *
-from modules.decoy_data.DecoyDataTypes import *
-from modules.filters.DataFilter import *
-from modules.filters.DataFilters import *
-from modules.filters.FilterSettings import *
+from sequence.ClustalRunner import *
+from tools.StatementCreator import *
+from antibody.cdr_data.CDRData import *
+from antibody.cdr_data.CDRDataTypes import *
+from antibody.decoy_data.DecoyData import *
+from antibody.decoy_data.DecoyDataTypes import *
+from tools.filters.DataFilter import *
+from tools.filters.DataFilters import *
+from tools.filters.FilterSettings import *
 
-from window_modules.FilterSettingsWindow import *
-from modules import fasta
+from PyIgDesign.window_modules.FilterSettingsWindow import *
+from sequence import fasta
 
 
 #Rosetta Tools
-from antibody.analysis import create_features_json as json_creator
+import create_features_json as json_creator
 
 
 

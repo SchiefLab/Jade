@@ -1,4 +1,5 @@
 
+## Biopython functions
 
 def has_id(model, id):
     """

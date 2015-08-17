@@ -4,21 +4,25 @@ import os
 import sys
 import glob
 import re
+import sqlite3
 from collections import defaultdict
-from rosetta import *
-from app.pyrosetta_toolkit.modules.tools import output as output_tools
-from app.pyrosetta_toolkit.modules.ScoreAnalysis import ScoreAnalysis
-from app.pyrosetta_toolkit.modules.Structure import *
-from app.pyrosetta_toolkit.modules.definitions import restype_definitions
-from app.pyrosetta_toolkit.modules.DesignBreakdown import *
+from optparse import OptionParser
 
-from antibody.analysis.SequenceStats import SequenceStats
-from antibody.analysis.PyMolScriptWriter import *
-from antibody.analysis.PythonPDB2 import *
-from antibody.analysis import create_features_json as json_creator
+#Rosetta Imports
+from rosetta import *
+
+#Module DB Imports
+from structure.Structure import *
+from structure.PythonPDB2 import *
+from sequence.DesignBreakdown import *
+from sequence.SequenceStats import SequenceStats
+from pymol.PyMolScriptWriter import *
+import create_features_json as json_creator
 
 
 rosetta.init("-ignore_unrecognized_res -ignore_zero_occupancy false -ex1 -ex2 -use_input_sc")
+
+
 
 def main():
     ####################################################################################################################
@@ -46,6 +50,7 @@ def main():
     parser.add_option("--out_db_batch",
                       help="Batch name for databases")
 
+
     ###########################
     ## Analysis Types
     ###########################
@@ -55,18 +60,8 @@ def main():
                       default = False,
                       action = "store_true")
 
-    parser.add_option("--do_rescore",
-                      help = "Rescore the PDBs",
-                      default = False,
-                      action  = "store_true")
-
     parser.add_option("--do_run_antibody_features_all",
                       help = "Run the AntibodyFeatures to create databases for the strategy on all PDBs",
-                      default = False,
-                      action = "store_true")
-
-    parser.add_option("--do_run_antibody_features_top",
-                      help = "Run the AntibodyFeatures to create databases for the strategy on the top x PDBs.  If not rescored, will rescore.",
                       default = False,
                       action = "store_true")
 
@@ -75,10 +70,6 @@ def main():
                       default = False,
                       action = "store_true")
 
-    parser.add_option("--do_run_cluster_features_top",
-                      help = "Run the ClusterFeatures reporter on the top x PDBs of the strategy.  Rescore PDB list if nessessary.",
-                      default = False,
-                      action = "store_true")
 
     ############################
     ## Optional
@@ -87,10 +78,6 @@ def main():
     parser.add_option("--outdir",
                       help = "\nOutput directory",
                       default = "antibody_design_analysis_results")
-
-    parser.add_option("--np",
-                      help = "Number of processors to use for rescoring PDBs",
-                      default = 1)
 
     parser.add_option("--score_weights",
                       help = "Weights to use during rescore or FeaturesReporters",
@@ -103,19 +90,6 @@ def main():
                       default = False,
                       help = "Do not attempt to delete features databases present",
                       action = "store_true")
-
-    parser.add_option("--top_score",
-                      help = "Number of top scoring models to analyze",
-                      default = 10)
-
-    parser.add_option("--use_full_name_for_pymol_sessions",
-                      help = "Use the full name for pymol sessions output from rescoring the PDBLIST",
-                      default = False,
-                      action = "store_true")
-
-    parser.add_option("--native_path",
-                      help = "Model of the native.  If passed will add to pymol sessions",
-                      default = None)
 
     (options, args) = parser.parse_args(sys.argv)
 
@@ -156,23 +130,13 @@ def main():
     do_all = options.do_all
 
 
-
-
     ####################################################################################################################
     ##                     Analysis Components.  One option for each type of analysis.
     ####################################################################################################################
 
-    top_pdblist = options.outdir+"TOP_"+str(options.top_score)+"_"+options.out_name+"ORDERED_PDBLIST.txt"
-    top_dir = options.outdir+"/TOP_"+str(options.top_score)+"_"+options.out_name
-
 
     if not options.out_name:
         sys.exit("Output name required")
-
-    #### Rescore ####
-    if do_all or options.do_rescore:
-        rescore_pdb_list(pdb_list, options.top_score, options.score_weights, options.np, options.outdir, options.out_name,
-                         options.use_full_name_for_pymol_sessions, options.native_path)
 
 
     #### Create Features Databases ###
@@ -194,40 +158,8 @@ def main():
                        options.score_weights,options.out_name,
                        options.out_db_batch, options.outdir, options.use_present_dbs)
 
-    if do_all or options.do_run_antibody_features_top:
-        if not os.path.exists(top_pdblist):
-            rescore_pdb_list(pdb_list, options.top_score, options.score_weights, options.np, options.outdir, options.out_name,
-                            options.use_full_name_for_pymol_sessions, options.native_path)
-
-
-        fdir= os.path.split(os.path.abspath(__file__))[0]+"/features_inputs"
-
-        create_features_db(top_pdblist, fdir,
-                       'antibody_features',  options.rosetta_extension,
-                       options.score_weights,options.out_name+"_TOP_E_"+str(options.top_score),
-                       options.out_db_batch, options.outdir, options.use_present_dbs, top_dir)
-
-    if do_all or options.do_run_cluster_features_top:
-        if not os.path.exists(top_pdblist):
-            rescore_pdb_list(pdb_list, options.top_score, options.score_weights, options.np, options.outdir, options.out_name,
-                            options.use_full_name_for_pymol_sessions, options.native_path)
-
-        fdir= os.path.split(os.path.abspath(__file__))[0]+"/features_inputs"
-
-        create_features_db(top_pdblist, fdir,
-                       'cluster_features',  options.rosetta_extension,
-                       options.score_weights,options.out_name+"_TOP_E_"+str(options.top_score),
-                       options.out_db_batch, options.outdir, options.use_present_dbs, top_dir)
-
 
     print "Complete"
-
-
-def run_clustal_omega(pdb_list, outdir):
-    pass
-
-def create_sequence_fasta(pdb_list, outdir):
-    pass
 
 def rm_features_db(outdir, out_name, score_weights, xml_name):
     db_name = outdir+'/'+out_name+'.'+xml_name+'.'+score_weights+".db3"
@@ -296,92 +228,6 @@ def get_data_from_features_db(db_path):
     for row in cur.execute(command):
         pass
 
-def rescore_pdb_list(pdb_list,top_score, score_weights, np, outdir, out_name, use_full_name_for_pymol_sessions,
-                     native_path = None):
-    """
-    Rescores A PDBLIST,
-    creates a Topx PDBLIST,
-    copies structures into new output directory for top 10,
-    creates a PyMol session for TOP 10 with new names as model:energy for easy analysis.
-    """
-
-
-    top_pdblist = out_name+"_SCORED_PDBLIST_TOP_"+str(top_score)
-    scored_pdblist = make_scored_pdblist(pdb_list, score_weights, np, outdir, out_name)
-    s = ScoreAnalysis()
-    s.read_scores(scored_pdblist)
-
-    top_dir = outdir+"/top_"+str(top_score)+"_"+out_name
-    top_scoring_map = s.get_top_scoring_by_number(int(top_score), False)
-    s.copy_results2(top_scoring_map, outdir, top_dir, top_pdblist)
-    os.system('rm '+top_pdblist); #We don't really need this now that we have ordered PDBLISTS.
-
-    #Add PyMOL Sessions for top scoring in order
-    pdb_paths = []
-    final_names = []
-    load_as = None
-
-    for path in sorted(top_scoring_map, key = top_scoring_map.get):
-        new_path = top_dir+"/"+os.path.basename(path)
-        pdb_paths.append(new_path)
-
-        if not use_full_name_for_pymol_sessions:
-            if not load_as:
-                load_as = []
-            SP1 = new_path.split('_')
-            SP2 = SP1[-1].split('.')
-            num = SP2[0]
-            new_name = "model_"+num+"_E_"+str(top_scoring_map[path])
-            load_as.append(new_name)
-            final_names.append(new_name)
-            print new_name
-        else:
-            basename = os.path.basename(new_path)
-
-
-            final_names.append(basename)
-
-    #If we already have the PSE, do not attempt to overwrite it as we may have already started analysis.
-    if os.path.exists(top_dir+"/"+out_name+"_TOP_"+str(top_score)+".pse"):
-        return
-
-    make_pymol_session_on_top(top_dir, pdb_paths, load_as, top_dir, str(top_score), out_name, native_path)
-
-def make_pymol_session_on_top(top_dir, pdb_path_list, load_as_list, outdir, out_name, top_num = None, native_path = None):
-
-    if top_num:
-        pse_path = outdir+"/"+out_name+"_top_"+str(top_num)+".pse"
-    else:
-        pse_path = outdir+"/"+out_name+"_all"+".pse"
-    if os.path.exists(pse_path):
-        print "Not overriding PSE: "+pse_path
-        #return
-
-    if len(pdb_path_list) == 0:
-        print "PDB list path empty.  Skipping creation of pymol session"
-        return
-    
-    scripter = PyMolScriptWriter(top_dir)
-
-    if native_path:
-        scripter.add_load_pdb(native_path, "native_"+os.path.basename(native_path))
-
-    scripter.add_load_pdbs(pdb_path_list, load_as_list)
-    scripter.add_align_all_to(scripter.get_final_names()[0])
-    scripter.add_show("cartoon")
-    scripter.add_line("center")
-    scripter.add_save_session(pse_path)
-    scripter.write_script("load_align_top.pml")
-    run_pymol_script(top_dir+"/"+"load_align_top.pml")
-
-def make_scored_pdblist(pdb_list, score_weights, np, outdir, outname):
-    scored_pdblist = output_tools.score_PDBLIST(pdb_list, create_score_function(score_weights), int(np))
-
-    os.system('cp '+scored_pdblist+' '+outdir)
-    final_path = outdir+'/'+outname+"_SCORED_PDBLIST.txt"
-    os.system('mv '+outdir+'/SCORED_PDBLIST.txt'+' '+final_path)
-    print "Copied to "+final_path
-    return final_path
 
 def make_pdblist(in_dir):
     pdb_list = glob.glob(in_dir+"/*.pdb*")
