@@ -1,26 +1,10 @@
 #!/usr/bin/python
 
-# (c) Copyright Rosetta Commons Member Institutions.
-# (c) This file is part of the Rosetta software suite and is made available under license.
-# (c) The Rosetta software is developed by the contributing members of the Rosetta Commons.
-# (c) For more information, see http://www.rosettacommons.org. Questions about this can be
-# (c) addressed to University of Washington UW TechTransfer, email: license@u.washington.edu.
 
-## @file   /GUIs/pyrosetta_toolkit/modules/definitions/restype_definitions.py
-## @brief  Container class for restypes
-## @author Jared Adolf-Bryfogle (jadolfbr@gmail.com)
+#This object holds data used to define certain things.  CDR's, SASA, Residue types and names, etc.
 
 
-#This object holds data used to define certain things.  CDR's, SASA, Residue types and names, etc.  Hopefully, this will streamline working within python.
-
-
-
-
-
-#This seems like an ok way to do this.  Keep.
-#All the dictionaries for residue Types in design
-
-class definitions():
+class RestypeDefinitions():
     def __init__(self):
         self.restypes = ("All", "Charged", "Positive", "Negative", "Non-Polar", "Polar-Uncharged", "Polar", "Aromatic", "Hydroxyl", "Conserved", "etc")
         self.restype_info= dict()

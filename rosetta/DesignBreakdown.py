@@ -27,7 +27,7 @@ import tkSimpleDialog
 
 #Toolkit Imports
 from prettytable.prettytable import *
-from restype_definitions import definitions
+from structure.RestypDefinitions import RestypeDefinitions
 
 class DesignBreakdown:
     """
@@ -57,7 +57,7 @@ class DesignBreakdown:
         self.load_sequences(fasta_path)
 
         self.results = SequenceResults()
-        self.aa_codes = definitions().get_all_one_letter_codes()
+        self.aa_codes = RestypeDefinitions().get_all_one_letter_codes()
 
         #Calculate - If return number is 0, exit.
         if not self.calculate_results():

@@ -6,7 +6,7 @@ from Bio.PDB import PDBIO
 
 from rosetta import *
 from rosetta.core.pose import get_chain_from_chain_id
-from restype_definitions import definitions
+from structure.RestypDefinitions import RestypeDefinitions
 
 import os
 from collections import defaultdict
@@ -85,7 +85,7 @@ def get_biopython_structure(path, model_id = None):
 
 def get_biochain_sequence(bio_chain):
     seq = ""
-    d = definitions()
+    d = RestypeDefinitions()
 
     for res in bio_chain:
         if res.id[0]==' ':
@@ -139,7 +139,7 @@ def chain_fasta_files_from_biostructure(structure, prefix, outdir):
 
 def get_biochain_sequence(bio_chain):
     seq = ""
-    d = definitions()
+    d = RestypeDefinitions()
 
     for res in bio_chain:
         if res.id[0]==' ':

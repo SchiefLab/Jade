@@ -1,7 +1,7 @@
 #Author: Jared Adolf-Bryfogle
 
 import sys
-from restype_definitions import definitions
+from structure.RestypDefinitions import RestypeDefinitions
 
 class SequenceStats:
     """
@@ -16,7 +16,7 @@ class SequenceStats:
         self.stats = []; #Vector of a map of each amino acid
         self.freq = []; #Same as stats
 
-        self.aas = definitions().get_all_one_letter_codes()
+        self.aas = RestypeDefinitions().get_all_one_letter_codes()
         self.init_data_map()
         self.compute_stats()
 

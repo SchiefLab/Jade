@@ -7,7 +7,7 @@ from structure.Structure import ResidueRegion
 from structure.Structure import AntibodyResidue
 from structure.Structure import PDBResInfo
 from structure.SequenceStats import SequenceStats
-from restype_definitions import definitions
+from structure.RestypDefinitions import RestypeDefinitions
 from sequence.ClustalRunner import ClustalRunner
 import fasta
 
@@ -29,7 +29,7 @@ class PDBConsensusInfo():
         self.stats = defaultdict(); #Vector of a map of each amino acid
         self.freq = defaultdict(); #Same as stats
 
-        self.aas = definitions().get_all_one_letter_codes()
+        self.aas = RestypeDefinitions().get_all_one_letter_codes()
 
         #-> If an entry has an unknown residue (most likely X), skip the full sequence or just skip that position
         self.skip_full_sequence_of_unknown_aa = False

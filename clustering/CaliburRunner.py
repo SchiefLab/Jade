@@ -15,7 +15,7 @@ import sys
 import os
 import re
 
-class calibur:
+class CaliburWrapper:
     def __init__(self, caliburPath=set):
         """
         This is meant to be a set of functions for running and parsing calibur

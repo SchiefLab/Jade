@@ -9,7 +9,7 @@
 #Instructions: Look at the input options.  Set at least --pdb and --region. (python get_mutation_energy.py --pdb mypdbfile.pdb --region 1:10:B)
 
 from rosetta import *
-from restype_definitions import *
+from structure.RestypDefinitions import *
 from optparse import OptionParser, IndentedHelpFormatter
 
 import os
@@ -103,7 +103,7 @@ scorefxn.set_weight(chainbreak, 100)
 
 #Create the objects we need
 rel = FastRelax(scorefxn)
-codes = definitions()
+codes = RestypeDefinitions()
 
 if options.alanine_scan:
     single_letter_residues = []
