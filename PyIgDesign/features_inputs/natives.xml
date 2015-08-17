@@ -1,0 +1,17 @@
+<ROSETTASCRIPTS>
+	<SCOREFXNS>
+		<s weights=talaris2013/>
+	</SCOREFXNS>
+	<MOVERS>
+		<ReportToDB name=features database_name="natives_%%name%%.db3" batch_description="ref">
+			<feature name=ResidueFeatures/>
+			<feature name=PdbDataFeatures/>
+			<feature name=CDRClusterFeatures/>
+			<feature name=ScoreTypeFeatures/>
+                	<feature name=StructureScoresFeatures scorefxn=s/>
+		</ReportToDB>
+	</MOVERS>
+	<PROTOCOLS>
+		<Add mover_name=features/>
+	</PROTOCOLS>
+</ROSETTASCRIPTS>
