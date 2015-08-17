@@ -2,14 +2,14 @@ import os
 import sys
 from collections import defaultdict
 
-from modules.Structure import Residue
-from modules.Structure import ResidueRegion
-from modules.Structure import AntibodyResidue
-from modules.Structure import PDBResInfo
-from modules.SequenceStats import SequenceStats
-from modules.restype_definitions import definitions
-from modules.ClustalRunner import ClustalRunner
-from tools import fasta
+from structure.Structure import Residue
+from structure.Structure import ResidueRegion
+from structure.Structure import AntibodyResidue
+from structure.Structure import PDBResInfo
+from structure.SequenceStats import SequenceStats
+from restype_definitions import definitions
+from sequence.ClustalRunner import ClustalRunner
+import fasta
 
 class PDBConsensusInfo():
     """

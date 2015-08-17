@@ -1,4 +1,4 @@
-from cdr_clusters import AbDbFunctions
+from antibody import ab_db
 import Structure
 import os
 import sys
@@ -96,7 +96,7 @@ class CDRLengths(Data):
 
     def load_data(self, cdr, extra_sele = []):
         self.cdr_name = cdr
-        self.lengths = AbDbFunctions.get_all_lengths(self.ab_db, self.cdr_name, self.limit_to_known, self.res_cutoff, self.rfac_cutoff)
+        self.lengths = ab_db.get_all_lengths(self.ab_db, self.cdr_name, self.limit_to_known, self.res_cutoff, self.rfac_cutoff)
         self.data = defaultdict(CDRClusters)
 
         for length in self.lengths:
@@ -119,7 +119,7 @@ class CDRClusters(Data):
     def load_data(self, cdr, length, extra_sele = []):
         self.cdr_name = cdr
         self.length = length
-        self.clusters = AbDbFunctions.get_all_clusters_for_length(self.ab_db, self.cdr_name, self.length, self.limit_to_known, self.res_cutoff, self.rfac_cutoff)
+        self.clusters = ab_db.get_all_clusters_for_length(self.ab_db, self.cdr_name, self.length, self.limit_to_known, self.res_cutoff, self.rfac_cutoff)
         self.data = defaultdict(CDRClusterData)
 
         for cluster in self.clusters:
@@ -149,11 +149,11 @@ class CDRClusterData(Data):
 
         self.extra_data = []
 
-        self.center_data = AbDbFunctions.get_center_for_cluster_and_length(self.ab_db, self.cdr_name, self.length, self.cluster, self.sele)
-        self.data = AbDbFunctions.get_data_for_cluster_and_length(self.ab_db, self.cdr_name, self.length, self.cluster, self.sele, self.limit_to_known, self.res_cutoff, self.rfac_cutoff)
+        self.center_data = ab_db.get_center_for_cluster_and_length(self.ab_db, self.cdr_name, self.length, self.cluster, self.sele)
+        self.data = ab_db.get_data_for_cluster_and_length(self.ab_db, self.cdr_name, self.length, self.cluster, self.sele, self.limit_to_known, self.res_cutoff, self.rfac_cutoff)
 
         if extra_sele:
-            self.extra_data = AbDbFunctions.get_data_for_cluster_and_length(self.ab_db, self.cdr_name, self.length, self.cluster, extra_sele, self.limit_to_known, self.res_cutoff, self.rfac_cutoff)
+            self.extra_data = ab_db.get_data_for_cluster_and_length(self.ab_db, self.cdr_name, self.length, self.cluster, extra_sele, self.limit_to_known, self.res_cutoff, self.rfac_cutoff)
 
         self._populate_infos()
 

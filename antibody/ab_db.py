@@ -2,7 +2,7 @@ import sqlite3
 import os
 import sys
 from collections import defaultdict
-from cdr_clusters import outliers
+from antibody import outliers
 #A Collection of functions to query the AbDb
 
 
