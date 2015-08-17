@@ -1,0 +1,7 @@
+-ignore_unrecognized_res
+-pdb_comments
+-ex1
+-ex2
+-use_input_sc
+-use_outliers
+-out:pdb_gz
