@@ -12,27 +12,36 @@ def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts
 
 
     #qsub -q dna -l nodes=10:ppn=11 -V -N $1 -d $qsub_output -v np=101 $benchmarks/$1
-    if ppn:
-        qsub_cmd = " qsub -l nodes="+str(nodes)+":ppn="+str(ppn)+extra_opts+" -V -N "+name + " -d "+queue_dir+" "+script_path
-    else:
-        qsub_cmd = " qsub -l nodes="+str(nodes) + " " + extra_opts+" -V -N "+name + " -d "+queue_dir+" "+script_path
 
+    qsub_cmd = " qsub " +extra_opts+" -V -N "+name + " -d "+queue_dir
+    if ppn:
+
+        qsub_cmd = qsub_cmd + " -l nodes="+str(nodes)+":ppn="+str(ppn)
+    else:
+        qsub_cmd = qsub_cmd + " -l nodes="+str(nodes)
+
+    qsub_cmd = qsub_cmd +" "+script_path
+    
     if print_only:
         print(qsub_cmd)
     else:
         os.system(qsub_cmd)
 
-def run_on_slurm(cmd, queue_dir, root_dir, name, nodes, ppn, print_only = False, extra_opts = ""):
-    script_path = write_queue_file(cmd, queue_dir, name)
 
+def run_on_slurm(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts = ""):
+    script_path = write_queue_file(cmd, queue_dir, name)
 
 
     #qsub -q dna -l nodes=10:ppn=11 -V -N $1 -d $qsub_output -v np=101 $benchmarks/$1
 
+    slurm_cmd = "sbatch --nodes="+str(nodes)+" "+extra_opts+" --job-name="+name + " "
+    slurm_cmd = slurm_cmd + " -o "+queue_dir+"/"+name+"_%j.out"
+    slurm_cmd = slurm_cmd + " -e "+queue_dir+"/"+name+"_%j.err"
+
     if ppn:
-        slurm_cmd = "sbatch --nodes="+str(nodes)+" --ntasks="+str(ppn)+" "+extra_opts+" --job_name="+name + " "+script_path
-    else:
-        slurm_cmd = "sbatch --nodes="+str(nodes)+" "+extra_opts+" --job_name="+name + " "+script_path
+        slurm_cmd = slurm_cmd+" --ntasks="+str(ppn)
+
+    slurm_cmd = slurm_cmd +" "+script_path
 
     if print_only:
         print(slurm_cmd)
@@ -79,7 +88,7 @@ class RunRosetta(object):
                                default = 101)
 
         self.parser.add_argument("--nodes",
-                                default = 100)
+                                default = 101)
 
         self.parser.add_argument("--ppn")
 
@@ -98,7 +107,8 @@ class RunRosetta(object):
                                choices = ["slurm","qsub","local"] )
 
         self.parser.add_argument("--job_manager_opts",
-                                 help = "Extra options for the job manager, such as queue or processor requests")
+                                 help = "Extra options for the job manager, such as queue or processor requests",
+                                 default = "")
 
         self.parser.add_argument("--machine_file",
                                  help = "Optional machine file for passing to MPI")
@@ -241,7 +251,8 @@ class RunRosetta(object):
         """
         log_path = self.base_options.get_make_log_dir()+"/queue_out"
         if not os.path.exists(log_path):
-            return log_path
+            os.mkdir(log_path)
+        return log_path
 
 
     ### Methods to override for specific Benchmarks ###
@@ -342,7 +353,7 @@ class RunRosetta(object):
             os.system(cmd)
 
         elif self.options.job_manager == "qsub":
-            run_on_qsub(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nstruct, self.options.print_only, self.options.job_manager_opts)
+            run_on_qsub(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.options.job_manager_opts)
 
         elif self.options.job_manager == "slurm":
-            run_on_slurm(cmd, self.get_root(), self.get_job_name(*args, **kwargs), self.options.nstruct, self.options.print_only, self.options.job_manager_opts)
+            run_on_slurm(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.options.job_manager_opts)
