@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 #Jared Adolf-Bryfogle
 #Reorders PDBFiles in a dirctory according to LH_A in order for Rosetta Antibody Design benchmarking. Removes HetAtm!!!
 

@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
 # Author: Jared Adolf-Bryfogle
 
 #This script will create either cluster features or antibody features json for use in Features R script.

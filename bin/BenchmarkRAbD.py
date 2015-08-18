@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from collections import defaultdict
 
 import argparse
@@ -33,7 +35,8 @@ class BenchmarkRAbD(RunRosetta):
         """
         RunRosetta.__init__(self, "antibody_designer")
         self._set_outer_cycle_rounds()
-
+        self.current_mintype = None
+        self.current_l_chain = None
 
     def _add_args(self):
         RunRosetta._add_args(self)
@@ -71,9 +74,6 @@ class BenchmarkRAbD(RunRosetta):
 
     def _set_outer_cycle_rounds(self):
 
-        print "Where are my options" + repr(self.options)
-
-
         if self.options.outer_cycle_rounds:
             pass
         elif self.extra_options.get_outer_cycle_rounds():
@@ -82,56 +82,59 @@ class BenchmarkRAbD(RunRosetta):
 
     ##Full Overrides###
 
-    def get_make_log_dir(self, mintype, l_chain):
-        name = self._get_out_prefix(mintype)+"_"+l_chain
+    def get_make_log_dir(self):
+
+        name = self._get_out_prefix()+"_"+self.current_l_chain
+        print name
         log_path = self.base_options.get_make_log_dir()+"/"+name
         if not os.path.exists(log_path):
             os.mkdir(log_path)
         return log_path
 
-    def get_make_out_path(self, mintype):
+    def get_make_out_path(self):
         s = self.base_options.get_root()+"/decoys"
         if not os.path.exists(s):
             os.mkdir(s)
 
-        s = s + "/"+self._get_out_prefix(mintype)
+        s = s + "/"+self._get_out_prefix()
         if not os.path.exists(s):
             os.mkdir(s)
         return s
 
-    def _get_output_string(self, mintype, l_chain):
+    def get_output_string(self):
         s = self._get_program()
 
-        s = s + " -out:prefix "+self._get_out_prefix(mintype)+"."+" -out:suffix _"+l_chain+" -antibody:light_chain "+l_chain
+        s = s + " -out:prefix "+self._get_out_prefix()+"."+" -out:suffix _"+self.current_l_chain+" -antibody:light_chain "+self.current_l_chain
 
 
         #Nstruct
         s = s + " -nstruct " + str(self.options.nstruct)
 
         #Outpath
-        s = s + " -out:path:all " + self.get_make_out_path(mintype)
+        s = s + " -out:path:all " + self.get_make_out_path()
         s = s + self.base_options.get_base_rosetta_flag_string()
 
         #Decoys
-        s = s + " -l "+self.options.dataset+"."+l_chain+".PDBLIST.txt"
+        s = s + " -l "+self.options.dataset+"."+self.current_l_chain+".PDBLIST.txt"
 
         #Log Dir:
-        s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir(mintype, l_chain)
+        s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir()
 
         #Graft Rounds
         s = s + " -outer_cycle_rounds " + str(self.options.outer_cycle_rounds)
 
         #Instructions
-        s = s + " -cdr_instructions " + mintype+".instructions.txt"
+        s = s + " -cdr_instructions " + self.current_mintype+".instructions.txt"
 
         #For these benchmarks, there is only a single root directory.
         s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options.get_root())
 
         return s
 
-    def _get_out_prefix(self, mintype):
-        if self.options.override_out_prefix:
-            return self.options.override_out_prefix+"."
+    def _get_out_prefix(self):
+
+        if hasattr(self.options, "out_prefix") and self.options.out_prefix:
+            return self.options.out_prefix+"."
 
         s = ""
         if self.options.with_antigen:
@@ -152,17 +155,24 @@ class BenchmarkRAbD(RunRosetta):
         else:
             s = s+"-newest_db"
 
-        s = s +"."+mintype+"."+self.options.outer_cycle_rounds
+        s = s +"."+self.current_mintype+"."+self.options.outer_cycle_rounds
 
         return s
 
     ###Override Run to setup for each mintype and l chain given###
-    def run(self):
+    def run_bm(self):
         mintypesSP = self.options.mintypes.split(",")
         l_chains =  self.extra_options.get_l_chains()
 
         for mintype in mintypesSP:
+            self.current_mintype = mintype
             for l_chain in l_chains:
+                self.current_l_chain = l_chain
+                self.run()
+
+
+
+                """
                 cmd_string = ""
 
                 log_dir = self.get_make_log_dir(mintype, l_chain)
@@ -181,10 +191,11 @@ class BenchmarkRAbD(RunRosetta):
 
                 if self.options.job_manager == "local":
                     os.chdir(self.base_options.get_root())
-                    new_cmd = "cd "+ self.base_options.get_root()+" \n"+"mpiexec -np " + self.options.np + " "+ cmd_string
+                    new_cmd = "cd "+ self.get_root()+" \n"+"mpiexec -np " + self.options.np + " "+ cmd_string
                     print new_cmd
                     #os.system(new_cmd)
+                """
 
 if __name__ == "__main__":
     bm = BenchmarkRAbD()
-    bm.run()
+    bm.run_bm()

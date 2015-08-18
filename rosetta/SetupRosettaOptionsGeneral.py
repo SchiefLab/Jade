@@ -74,6 +74,18 @@ class SetupRosettaOptionsGeneral(object):
 
         return s
 
+    def get_machine_file(self):
+        if not self.json_dict.has_key('machine_file'):
+            return None
+        else:
+            return self.json_dict['machine_file']
+
+    def get_job_manager_opts(self):
+        if not self.json_dict.has_key("job_manager_opts"):
+            return []
+        else:
+            return self.json_dict["job_manager_opts"]
+
     #################################################
     def _get_root(self):
         """
