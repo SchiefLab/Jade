@@ -14,7 +14,7 @@ from rosetta import *
 #Module DB Imports
 from structure.Structure import *
 from structure.PythonPDB2 import *
-from sequence.DesignBreakdown import *
+from rosetta_general.DesignBreakdown import *
 from sequence.SequenceStats import SequenceStats
 from pymol.PyMolScriptWriter import *
 import create_features_json as json_creator

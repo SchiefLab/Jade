@@ -1,5 +1,5 @@
 from Tkinter import *
-from modules.filters.FilterSettings import FilterSettings
+from tools.filters.FilterSettings import FilterSettings
 
 
 

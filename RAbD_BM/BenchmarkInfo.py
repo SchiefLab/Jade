@@ -2,6 +2,7 @@ import tools
 import sys
 import os
 
+
 class BenchmarkInfo:
     """
     Simple Class for holding info for a particular benchmark.  This will then be used during analysis

@@ -1,4 +1,4 @@
-from modules.filters.DataFilter import DataFilter
+from tools.filters.DataFilter import DataFilter
 
 class TotalScoreCutoffFilter(DataFilter):
     """

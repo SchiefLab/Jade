@@ -2,7 +2,7 @@ from Tkinter import *
 from collections import defaultdict
 import math
 
-from modules.StatementCreator import *
+from tools.StatementCreator import *
 
 ########################################################################################################################
 ###   DecoyData

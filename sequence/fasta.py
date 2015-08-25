@@ -5,14 +5,15 @@ from Bio.PDB import PDBIO
 
 from rosetta import *
 from rosetta.core.pose import get_chain_from_chain_id
-from modules.restype_definitions import definitions
-from modules.ClustalRunner import ClustalRunner
+from structure.RestypeDefinitions import RestypeDefinitions
+from sequence.ClustalRunner import ClustalRunner
 
 from weblogolib import *
 
 import os
 from collections import defaultdict
-from modules import bio
+from tools import biopython_util as bio
+
 import re
 import sys
 import random
@@ -279,31 +280,9 @@ def split_fasta_from_fasta(fasta_path, prefix, outdir):
 
     return fasta_files
 
-
-########  Biopython Utility Functions ########
-
-def get_biopython_structure(path, model_id = None):
-    structure = None
-
-    parser = PDBParser()
-
-    if not model_id:
-        model_id = os.path.basename(path)
-    if os.path.basename(path).split('.')[-1] == "pdb":
-        structure = parser.get_structure(model_id, path)
-
-    elif os.path.basename(path).split('.')[-1] == "gz":
-        GZ = gzip.open(path, 'rb')
-        structure = parser.get_structure(model_id, GZ)
-        GZ.close()
-    else:
-        sys.exit("Unknown extension to read PDB: "+path)
-
-    return structure
-
 def get_biochain_sequence(bio_chain):
     seq = ""
-    d = definitions()
+    d = RestypeDefinitions()
 
     for res in bio_chain:
         if res.id[0]==' ':
@@ -314,28 +293,6 @@ def get_biochain_sequence(bio_chain):
                 continue
             seq = seq+aa
     return seq
-
-def get_chain_length(bio_chain):
-
-    l = 0
-    for res in bio_chain:
-        if res.id[0]==' ':
-            l+=1
-    return l
-
-def get_num_biochains(model):
-    return len(model[0])
-
-def get_seq_from_biostructure(structure, chain_id):
-    for biochain in structure[0]:
-        if get_chain_length(biochain) == 0:
-            continue
-        if biochain.id == chain_id:
-            return get_biochain_sequence(biochain)
-
-    print "Chain not found!"
-    raise LookupError
-
 
 ########  Etc ###########
 def output_weblogo_for_sequences(sequences, outdir, outname, tag = "Dunbrack Lab - Antibody Database Team"):

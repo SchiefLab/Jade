@@ -9,7 +9,7 @@
 #Instructions: Look at the input options.  Set at least --pdb and --region. (python get_mutation_energy.py --pdb mypdbfile.pdb --region 1:10:B)
 
 from rosetta import *
-from structure.RestypDefinitions import *
+from structure.RestypeDefinitions import *
 from optparse import OptionParser, IndentedHelpFormatter
 
 import os

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import json
 import os
 import sys
@@ -21,7 +23,7 @@ def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts
         qsub_cmd = qsub_cmd + " -l nodes="+str(nodes)
 
     qsub_cmd = qsub_cmd +" "+script_path
-    
+
     if print_only:
         print(qsub_cmd)
     else:
@@ -323,10 +325,17 @@ class RunRosetta(object):
     def get_full_cmd(self, *args, **kwargs):
         cmd_string = self.get_output_string(*args, **kwargs)
 
-        if self.options.machine_file:
-            cmd = "cd "+ self.get_root()+" \n"+"mpiexec -np " + self.options.np + " --machine_file "+self.options.machine_file+" "+ cmd_string
+        if self.options.job_manager == "slurm":
+            cmd = "cd "+ self.get_root()+" \n"+"srun "
         else:
-            cmd = "cd "+ self.get_root()+" \n"+"mpiexec -np " + self.options.np + " "+ cmd_string
+            cmd = "cd "+ self.get_root()+" \n"+"mpiexec -np " + self.options.np
+
+        if self.options.machine_file:
+            cmd = cmd + " --machine_file "+self.options.machine_file+" "+ cmd_string
+        else:
+            cmd = cmd + " "+ cmd_string
+
+
 
         return cmd
 

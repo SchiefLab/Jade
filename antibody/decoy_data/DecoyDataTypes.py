@@ -2,8 +2,8 @@ import os
 import numpy
 
 from collections import defaultdict
-from modules.decoy_data.DecoyData import *
-from modules.StatementCreator import *
+from antibody.decoy_data.DecoyData import *
+from tools.StatementCreator import *
 
 
 

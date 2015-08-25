@@ -8,8 +8,8 @@ import sys
 import json
 import re
 from collections import defaultdict
-from rosetta.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
-from rosetta.RunRosetta import RunRosetta
+from rosetta_general.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
+from rosetta_general.RunRosetta import RunRosetta
 
 class AntibodyDesignBMSetup( SetupRosettaOptionsGeneral ):
 

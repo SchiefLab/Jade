@@ -27,7 +27,7 @@ import tkSimpleDialog
 
 #Toolkit Imports
 from prettytable.prettytable import *
-from structure.RestypDefinitions import RestypeDefinitions
+from structure.RestypeDefinitions import RestypeDefinitions
 
 class DesignBreakdown:
     """

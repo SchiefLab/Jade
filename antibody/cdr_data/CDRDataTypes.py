@@ -2,12 +2,12 @@ import os
 import copy
 
 #PyIgClassify
-from modules.CDRClusterer import *
-from modules import fasta
+from antibody.CDRClusterer import *
+from sequence import fasta
 
 #Modules
-from modules.cdr_data.CDRData import *
-from modules.ClustalRunner import *
+from antibody.cdr_data.CDRData import *
+from sequence.ClustalRunner import *
 
 from rosetta import *
 
