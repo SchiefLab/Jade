@@ -8,6 +8,7 @@ import matplotlib.axes
 
 from matplotlib.dates import YearLocator, MonthLocator, DateFormatter, WeekdayLocator
 
+# Jared Adolf-Bryfogle
 
 
 class MakeFigure:
@@ -30,6 +31,7 @@ class MakeFigure:
         self.labels = []
         self.data = defaultdict(dict)
         self.colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+        self.linestyles = ['_', '-', '--', ':']
 
     def reset(self, rows = 1, columns = 1, share_x = True, share_y = True):
         p, axes = plot.subplots(rows, columns, share_x, share_y)
@@ -60,9 +62,11 @@ class MakeFigure:
                 self.labels.append(label)
 
     def add_data(self, x, y, label):
+        print label
         self.data[label]['x'] = x
         self.data[label]['y'] = y
-        self.labels.append(label)
+        if not self.labels.count(label):
+            self.labels.append(label)
 
     def get_x_data(self, label):
         return self.data[label]['x']
@@ -75,6 +79,9 @@ class MakeFigure:
 
     def get_labels(self):
         return self.labels
+
+    def get_y_as_list(self, labels):
+        return [self.data[label]['y'] for label in labels]
 
     ################################
 
@@ -100,9 +107,25 @@ class MakeFigure:
             for p in self.axes:
                 p.set_ylim(min, max)
 
-    def fill_subplot(self, title, labels, x_axis_label, y_axis_label,
+    def set_x_scale(self, scale = 'log', plot_num = None):
+
+        #Here, I think we could return functions to generalize everything.
+        if plot_num:
+            self.axes[plot_num].set_xscale(scale)
+        else:
+            for p in self.axes:
+                p.set_sclale(scale)
+
+    def set_y_scale(self, scale = 'log', plot_num = None):
+        if plot_num:
+            self.axes[plot_num].set_yscale(scale)
+        else:
+            for p in self.axes:
+                p.set_yscale(scale)
+
+    def fill_subplot(self, title, labels, x_axis_label = None, y_axis_label = None,
                      index = None, grid = None,
-                     add_legend = True, linestyle="--", marker="^", colors = None):
+                     add_legend = False, linestyle="--", marker="^", colors = None):
         """
         This will add data to a particular subplot/plot.
 
@@ -139,23 +162,31 @@ class MakeFigure:
                 color = colors[i]
             else:
                 color = self.colors[i]
-
+            #i +=1
             #linestyle=linestyle, marker=marker,
-            p.plot(self.get_x_data(label), self.get_y_data(label), color=color, label = label)
+            p.plot(self.get_x_data(label), self.get_y_data(label), label = label)
 
 
         if add_legend:
-            p.legend(labels)
+            p.legend(labels, loc="upper left",  fancybox=True)
 
-        p.set_xlabel(x_axis_label, fontweight="bold")
-        p.set_ylabel(y_axis_label, fontweight="bold")
+        if x_axis_label:
+            p.set_xlabel(x_axis_label, fontweight="bold")
+
+        if y_axis_label:
+            p.set_ylabel(y_axis_label, fontweight="bold")
+
+    def add_grid(self, x_grid = True, y_grid = True):
+        for p in self.axes:
+            if x_grid:
+                p.xaxis.grid()
+            if y_grid:
+                p.yaxis.grid()
 
     def save_plot(self, outpath, tight = True):
 
-        self.p.grid( True )
-
         print "Saving: "+outpath
-        self.p.subplots_adjust(wspace=0.3, hspace=0.3)
+        self.p.subplots_adjust(wspace=0.2, hspace=0.2)
         #self.p.autoscale_view()
 
         if tight:

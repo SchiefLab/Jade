@@ -7,7 +7,7 @@ import re
 import argparse
 from RAbD_BM import tools as bm_tools
 
-from rosetta.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
+from rosetta_general.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
 
 def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts = ""):
     script_path = write_queue_file(cmd, queue_dir, name)
@@ -366,3 +366,8 @@ class RunRosetta(object):
 
         elif self.options.job_manager == "slurm":
             run_on_slurm(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.options.job_manager_opts)
+
+
+if __name__ == "__main__":
+    run_rosetta = RunRosetta()
+    run_rosetta.run()
