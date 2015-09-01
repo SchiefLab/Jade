@@ -32,7 +32,7 @@ def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts
         os.system(qsub_cmd)
 
 
-def run_on_slurm(cmd, queue_dir, name, nodes = False, ppn = False, print_only = False, extra_opts = ""):
+def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only = False, extra_opts = ""):
     script_path = write_queue_file(cmd, queue_dir, name)
 
 
@@ -45,8 +45,8 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ppn = False, print_only = 
 
     if nodes:
         slurm_cmd = slurm_cmd+" --nodes="+str(nodes)
-    if ppn:
-        slurm_cmd = slurm_cmd+" --ntasks="+str(ppn)
+    if ntasks:
+        slurm_cmd = slurm_cmd+" --ntasks="+str(ntasks)
 
     slurm_cmd = slurm_cmd +" "+script_path
 
@@ -107,7 +107,9 @@ class RunRosetta(object):
 
         self.parser.add_argument("--nodes")
 
-        self.parser.add_argument("--ppn")
+        self.parser.add_argument("--ppn",
+                                 help = "Processors per node for qsub.  NTasks is np for slurm")
+
 
         self.parser.add_argument("--nstruct")
 
@@ -416,7 +418,7 @@ class RunRosetta(object):
         cmd_string = self.get_output_string(*args, **kwargs)
 
         if self.options.job_manager == "slurm":
-            cmd = "cd "+ self.get_root()+" \n"+"srun "
+            cmd = "cd "+ self.get_root()+" \n"+"mpiexecs "
         else:
             cmd = "cd "+ self.get_root()+" \n"+"mpiexec -np " + self.options.np
 
@@ -454,7 +456,7 @@ class RunRosetta(object):
             run_on_qsub(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.options.job_manager_opts)
 
         elif self.options.job_manager == "slurm":
-            run_on_slurm(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.options.job_manager_opts)
+            run_on_slurm(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.np, self.options.print_only, self.options.job_manager_opts)
 
 
 if __name__ == "__main__":
