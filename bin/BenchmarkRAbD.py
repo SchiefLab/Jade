@@ -126,7 +126,7 @@ class BenchmarkRAbD(RunRosetta):
         s = s + " -l "+self.options.dataset+"."+self.current_l_chain+".PDBLIST.txt"
 
         #Log Dir:
-        s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir()
+        s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir()+"/rosetta_mpi_run"
 
         #Graft Rounds
         s = s + " -outer_cycle_rounds " + str(self.options.outer_cycle_rounds)
