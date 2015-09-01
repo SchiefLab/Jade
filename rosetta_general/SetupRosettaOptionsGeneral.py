@@ -14,6 +14,11 @@ class SetupRosettaOptionsGeneral(object):
     """
     def __init__(self, cluster_json_file):
 
+        if not os.path.exists(cluster_json_file):
+            cluster_json_file = os.path.dirname(os.path.abspath(__file__))+'/jsons/'+cluster_json_file
+            if not os.path.exists(cluster_json_file):
+                sys.exit("cluster json file not found")
+
         FILE = open(cluster_json_file, 'r')
         self.json_dict = json.load(FILE)
         FILE.close()
@@ -85,6 +90,12 @@ class SetupRosettaOptionsGeneral(object):
             return []
         else:
             return self.json_dict["job_manager_opts"]
+
+    def get_program(self):
+        if self.json_dict.has_key("program"):
+            return self.json_dict["program"]
+        else:
+            return None
 
     #################################################
     def _get_root(self):

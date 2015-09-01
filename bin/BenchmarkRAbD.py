@@ -35,6 +35,7 @@ class BenchmarkRAbD(RunRosetta):
         """
         RunRosetta.__init__(self, "antibody_designer")
         self._set_outer_cycle_rounds()
+        self._set_exp()
         self.current_mintype = None
         self.current_l_chain = None
 
@@ -79,12 +80,19 @@ class BenchmarkRAbD(RunRosetta):
         elif self.extra_options.get_outer_cycle_rounds():
             self.options.outer_cycle_rounds = str(self.extra_options.get_outer_cycle_rounds())
 
+    def _set_exp(self):
+        if hasattr(self.options, "exp_name") and self.options.exp_name:
+            pass
+        elif self.extra_options.get_exp():
+            self.options.exp_name = self.extra_options.get_exp()
+        else:
+            self.options.exp_name = "unknown_exp"
 
     ##Full Overrides###
 
     def get_make_log_dir(self):
 
-        name = self._get_out_prefix()+"_"+self.current_l_chain
+        name = self.get_out_prefix()+"_"+self.current_l_chain
         print name
         log_path = self.base_options.get_make_log_dir()+"/"+name
         if not os.path.exists(log_path):
@@ -96,7 +104,7 @@ class BenchmarkRAbD(RunRosetta):
         if not os.path.exists(s):
             os.mkdir(s)
 
-        s = s + "/"+self._get_out_prefix()
+        s = s + "/"+self.get_out_prefix()
         if not os.path.exists(s):
             os.mkdir(s)
         return s
@@ -104,7 +112,7 @@ class BenchmarkRAbD(RunRosetta):
     def get_output_string(self):
         s = self._get_program()
 
-        s = s + " -out:prefix "+self._get_out_prefix()+"."+" -out:suffix _"+self.current_l_chain+" -antibody:light_chain "+self.current_l_chain
+        s = s + " -out:prefix "+self.get_out_prefix()+"."+" -out:suffix _"+self.current_l_chain+" -antibody:light_chain "+self.current_l_chain
 
 
         #Nstruct
@@ -131,7 +139,7 @@ class BenchmarkRAbD(RunRosetta):
 
         return s
 
-    def _get_out_prefix(self):
+    def get_out_prefix(self):
 
         if hasattr(self.options, "out_prefix") and self.options.out_prefix:
             return self.options.out_prefix+"."

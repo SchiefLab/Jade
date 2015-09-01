@@ -5,3 +5,5 @@
 -use_input_sc
 -use_outliers
 -out:pdb_gz
+-other_pose_to_scorefile
+-scorefile_format json
