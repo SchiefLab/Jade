@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from rosetta_general.RunRosetta import *
 
 
