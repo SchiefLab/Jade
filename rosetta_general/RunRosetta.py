@@ -56,6 +56,8 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only
         os.system(slurm_cmd)
 
 def write_queue_file(cmd, queue_dir, name):
+
+    cmd = "#!/bin/bash\n\n\n" +cmd
     OUTFILE = open(queue_dir+"/"+name+".sh", 'w')
     OUTFILE.write(cmd)
     OUTFILE.close()
