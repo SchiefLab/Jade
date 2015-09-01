@@ -111,7 +111,8 @@ class RunRosetta(object):
                                  help = "Processors per node for qsub.  NTasks is np for slurm")
 
 
-        self.parser.add_argument("--nstruct")
+        self.parser.add_argument("--nstruct",
+                                 default = 1)
 
         self.parser.add_argument("-s",
                                  help = "PDB Files if not set.")
@@ -322,7 +323,7 @@ class RunRosetta(object):
         """
         Get and make the queue dir where qsub/slurm scripts will go.
         """
-        log_path = self.base_options.get_make_log_dir()+"/queue_out"
+        log_path = self.base_options.get_make_log_dir()+"/queue"
         if not os.path.exists(log_path):
             os.mkdir(log_path)
         return log_path
@@ -418,7 +419,7 @@ class RunRosetta(object):
         cmd_string = self.get_output_string(*args, **kwargs)
 
         if self.options.job_manager == "slurm":
-            cmd = "cd "+ self.get_root()+" \n"+"mpiexecs "
+            cmd = "cd "+ self.get_root()+" \n"+"mpiexec "
         else:
             cmd = "cd "+ self.get_root()+" \n"+"mpiexec -np " + self.options.np
 
