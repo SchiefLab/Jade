@@ -1,0 +1,6 @@
+{ "program": "InterfaceAnalyzer",
+  "flags": [
+    "-no_output",
+    "-scorefile interface_data.sc"
+  ]
+}

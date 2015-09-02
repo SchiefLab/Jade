@@ -7,3 +7,4 @@
 -out:pdb_gz
 -other_pose_to_scorefile
 -scorefile_format json
+-jd2:delete_old_poses

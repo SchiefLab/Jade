@@ -1,0 +1,12 @@
+{ "program": "antibody_designer",
+  "flags": [
+    "-add_graft_log_to_pdb",
+    "-pdb_comments",
+    "-scorefile interface_data.sc",
+    "-outer_cycle_rounds 200",
+    "-dihedral_cst_weight .3",
+    "-run_relax",
+    "-do_dock",
+    "-dock_min_dock"
+  ]
+}
