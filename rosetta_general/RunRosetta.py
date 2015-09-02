@@ -27,8 +27,11 @@ def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts
     qsub_cmd = qsub_cmd +" "+script_path
 
     if print_only:
+        print(cmd+"\n\n")
         print(qsub_cmd)
     else:
+        print(cmd+"\n\n")
+        print(qsub_cmd)
         os.system(qsub_cmd)
 
 
@@ -51,8 +54,11 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only
     slurm_cmd = slurm_cmd +" "+script_path
 
     if print_only:
+        print cmd + "\n\n"
         print(slurm_cmd)
     else:
+        print cmd + "\n\n"
+        print(slurm_cmd)
         os.system(slurm_cmd)
 
 def write_queue_file(cmd, queue_dir, name):
