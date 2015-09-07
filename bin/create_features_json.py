@@ -11,14 +11,14 @@ import os
 import sys
 import json
 from collections import defaultdict
-
+from tools.path import *
 
 
 
 def setup_baseline_scripts_and_formats(json_dict, type):
-    current_path = os.path.split(os.path.abspath(__file__))[0]
+    db_path = get_database_path()
 
-    FILE = open(current_path+"/"+type+"_features.json")
+    FILE = open(db_path+"/"+type+"_features.json")
     data = json.load(FILE)
     FILE.close()
     append_scripts_formats_to_json_dict(data, json_dict)
@@ -62,8 +62,7 @@ def write_json_for_single_recovery_experiment(db_path_exp, db_path_natives, exp_
     if not os.path.exists(db_path_exp):
         sys.exit("SQLITE3 database path does not exist!!")
 
-    json_dict = initialize_json_dict()
-    json_dict["output_dir"] = out_path
+    json_dict = initialize_json_dict( out_path )
     setup_baseline_scripts_and_formats(json_dict, "cluster")
 
     #Ref HAS to go first here!
@@ -142,9 +141,9 @@ class JsonCreator:
 def run_features_json(json_path):
     """
     Convenience function
-    Run compare_sample_sources with json path.  Must have compare_sample_sources.R in PATH
+    Run compare_sample_sources with json path.
     """
-    r_cmd = "compare_sample_sources.R --config "+json_path
+    r_cmd = get_rosetta_features_root()+"/compare_sample_sources.R --config "+json_path
     print "Running: "+r_cmd
     os.system(r_cmd)
 

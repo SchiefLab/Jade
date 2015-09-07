@@ -6,6 +6,18 @@ import glob
 #A Collection of pathing/file/dir functions
 
 
+def get_database_path():
+    p = os.path.split(os.path.abspath(__file__))[0]+"/../database"
+
+    return p
+
+def get_rosetta_features_root():
+    return os.getenv('ROSETTA3_DB')+"/../tests/features"
+
+def get_feat_input_path():
+    p  = os.path.split(os.path.abspath(__file__))[0]+"../rosetta_general/features_input"
+    return p
+
 def make_dir_if_not_exists(dir):
     if not os.path.exists(dir):
         os.mkdir(dir)
@@ -31,11 +43,11 @@ def get_file_paths(pattern, dir, ext = ".pdb"):
     file_paths = [dir+"/"+os.path.basename(x) for x in files]
     return file_paths
 
-def open_file(file):
+def open_file(file, mode = 'r'):
     if file.split(".")[-1] =="gz":
         #print "opening gzipped file"
-        INFILE = gzip.open(file, 'rb')
+        INFILE = gzip.open(file, mode+'b')
     else:
-        INFILE = open(file, 'r')
+        INFILE = open(file, mode)
 
     return INFILE

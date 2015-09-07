@@ -29,7 +29,7 @@ p = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append(p); #Allows all modules to use all other modules, without needing to update pythonpath
 
 #PyIgD
-import PyIgDAnalyze as analyze_strat
+import bin.PyRAbD_Analyze as analyze_strat
 from sequence.ClustalRunner import *
 from tools.StatementCreator import *
 from antibody.cdr_data.CDRData import *
@@ -40,7 +40,7 @@ from tools.filters.DataFilter import *
 from tools.filters.DataFilters import *
 from tools.filters.FilterSettings import *
 
-from PyIgDesign.window_modules.FilterSettingsWindow import *
+from PyRAbD.window_modules.FilterSettingsWindow import *
 from sequence import fasta
 
 

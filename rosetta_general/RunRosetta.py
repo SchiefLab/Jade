@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 
-import json
+
 import os
 import sys
-import re
 import argparse
-from RAbD_BM import tools as bm_tools
-from tools.gneral import get_platform
+from tools.general import get_platform
 
 from rosetta_general.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
 
