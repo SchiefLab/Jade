@@ -3,6 +3,7 @@
 
 import os
 import sys
+import re
 import argparse
 from tools.general import get_platform
 
@@ -44,9 +45,9 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only
     slurm_cmd = slurm_cmd + " -o "+queue_dir+"/"+name+"_%j.out"
     slurm_cmd = slurm_cmd + " -e "+queue_dir+"/"+name+"_%j.err"
 
-    if nodes:
+    if nodes and not re.search('--nodes', extra_opts):
         slurm_cmd = slurm_cmd+" --nodes="+str(nodes)
-    if ntasks:
+    if ntasks and not re.search('--ntasks', extra_opts):
         slurm_cmd = slurm_cmd+" --ntasks="+str(ntasks)
 
     slurm_cmd = slurm_cmd +" "+script_path
