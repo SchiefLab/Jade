@@ -182,7 +182,10 @@ class RunRosetta(object):
                                         "Note NO - charactor. "
                                         "Booleans do not need an = sign.")
 
-
+        self.parser.add_argument("--one_file_mpi",
+                                 help = "Don't setup mpi_tracer_to_file. ",
+                                 default = False,
+                                 action = "store_true")
 
     def _parse_args(self):
         self.options = self.parser.parse_args()
@@ -382,7 +385,8 @@ class RunRosetta(object):
         s = s + self.base_options.get_base_rosetta_flag_string()
 
         #Log Dir:
-        s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir(*args, **kwargs)+"/rosetta_mpi_run"
+        if not self.options.one_file_mpi:
+            s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir(*args, **kwargs)+"/rosetta_mpi_run"
 
         #For these benchmarks, there are only a single root directory.
         s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options.get_root())
