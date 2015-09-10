@@ -14,9 +14,9 @@ import sys
 import os
 import json
 from collections import OrderedDict
-from optparse import OptionParser
+from argparse import ArgumentParser
 
-class ScoreFile:
+class ScoreFiles:
   def __init__(self, filename):
     self.filename = filename
     self.decoys = []
@@ -30,9 +30,13 @@ class ScoreFile:
     for line in lines:
       try:
         o = json.loads(line)
+        #print o[self.decoy_field_name]
+        #print repr(o)
         self.decoys.append(o)
       except ValueError:
         print >> sys.stderr, "Failed to parse JSON object; skipping line:\n", line
+
+
 
   def getDecoyCount(self):
     return len(self.decoys)
@@ -113,6 +117,15 @@ class ScoreFile:
 
     return calc_stats
 
+  def getOrdered(self, scoreterm, top_n = -1, reverse = False):
+    if scoreterm == "hbonds_int" or scoreterm == "dSASA_int": reverse = True
+    return sorted([ [x[scoreterm], x[self.decoy_field_name]] for x in self.decoys], reverse = reverse)[:top_n]
+
+  def getScore(self, decoy, scoreterm):
+    for o in self.decoys:
+      if o[self.decoy_field_name] == decoy:
+        return o[scoreterm]
+
 ########################################################################
 
 def output_legacy(out, prefix):
@@ -180,63 +193,69 @@ def output_CSV(out, prefix):
     sys.stdout.write(prefix + ",".join(values) + "\n")
 
 def printVerbose(s):
-  if options.verbose:
-    print >> sys.stderr, s
+  print >> sys.stderr, s
 
 ########################################################################
 
 def main(argv):
-  parser = OptionParser(usage="usage: %prog [OPTIONS] scorefile [scorefile...]\n" +
+  parser = ArgumentParser(
     "This utility parses and extracts data from score files in JSON format")
-  parser.set_description(main.__doc__)
 
-  parser.add_option("-n", "--decoynames",
-    action="store_true",
-    default=False,
-    help="List decoy names",
-  )
+  parser.add_argument("scorefiles", nargs = '*', help = "A list of scorefiles")
 
-  parser.add_option("-t", "--scoreterms",
-    action="store_true",
-    default=False,
-    help="List score term names",
-  )
-
-  parser.add_option("-S", "--summary",
-    action="store_true",
-    default=False,
-    help="Compute stats summarizing data",
-  )
-
-  parser.add_option("-s", "--scores",
-    default="",
+  parser.add_argument("-s", "--scoretypes",
+    default=["dSASA_int", "delta_unsatHbonds", "hbonds_int", "total_score", "dG_separated"],
     help="Comma separated list of score terms to extract",
-  )
+    nargs = '*')
 
-  parser.add_option("-o", "--output",
-    default="legacy",
-    help="Output format: legacy, tab, CSV",
-  )
 
-  parser.add_option("-p", "--prefix",
-    default=None,
-    help="Line prefix in score output (legacy format)",
-  )
 
-  parser.add_option("-v", "--verbose",
+  parser.add_argument("-n", "--top_n",
+                      default = -1,
+                      type = int,
+                      help = "Only list Top N when doing top scoring decoys"
+                             "Default is to print all of them.")
+
+  parser.add_argument('--top_n_by_10',
+                      default = 10,
+                      type = int,
+                      help = "Top N by 10 percent total score to print out. ")
+
+  parser.add_argument('--top_n_by_10_scoretype',
+                      default = "dG_separated",
+                      help = "Scoretype to use for any top N by 10 printing.  If scoretype not present, won't do anything.")
+
+
+
+
+  parser.add_argument("--decoy_names",
     action="store_true",
     default=False,
-    help="Verbose output",
-  )
+    help="List decoy names",)
+
+  parser.add_argument("-S", "--summary",
+    action="store_true",
+    default=False,
+    help="Compute stats summarizing data",)
+
+
+
+
+  parser.add_argument("--list_scoretypes",
+    action="store_true",
+    default=False,
+    help="List score term names",)
+
+
+
+
+
+
 
   global options
-  (options, remaining_args) = parser.parse_args(args=argv)
+  options = parser.parse_args()
 
-  if len(remaining_args) < 1:
-    parser.parse_args(["--help"])
-    sys.exit(1)
-
-  for filename in remaining_args:
+  for filename in options.scorefiles:
     if filename != "":
       printVerbose("    Scorefile: %s" % filename)
 
@@ -244,24 +263,26 @@ def main(argv):
       print >> sys.stderr, "File not found:", filename
       continue
 
-    sf = ScoreFile(filename)
-    if options.verbose:
-      printVerbose("       Decoys: %d" % sf.getDecoyCount())
-      printVerbose("  Score terms: %s" % ", ".join(sf.getScoreTermNames()))
-      printVerbose("")
+    sf = ScoreFiles(filename)
+
+    printVerbose("       Decoys: %d" % sf.getDecoyCount())
+    printVerbose("  Score terms: %s" % ", ".join(sf.getScoreTermNames()))
+    printVerbose("")
 
     ### Info handlers
-    if options.decoynames:
-      print "\n".join( sf.getDecoyNames() )
+    decoy_names = sf.getDecoyNames()
+    if options.decoy_names:
+      print "\n".join( decoy_names )
       continue
 
-    if options.scoreterms:
-      print "\n".join( sf.getScoreTermNames() )
+    scoreterms = sf.getScoreTermNames()
+    if options.list_scoretypes:
+      print "\n".join( scoreterms )
       continue
 
     ### Stats summary
     if options.summary:
-      stats = sf.getStats(options.scores)
+      stats = sf.getStats(options.scoretypes)
       max_width = max( [ len(x) for x in stats.keys() ] )
       fmt = "%*s:  %4s  %10s  %10s  %10s  %10s  %10s"
       print fmt % (max_width, "TERM", "n", "Min", "Max", "Mean", "Median", "StdDev")
@@ -275,7 +296,7 @@ def main(argv):
       continue
 
     ### Default score list handler
-    scores = sf.getScoreTerms(options.scores)
+    scores = sf.getScoreTerms(options.scoretypes)
     out = []
     for decoy_name in scores:
       terms = scores[decoy_name]
@@ -284,13 +305,29 @@ def main(argv):
         decoy_scores.append((term, terms[term]))
       out.append(decoy_scores)
 
-    ### Output
-    if options.output == "legacy":
-      output_legacy(out, "SCORE: " if options.prefix is None else options.prefix + ": ")
-    elif options.output == "tab":
-      output_tab(out, "" if options.prefix is None else options.prefix + "\t")
-    elif options.output == "CSV" or options.output == "csv":
-      output_CSV(out, "" if options.prefix is None else options.prefix)
+
+
+    for term in options.scoretypes:
+      if term not in scoreterms: continue
+      print "\nBy "+term
+
+
+      ordered = sf.getOrdered(term, options.top_n)
+
+      for o in ordered:
+        print "%.2f\t"%o[0]+o[1]
+
+    ### Top 10 by ten
+    if options.top_n_by_10_scoretype in scoreterms:
+      top_p = int(len(decoy_names)/10)
+      top_decoys = [o[1] for o in sf.getOrdered("total_score", top_p)]
+      top_by_n_decoys = [o for o in sf.getOrdered(options.top_n_by_10_scoretype) if o[1] in top_decoys][:options.top_n_by_10]
+
+      print "\n\nTop "+options.top_n_by_10_scoretype+" by top 10% Total Score"
+      print options.top_n_by_10_scoretype+"\t"+"decoy"+"\t"+"total_score"
+
+      for o in top_by_n_decoys:
+        print "%.2f\t"%o[0]+o[1]+"%.2f"%sf.getScore(o[1], "total_score")
 
 ########################################################################
 
