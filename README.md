@@ -23,7 +23,7 @@ It uses JSON files to setup the base flags (<code>--json_base</code>) and then s
 
 Use <code>--print_only</code> to print instead of run to double check everything.  Paths can (and should) be relative.  Will setup any directories mentioned.  You can feed additional flags files or options (or overwrite any set in the json files) using :     <code>--extra_options @rel/path/to/flags rosetta_opt=setting another_opt=setting a_boolean_opt</code>
 
-Set the job manager using the option <code>--job_manager</code>. Current options are __slurm__, __qsub__, and __local__.  Set extra options for the job manager in parenthesis, such as the slurm partition option -p, using the <code>--job_manager_opts "set of -options -for run"</code>
+Set the job manager using the option <code>--job_manager</code>. Current options are __slurm__, __qsub__, and __local__.  Set extra options for the job manager in parenthesis, such as the slurm partition option -p, using <code>--job_manager_opts "set of -options -for run"</code>
 
 Be sure to set <code>--np</code> and <code>--nstruct</code> (if not set in flags files or extra_options)
 
