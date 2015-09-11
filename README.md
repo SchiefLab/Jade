@@ -72,11 +72,9 @@ optional arguments:
                         JSON file for setting up base paths/etc. for the
                         cluster.Default = 'file_dir/jsons/common_flags.json'
   --json_run JSON_RUN   JSON file for specific Rosetta run.
-  --root ROOT           Set the root directory. Default is to use pwd.
-                        (Benchmarking: Override any set in json_base.)
+  --root ROOT           Set the root directory. Default = pwd.
   --job_name JOB_NAME   Set the job name used for mpi_tracer_to_file dir and
-                        queue. Default = 'rosetta_run'. (Benchmarking:
-                        Override any set in json_base.)
+                        queue. Default = 'rosetta_run'. 
   --extra_options [EXTRA_OPTIONS [EXTRA_OPTIONS ...]], -e [EXTRA_OPTIONS [EXTRA_OPTIONS ...]]
                         Extra Rosetta options. Specify like:
                         cdr_instructions=my_file other_option=setting. Note NO
