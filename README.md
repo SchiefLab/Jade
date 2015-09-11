@@ -33,7 +33,9 @@ See below for the current full help of the program:
 
 
 ```
-usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub.
+usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub. in
+       Relative paths are accepted.
+       
        [-h] [--program PROGRAM] [--np NP] [--nodes NODES] [--ppn PPN]
        [--nstruct NSTRUCT] [-s S] [-l L] [--outdir OUTDIR]
        [--compiler {gcc,clang}] [--job_manager {slurm,qsub,local}]
@@ -46,15 +48,14 @@ optional arguments:
   -h, --help            show this help message and exit
   --program PROGRAM     Define the Rosetta program to use if not set in
                         json_run
-  --np NP
-  --nodes NODES
+  --np NP               
+  --nodes NODES         
   --ppn PPN             Processors per node for qsub. NTasks is np for slurm
   --nstruct NSTRUCT
-  -s S                  Path to a pdb file
+  -s S                  Path to a pdb file.
   -l L                  Path to a list of pdb files
-  
   --outdir OUTDIR, -o OUTDIR
-                        Outpath given to Rosetta. Default = 'pwd/decoys'
+                        Outpath. Default = 'pwd/decoys'
   --compiler {gcc,clang}, -c {gcc,clang}
                         Set the compiler used. Will set clang automatically
                         for macos. Default = 'gcc'
@@ -65,21 +66,23 @@ optional arguments:
                         processor requests
   --machine_file MACHINE_FILE
                         Optional machine file for passing to MPI
-                        
-  --print_only          Do not actually run anything. Just print out setup info for review
+  --print_only          Do not actually run anything. Just print setup for
+                        review.
   --json_base JSON_BASE
                         JSON file for setting up base paths/etc. for the
                         cluster.Default = 'file_dir/jsons/common_flags.json'
   --json_run JSON_RUN   JSON file for specific Rosetta run.
-  --root ROOT           Override any root directory set in json_base. If none
-                        is set, will use cwd
-  --job_name JOB_NAME   Override any job name set in json_base.  Default =
-                        'rosetta_run'
+  --root ROOT           Set the root directory. Default is to use pwd.
+                        (Benchmarking: Override any set in json_base.)
+  --job_name JOB_NAME   Set the job name used for mpi_tracer_to_file dir and
+                        queue. Default = 'rosetta_run'. (Benchmarking:
+                        Override any set in json_base.)
   --extra_options [EXTRA_OPTIONS [EXTRA_OPTIONS ...]], -e [EXTRA_OPTIONS [EXTRA_OPTIONS ...]]
                         Extra Rosetta options. Specify like:
-                        cdr_instructions=my_file other_option=setting.  Note NO '-'
-                        charactor. Booleans do not need an = sign.
+                        cdr_instructions=my_file other_option=setting. Note NO
+                        - charactor. Booleans do not need an = sign.
   --one_file_mpi        Don't setup mpi_tracer_to_file.
+
 ```
 
 ## score_analysis
