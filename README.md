@@ -33,7 +33,7 @@ See below for the current full help of the program:
 
 
 ```
-usage: This program runs Rosetta MPI locally on a cluster using slurm or qsub.
+usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub.
        [-h] [--program PROGRAM] [--np NP] [--nodes NODES] [--ppn PPN]
        [--nstruct NSTRUCT] [-s S] [-l L] [--outdir OUTDIR]
        [--compiler {gcc,clang}] [--job_manager {slurm,qsub,local}]
