@@ -205,7 +205,7 @@ def main(argv):
 
   parser.add_argument("-s", "--scoretypes",
     default=["dSASA_int", "delta_unsatHbonds", "hbonds_int", "total_score", "dG_separated"],
-    help="Comma separated list of score terms to extract",
+    help="List of score terms to extract",
     nargs = '*')
 
 
@@ -238,17 +238,10 @@ def main(argv):
     default=False,
     help="Compute stats summarizing data",)
 
-
-
-
   parser.add_argument("--list_scoretypes",
     action="store_true",
     default=False,
     help="List score term names",)
-
-
-
-
 
 
 

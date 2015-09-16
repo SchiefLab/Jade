@@ -20,7 +20,7 @@ class RestypeDefinitions():
     
     def get_one_letter_from_three(self, three_letter_code):
         three_letter_code = three_letter_code.split("_")[0].upper(); #Fix for Rosetta designated chain endings.
-        if three_letter_code=="HSD": three_letter_code="HIS"; #Fix for his protonation state
+        if three_letter_code in ["HSD", "HIE", "HIP", "HID"]: three_letter_code="HIS"; #Fix for his protonation state
         if three_letter_code=="CYD": three_letter_code="CYS"; #Fix for Disulfide
         for triplet in self.restype_info["All"]:
             tripletSP = triplet.split(":")

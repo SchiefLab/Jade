@@ -103,16 +103,20 @@ class RunRosetta(object):
         self._resolve_options()
 
     def _add_args(self):
-        self.parser = argparse.ArgumentParser("This program runs Rosetta MPI locally on a cluster using slurm or qsub.")
+        self.parser = argparse.ArgumentParser("This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  "
+                                              "Relative paths are accepted.")
 
         if not self.program:
             self.parser.add_argument("--program",
                                  help = "Define the Rosetta program to use if not set in json_run")
 
         self.parser.add_argument("--np",
-                               default = 101)
+                               default = 101,
+                                 help = "Number of processors to use for MPI.  "
+                                        "Default = 101")
 
-        self.parser.add_argument("--nodes")
+        self.parser.add_argument("--nodes",
+                                 help = "Number of nodes to ask for.  Optional. ")
 
         self.parser.add_argument("--ppn",
                                  help = "Processors per node for qsub.  NTasks is np for slurm")
@@ -122,10 +126,10 @@ class RunRosetta(object):
                                  default = 1)
 
         self.parser.add_argument("-s",
-                                 help = "PDB Files if not set.")
+                                 help = "Path to a pdb file")
 
         self.parser.add_argument("-l",
-                                 help = "Path to pdb files")
+                                 help = "Path to a list of pdb files")
 
         self.parser.add_argument("--outdir", "-o",
                                  default = "decoys",
@@ -134,7 +138,7 @@ class RunRosetta(object):
 
         self.parser.add_argument("--compiler", "-c",
                                  default = "gcc",
-                                 help = "Set the compiler used.  Will set clang automatically for macos."
+                                 help = "Set the compiler used.  Will set clang automatically for macos. "
                                         "Default = 'gcc' ",
                                  choices = ["gcc", "clang"])
 
@@ -154,7 +158,7 @@ class RunRosetta(object):
                                  help = "Optional machine file for passing to MPI")
 
         self.parser.add_argument("--print_only",
-                                 help = "Do not actually run anything.  Just print out run setup",
+                                 help = "Do not actually run anything.  Just print setup for review.",
                                  default = False,
                                  action = "store_true")
 
@@ -168,18 +172,21 @@ class RunRosetta(object):
                                 help = "JSON file for specific Rosetta run.")
 
         self.parser.add_argument("--root",
-                                 help = "Override any root directory set in json_base. If none is set, will use cwd")
+                                 help = "Set the root directory.  "
+                                        "Default = pwd.  "
+                                        "(Benchmarking: Override any set in json_base.)")
 
         self.parser.add_argument("--job_name",
-                                 default = "rosetta_run",
-                                help = "Override any job name set in json_base"
-                                       "Default = 'rosetta_run'",)
+                                default = "rosetta_run",
+                                help = "Set the job name used for mpi_tracer_to_file dir and queue.  "
+                                       "Default = 'rosetta_run'.  "
+                                       "(Benchmarking: Override any set in json_base.)",)
 
 
         self.parser.add_argument("--extra_options", "-e",
                                  nargs = '*',
                                  help = "Extra Rosetta options.  "
-                                        "Specify like: cdr_instructions=my_file other_option=setting"
+                                        "Specify like: cdr_instructions=my_file other_option=setting.  "
                                         "Note NO - charactor. "
                                         "Booleans do not need an = sign.")
 
