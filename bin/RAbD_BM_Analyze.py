@@ -16,12 +16,12 @@ from argparse import ArgumentParser
 
 import datetime
 
-from PyRAbD_BM.BenchmarkInfo import *
+from RAbD_BM.BenchmarkInfo import *
 from tools.general import *
 from tools.path import *
 
-import PyRAbD_BM.PoolData as pool
-import PyRAbD_BM.tools as tools
+import RAbD_BM.PoolData as pool
+import RAbD_BM.tools as tools
 
 from bin import create_features_json as create_json
 from glob import glob
