@@ -12,6 +12,7 @@ from argparse import ArgumentParser
 
 from rosetta_general.DesignBreakdown import *
 from rosetta_general.features import *
+from rosetta_general.RunRosetta import RunRosetta
 
 from pymol.PyMolScriptWriter import *
 from tools.general import *
@@ -23,7 +24,8 @@ def main():
     ####################################################################################################################
 
 
-    parser = ArgumentParser("Deprecated in favor of using RunRosettaMPI to generate features.")
+    parser = ArgumentParser("Creates Features Databases for antibody design using MPI.  "
+                            "This uses RunRosettaMPI, so that it can be run locally or on a cluster.")
 
     ############################
     ## Required Options
@@ -58,31 +60,36 @@ def main():
     ## Optional
     ############################
 
-    parser.add_argument("--outdir",
-                      help = "\nOutput directory",
-                      default = "antibody_design_analysis_results")
+    #parser.add_argument("--outdir",
+    #                  help = "\nOutput directory",
+    #                  default = "antibody_design_analysis_results")
 
     parser.add_argument("--score_weights",
                       help = "Weights to use during FeaturesReporters",
                       default = "talaris2013")
 
-    parser.add_argument("--compiler",
-                        help = "Compiler.  If on mac will automatically choose clang.",
-                        default = "gcc")
+    #parser.add_argument("--compiler",
+    #                    help = "Compiler.  If on mac will automatically choose clang.",
+    #                    default = "gcc")
 
     parser.add_argument("--use_present_dbs",
                       default = False,
                       help = "Do not attempt to delete features databases present",
                       action = "store_true")
 
-    parser.add_argument("--use_mpi",
-                        default = True)
 
-    parser.add_argument("--np",
-                        default = 5,
-                        help = "Number of processors for MPI")
+
+    #parser.add_argument("--np",
+    #                    default = 5,
+    #                    help = "Number of processors for MPI")
+
+
+    run_mpi_rosetta = RunRosetta(program = "rosetta_scripts", parser = parser);
+
 
     options = parser.parse_args()
+
+    options.use_mpi = True
 
     if not options.PDBLIST and not options.indir:
         sys.exit("Cannot analyze strategy without a PDBLIST or an input directory full of PDBs")
@@ -132,16 +139,12 @@ def main():
     #### Create Features Databases ###
     if options.analysis == "all" or options.analysis == "antibody_features":
 
-        fdir= os.path.split(os.path.abspath(__file__))[0]+"/features_inputs"
-
         create_features_db(pdb_list,
                        'antibody_features',  options.compiler,
                        options.score_weights, options.out_name,
                        options.out_db_batch, options.outdir, options.use_present_dbs, "", options.mpi, options.np)
 
     if options.analysis == "all" or options.analysis == "cluster_features":
-
-        fdir= os.path.split(os.path.abspath(__file__))[0]+"/features_inputs"
 
         create_features_db(pdb_list,
                        'cluster_features',  options.compiler,

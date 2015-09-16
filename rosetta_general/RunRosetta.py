@@ -70,7 +70,7 @@ def write_queue_file(cmd, queue_dir, name):
 
 
 class RunRosetta(object):
-    def __init__(self, program = None):
+    def __init__(self, program = None, parser = None):
         """
         Base class for Running Rosetta through python.
         Mainly used for benchmarking experiments.
@@ -91,7 +91,7 @@ class RunRosetta(object):
         self.program = program
 
 
-        self._add_args()
+        self._add_args(parser)
         self._parse_args()
         self._setup_base_options()
         if self.options.json_run:
@@ -102,9 +102,13 @@ class RunRosetta(object):
 
         self._resolve_options()
 
-    def _add_args(self):
-        self.parser = argparse.ArgumentParser("This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  "
+    def _add_args(self, parser = None):
+
+        if not parser:
+            self.parser = argparse.ArgumentParser("This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  "
                                               "Relative paths are accepted.")
+        else:
+            self.parser = parser
 
         if not self.program:
             self.parser.add_argument("--program",

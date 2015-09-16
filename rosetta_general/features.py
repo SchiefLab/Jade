@@ -50,7 +50,7 @@ def create_features_db(pdb_list,
         features_command = features_command+' in:path:pdb '+indir
 
     if mpi:
-        os.system("mpiexec -np "+np+" "+features_command)
+        os.system("mpiexec -np "+np+" "+features_command + " -separate_db_per_mpi_process")
     else:
         os.system(features_command)
 

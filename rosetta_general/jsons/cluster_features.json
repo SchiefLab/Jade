@@ -1,0 +1,15 @@
+{ "program": "rosetta_scripts",
+  "xml_script": "antibody_features.xml",
+  "script_vars": {
+    "name": "ab_features",
+    "batch": "NA",
+    "score":"talaris2013"
+  },
+  "flags": [
+    "-no_output",
+    "-check_cdr_chainbreaks false",
+    "-check_cdr_pep_bond_geom false",
+    "-no_optH false",
+    "-separate_db_per_mpi_process"
+  ]
+}

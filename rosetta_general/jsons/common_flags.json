@@ -1,5 +1,6 @@
 {"logs":"logs",
   "flags":[
+    "-ignore_zero_occupancy false",
     "-ignore_unrecognized_res",
     "-pdb_comments",
     "-ex1",

@@ -49,6 +49,23 @@ class SetupRosettaOptionsGeneral(object):
     def get_indirs(self):
         return self._get_indirs()
 
+    def get_xml_script(self):
+       try:
+           return self.json_dict["xml_script"]
+       except KeyError:
+           return ""
+
+    def get_xml_var_string(self):
+        if self.get_xml_script() && self.json_dict.has_key("script_vars"):
+            pairs = self.json_dict["script_vars"]
+            var_string = " -parser:script_vars "
+            for k in pairs:
+                var_string = var_string+" "+k+"="+pairs[k]
+            return var_string
+
+        else:
+            return ""
+
     def get_base_rosetta_flag_string(self, indir_root = None):
         """
         Get the full flag string for output.  Optionally give indir_root for subclasses that require setting of different
@@ -56,6 +73,8 @@ class SetupRosettaOptionsGeneral(object):
 
         """
         s = " "
+        s = s + self.get_xml_script()
+        s = s + self.get_xml_var_string()
 
         if len(self._get_flags_files()) > 0:
             for flags_file in self._get_flags_files():
