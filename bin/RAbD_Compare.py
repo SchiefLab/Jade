@@ -1444,7 +1444,7 @@ class CompareAntibodyDesignStrategies:
             return
 
         top_n = self.top_n.get()
-        fdir= os.path.split(os.path.abspath(__file__))[0]+"/features_inputs"
+        fdir= os.path.split(os.path.abspath(__file__))[0]+"/xml_scripts"
 
         for strategy in self.strategies:
             temp_name = "temp_PDBLIST.txt"

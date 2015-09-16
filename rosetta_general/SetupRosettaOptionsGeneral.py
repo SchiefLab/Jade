@@ -3,7 +3,7 @@ import os
 import sys
 import re
 import argparse
-
+from tools.path import *
 
 
 class SetupRosettaOptionsGeneral(object):
@@ -50,13 +50,20 @@ class SetupRosettaOptionsGeneral(object):
         return self._get_indirs()
 
     def get_xml_script(self):
-       try:
-           return self.json_dict["xml_script"]
-       except KeyError:
-           return ""
+        if self.json_dict.has_key("xml_script"):
+            script =  self.json_dict["xml_script"]
+
+            #Attempt searching for xml script.  May be in in_paths:
+            if os.path.exists(get_xml_scripts_path()+"/"+script):
+                return get_xml_scripts_path()+"/"+script
+            else:
+                return script
+
+        else:
+            return ""
 
     def get_xml_var_string(self):
-        if self.get_xml_script() && self.json_dict.has_key("script_vars"):
+        if self.get_xml_script() and self.json_dict.has_key("script_vars"):
             pairs = self.json_dict["script_vars"]
             var_string = " -parser:script_vars "
             for k in pairs:
@@ -73,7 +80,7 @@ class SetupRosettaOptionsGeneral(object):
 
         """
         s = " "
-        s = s + self.get_xml_script()
+        s = s + " -parser:protocol "+self.get_xml_script()
         s = s + self.get_xml_var_string()
 
         if len(self._get_flags_files()) > 0:
@@ -113,6 +120,12 @@ class SetupRosettaOptionsGeneral(object):
     def get_program(self):
         if self.json_dict.has_key("program"):
             return self.json_dict["program"]
+        else:
+            return None
+
+    def get_db_mode(self):
+        if self.json_dict.has_key("db_mode"):
+            return self.json_dict["db_mode"]
         else:
             return None
 

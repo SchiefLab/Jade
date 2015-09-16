@@ -1,9 +1,6 @@
 <ROSETTASCRIPTS>
-	<SCOREFXNS>
-		< s weights=%%score%%/>
-	</SCOREFXNS>
 	<MOVERS>
-		<ReportToDB name=features database_name=%%name%%.%%score%%.db3 batch_description=%%batch%%>
+		<ReportToDB name=features database_name=%%name%%.db3 batch_description=%%batch%%>
 			<feature name=ResidueFeatures/>
 			<feature name=PdbDataFeatures/>
 			<feature name=CDRClusterFeatures numbering_scheme=AHO_Scheme/>

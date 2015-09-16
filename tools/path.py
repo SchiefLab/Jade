@@ -18,6 +18,11 @@ def get_feat_input_path():
     p  = os.path.split(os.path.abspath(__file__))[0]+"../rosetta_general/features_input"
     return p
 
+def get_xml_scripts_path():
+    p  = os.path.split(os.path.abspath(__file__))[0]+"../rosetta_general/xml_scripts"
+    return p
+
+
 def make_dir_if_not_exists(dir):
     if not os.path.exists(dir):
         os.mkdir(dir)

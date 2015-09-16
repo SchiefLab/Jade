@@ -1,5 +1,9 @@
 #!/usr/bin/env python
+# Jared Adolf-Bryfogle
+# Classes for running Rosetta on a cluster using pre-defined sets of options stored in Json file.
 
+# Used by itself or subclassed for benchmarking.
+# Can also use in other code by passing the parser to RunRosetta.
 
 import os
 import sys
@@ -103,101 +107,133 @@ class RunRosetta(object):
         self._resolve_options()
 
     def _add_args(self, parser = None):
-
+        """
+        Add Arguments to an Argument Parser or create a new one.
+        """
         if not parser:
             self.parser = argparse.ArgumentParser("This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  "
                                               "Relative paths are accepted.")
         else:
             self.parser = parser
 
-        if not self.program:
-            self.parser.add_argument("--program",
-                                 help = "Define the Rosetta program to use if not set in json_run")
-
-        self.parser.add_argument("--np",
-                               default = 101,
-                                 help = "Number of processors to use for MPI.  "
-                                        "Default = 101")
-
-        self.parser.add_argument("--nodes",
-                                 help = "Number of nodes to ask for.  Optional. ")
-
-        self.parser.add_argument("--ppn",
-                                 help = "Processors per node for qsub.  NTasks is np for slurm")
 
 
-        self.parser.add_argument("--nstruct",
-                                 default = 1)
-
-        self.parser.add_argument("-s",
-                                 help = "Path to a pdb file")
-
-        self.parser.add_argument("-l",
-                                 help = "Path to a list of pdb files")
-
-        self.parser.add_argument("--outdir", "-o",
-                                 default = "decoys",
-                                 help = "Outpath.  "
-                                        "Default = 'pwd/decoys' ")
-
-        self.parser.add_argument("--compiler", "-c",
-                                 default = "gcc",
-                                 help = "Set the compiler used.  Will set clang automatically for macos. "
-                                        "Default = 'gcc' ",
-                                 choices = ["gcc", "clang"])
-
-
-        self.parser.add_argument("--job_manager",
+        job_setup = self.parser.add_argument_group("Job Setup" )
+        job_setup.add_argument("--job_manager",
                                default="slurm",
                                help="Job Manager to launch job. "
                                     "Default = 'slurm ' ",
                                choices = ["slurm","qsub","local"] )
 
 
-        self.parser.add_argument("--job_manager_opts",
+        job_setup.add_argument("--job_manager_opts",
                                  help = "Extra options for the job manager, such as queue or processor requests",
                                  default = "")
 
-        self.parser.add_argument("--machine_file",
+
+        job_setup.add_argument("--np",
+                               default = 101,
+                                 help = "Number of processors to use for MPI.  "
+                                        "Default = 101")
+
+        job_setup.add_argument("--nodes",
+                                 help = "Number of nodes to ask for.  Optional. ")
+
+        job_setup.add_argument("--ppn",
+                                 help = "Processors per node for qsub.  NTasks is np for slurm")
+
+
+
+        job_setup.add_argument("--nstruct",
+                                 default = 1)
+
+        job_setup.add_argument("--compiler", "-c",
+                                 default = "gcc",
+                                 help = "Set the compiler used.  Will set clang automatically for macos. "
+                                        "Default = 'gcc' ",
+                                 choices = ["gcc", "clang"])
+
+        job_setup.add_argument("--machine_file",
                                  help = "Optional machine file for passing to MPI")
 
-        self.parser.add_argument("--print_only",
-                                 help = "Do not actually run anything.  Just print setup for review.",
-                                 default = False,
-                                 action = "store_true")
-
-
-        self.parser.add_argument("--json_base",
-                               default = os.path.dirname(os.path.abspath(__file__))+"/jsons/common_flags.json",
-                               help = "JSON file for setting up base paths/etc. for the cluster."
-                                      "Default = 'file_dir/jsons/common_flags.json' ")
-
-        self.parser.add_argument("--json_run",
-                                help = "JSON file for specific Rosetta run.")
-
-        self.parser.add_argument("--root",
-                                 help = "Set the root directory.  "
-                                        "Default = pwd.  "
-                                        "(Benchmarking: Override any set in json_base.)")
-
-        self.parser.add_argument("--job_name",
+        job_setup.add_argument("--job_name",
                                 default = "rosetta_run",
                                 help = "Set the job name used for mpi_tracer_to_file dir and queue.  "
                                        "Default = 'rosetta_run'.  "
                                        "(Benchmarking: Override any set in json_base.)",)
 
 
-        self.parser.add_argument("--extra_options", "-e",
+
+        protocol_setup = self.parser.add_argument_group("Protocol Setup")
+
+        if not self.program:
+            protocol_setup.add_argument("--program",
+                                 help = "Define the Rosetta program to use if not set in json_run")
+
+        protocol_setup.add_argument("-s",
+                                 help = "Path to a pdb file")
+
+        protocol_setup.add_argument("-l",
+                                 help = "Path to a list of pdb files")
+
+        protocol_setup.add_argument("--outdir", "-o",
+                                 default = "decoys",
+                                 help = "Outpath.  "
+                                        "Default = 'pwd/decoys' ")
+
+
+        protocol_setup.add_argument("--json_base",
+                               default = os.path.dirname(os.path.abspath(__file__))+"/jsons/common_flags.json",
+                               help = "JSON file for setting up base paths/etc. for the cluster."
+                                      "Default = 'file_dir/jsons/common_flags.json' ")
+
+        protocol_setup.add_argument("--json_run",
+                                help = "JSON file for specific Rosetta run.  Not required.")
+
+        protocol_setup.add_argument("--root",
+                                 help = "Set the root directory.  "
+                                        "Default = pwd.  "
+                                        "(Benchmarking: Override any set in json_base.)")
+
+        protocol_setup.add_argument("--extra_options", "-e",
                                  nargs = '*',
                                  help = "Extra Rosetta options.  "
                                         "Specify like: cdr_instructions=my_file other_option=setting.  "
                                         "Note NO - charactor. "
                                         "Booleans do not need an = sign.")
 
-        self.parser.add_argument("--one_file_mpi",
+        protocol_setup.add_argument("--one_file_mpi",
                                  help = "Don't setup mpi_tracer_to_file. ",
                                  default = False,
                                  action = "store_true")
+
+        protocol_setup.add_argument("--print_only",
+                                 help = "Do not actually run anything.  Just print setup for review.",
+                                 default = False,
+                                 action = "store_true")
+
+        db_group = self.parser.add_argument_group("Relational Databases", "Options for Rosetta Database input and output.  Use for features or for inputting and output structures as databases")
+
+        db_group.add_argument("--db_mode",
+                            help = "Set the mode for Rosetta to use if using a database.  "
+                                      "Features will be output to a database.  "
+                                      "If not sqlite3, must build Rosetta with extras.  "
+                                      "If any post-processing is required, such as combining sqlite3 dbs, will do this.  "
+                                      "Default DB mode for features is sqlite3.  ",
+                            choices = ["sqlite3", "mysql", "postgres"])
+
+        db_group.add_argument("--db_name",
+                            help = "In or Out database name")
+
+        db_group.add_argument("--db_in",
+                              help = "Use an input database",
+                              default = False,
+                              action = "store_true")
+
+        db_group.add_argument("--db_out",
+                              help = "Use an output database",
+                              default = False,
+                              action = "store_true")
 
     def _parse_args(self):
         self.options = self.parser.parse_args()
@@ -287,12 +323,22 @@ class RunRosetta(object):
             elif self.base_options.get_prgram():
                 self.program = self.base_options.get_program()
 
+        def _set_db_mode():
+            if self.options.db_mode:
+                pass
+            elif self.extra_options.get_db_mode():
+                self.options.db_mode = self.extra_options.get_db_mode()
+            elif self.base_options.get_db_mode():
+                self.options.db_mode = self.base_options.get_db_mode()
+
         #Resolve options overrides
         _set_nstruct()
         #_set_exp()
+        _set_db_mode()
         _set_machine_file()
         _set_job_manager_opts()
         _setup_prgram()
+
 
     def get_root(self):
 
@@ -388,6 +434,18 @@ class RunRosetta(object):
         #if self.get_out_prefix(*args, **kwargs):
         #    s = s + " -out:prefix "+self.get_out_prefix(*args, **kwargs)
 
+        #DB Mode
+        if self.options.db_mode:
+            s = s + " -inout:dbms:mode "+self.options.db_mode
+
+        if self.options.db_name:
+            s = s + " -inout:dbms:database_name " +self.options.db_name
+
+        if self.options.db_in:
+            s = s + " -in:use_database"
+
+        if self.options.db_out:
+            s = s + " -ou:use_database"
 
         #Nstruct
         s = s + " -nstruct " + str(self.options.nstruct)
