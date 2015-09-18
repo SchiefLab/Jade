@@ -129,7 +129,8 @@ class RunRosetta(object):
 
 
         job_setup.add_argument("--job_manager_opts",
-                                 help = "Extra options for the job manager, such as queue or processor requests",
+                                 help = "Extra options for the job manager, such as queue or processor requests"
+                                        "Remove double dashes. Specify like: -p imperial exlusive.",
                                  default = [],
                                  nargs = "*")
 
