@@ -11,7 +11,6 @@ import sys
 import re
 from collections import defaultdict
 import sqlite3
-from optparse import OptionParser
 
 import create_features_json as json_creator
 from RAbD_BM.BenchmarkInfo import *
@@ -58,6 +57,9 @@ class Listbox(Listbox):
             self.config(width=width+w)
 
 class AnalyzeBenchmarksGUI:
+    """
+    Deprecated
+    """
     def __init__(self, analyzer, nstruct_check, add_rec_data, override_check, get_ensemble_data, out_name):
         self.base_dir = os.path.split(os.path.abspath(__file__))[0]
         self.current_dir = self.base_dir
@@ -516,7 +518,7 @@ class CompareBenchmarks:
             print "Databases should end with .db or .db3 extension.  Naming format of databases: benchmark.features_type.scorefunction.db"
             return
 
-        dbs = glob.glob(self.main_dir.get()+"/databases/*.db3*")
+        dbs = glob.glob(self.main_dir.get()+"/databases/*.db*")
         if len(dbs) == 0:
             print "Could not find any databases to use for analysis.  Please make sure databases are in "+self.main_dir.get()+"/databases"
             print "Databases should end with .db or .db3 extension.  Naming format of databases: benchmark.features_type.scorefunction.db"

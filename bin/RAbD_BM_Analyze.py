@@ -19,6 +19,7 @@ import datetime
 from RAbD_BM.BenchmarkInfo import *
 from tools.general import *
 from tools.path import *
+from rosetta_general.RunRosetta import *
 
 import RAbD_BM.PoolData as pool
 import RAbD_BM.tools as tools
@@ -63,86 +64,98 @@ class AnalyzeBenchmarks:
         ####################################################################################################################
     
     
-        parser = ArgumentParser()
+        parser = ArgumentParser("This Program runs features analysis on the given benchmark, and calculates recoveries, risk ratios, and any other metrics needed."
+                                "Will run MPI based Features Reporters by default locally.")
     
         ############################
         ## Required Options
         ############################
-        parser.add_argument("--decoy_dir",
+        general_opts = parser.add_argument_group("General RAbD BM Options")
+        general_opts.add_argument("--decoy_dir",
                           help = "rel path to where decoys exist for benchmark")
     
-    
-        parser.add_argument("--skip_antibody_features",
+
+        general_opts.add_argument("--skip_antibody_features",
                           help = "Skip output of the AntibodyFeatures db (Recoveries are not calculated for the AntibodyFeatures runs.",
                           default = False,
                           action = "store_true")
     
-        parser.add_argument("--skip_cluster_features",
+        general_opts.add_argument("--skip_cluster_features",
                           help = "Skip output of the cluster features db (which includes calculating recoveries)",
                           default = False,
                           action = "store_true")
     
-        parser.add_argument("--paper_ab_db",
+        general_opts.add_argument("--paper_ab_db",
                           help = "Used paper ab db for analysis",
                           default = True)
     
         #######################
         ## DB input options
         #######################
-    
-        parser.add_argument("--bm_set",
+
+        general_opts.add_argument("--bm_set",
                           default="new_20",
                           help = "The benchmark set of the input databases.  Will use this native to fine the correct input databases for recovery comparisons.")
     
-        parser.add_argument("--bm_set_db_dir",
+        general_opts.add_argument("--bm_set_db_dir",
                           default="databases/natives",
                           help = "Path to the set of native databases for recovery.")
-    
-    
+
+
         ############################
         ## Single experiment options
         ############################
-        parser.add_argument("--full_name",
+        general_opts.add_argument("--full_name",
                           help = "Full name of the experiment: $exp.$pdbs.$type.$benchmark")
-    
-        parser.add_argument("--final_name",
+
+        general_opts.add_argument("--final_name",
                           help = "Final name used to report data: docked_relax_top")
-    
-    
+
+
     
     
         #######################
         ## Not Required options
         #######################
-        parser.add_argument("--scorefunction",
+        general_opts.add_argument("--scorefunction",
                           help = "The scorefunction used for features reporters and analysis",
                           default = "talaris2013")
     
-        parser.add_argument("--exp_batch",
+        general_opts.add_argument("--exp_batch",
                           help = "Name of the batch to use for databases",
                           default = "FinalPaperBM.8.2015")
+
     
-    
-    
-        parser.add_argument("--get_ensemble_data",
+        general_opts.add_argument("--get_ensemble_data",
                           help = "Attempt to get data for an ensemble as well",
                           default = False,
                           action = "store_true")
     
-        parser.add_argument("--check_nstruct",
+        general_opts.add_argument("--check_nstruct",
                           help = "Make sure all decoys are present",
                           default = False,
                           action = "store_true")
     
-        parser.add_argument("--delete_dbs",
+        general_opts.add_argument("--delete_dbs",
                           help = "Delete output databases if already present instead of skipping them.",
                           default = False,
                           action = "store_true")
-    
-        parser.add_argument("--compiler",
-                          default = "clang")
 
-        self.options = parser.parse_args();
+
+        self.run_mpi_rosetta = RunRosetta(program = "rosetta_scripts", parser = parser)
+        self.run_mpi_rosetta.options.job_manager="local"
+
+        self.options = parser.parse_args()
+
+    def _get_program(self):
+        """
+        Get the set program
+        """
+
+        if get_platform() == 'macos':
+            self.options.compiler = 'clang'
+
+        return "rosetta_scripts.mpi."+get_platform() + self.options.compiler+"release"
 
     def _setup_benchmark_from_options(self):
         BM_info = BenchmarkInfo()
@@ -218,26 +231,54 @@ class AnalyzeBenchmarks:
         3) Analyzes the features database for recovery by running pool data.
         """
 
-        def run_features(features_type):
-            db_path = self.base_dir+"/databases/"+benchmark.full_name+".top."+features_type+"."+benchmark.scorefunction+".db3"
-            print db_path
-            #os.remove(db_path)
-            features_cmd = "./make_pdblists_run_features.sh "+benchmark.decoy_dir+" "+benchmark.full_name+" "+features_type+" "+benchmark.scorefunction+" "+benchmark.exp_batch + " "+repr(get_ensemble_data)+" "+self.extension
+        def create_list(name, pdbs):
+            OUT = open(benchmark.decoy_dir+"/"+name)
+            for pdb in pdbs:
+                if re.search("initial_benchmark_perturbation", pdb) or re.search("excn", pdb):
+                    continue
+                OUT.write(pdb+"\n")
+            OUT.close()
 
+        def run(features_type):
+            db_path = self.run_mpi_rosetta.options.outdir+"/"+self.run_mpi_rosetta.options.db_name
             if not os.path.exists(db_path):
                 print "Making PDBLists and running Features Reporters for "+features_type
-                print features_cmd
-                os.system(features_cmd)
-
+                self.run_mpi_rosetta.run()
             elif self.options.delete_dbs:
-                os.remove(db_path)
-
                 print "Making PDBLists and running Features Reporters for "+features_type
-                print features_cmd
-                os.system(features_cmd)
+                os.remove(db_path)
+                self.run_mpi_rosetta.run()
             else:
                 print db_path+" exists...skipping"
 
+        def run_features(features_type):
+            in_dir = benchmark.decoy_dir
+
+            all_files = glob.glob(in_dir+"/"+benchmark.full_name+"*.pdb*")
+            all_ens_files = glob.glob(in_dir+"/ensemble*"+benchmark.full_name+"*.pdb*")
+
+            all_list = create_list(benchmark.full_name+".top."+features_type, all_files)
+            all_ens_list = create_list(benchmark.full_name+".ens."+features_type, all_ens_files)
+
+            #Top
+            self.run_mpi_rosetta.set_json_run(features_type+".json")
+            self.run_mpi_rosetta.options.l = all_list
+            self.run_mpi_rosetta.options.outdir = self.base_dir+"/databases"
+            self.run_mpi_rosetta.options.db_name = benchmark.full_name+".top."+features_type+"."+benchmark.scorefunction+".db"
+            run(features_type)
+
+            #Ens
+            if get_ensemble_data:
+                self.run_mpi_rosetta.set_json_run(features_type+".json")
+                self.run_mpi_rosetta.options.l = all_ens_list
+                self.run_mpi_rosetta.options.outdir =  self.base_dir+"/databases"
+                self.run_mpi_rosetta.options.db_name = benchmark.full_name+".ens."+features_type+"."+benchmark.scorefunction+".db"
+                run(features_type)
+
+
+
+            #os.remove(db_path)
+            db_path = self.run_mpi_rosetta.options.outdir+"/"+benchmark.full_name+".top."+features_type+"."+benchmark.scorefunction+".db"
             if features_type == "cluster_features":
                 self._calculate_recoveries(db_path, benchmark)
                 self._pool_data(db_path, benchmark)
@@ -245,11 +286,7 @@ class AnalyzeBenchmarks:
 
                 if get_ensemble_data:
                     print "Calculating ensemble data"
-                    db_path = self.base_dir+"/databases/"+benchmark.full_name+".ens.cluster_features."+benchmark.scorefunction
-
-                    if os.path.exists(db_path):
-                        os.remove(db_path)
-
+                    db_path = self.run_mpi_rosetta.options.outdir +"/"+benchmark.full_name+".ens."+features_type+"."+benchmark.scorefunction+".db"
                     new_benchmark = copy.deepcopy(benchmark)
                     new_benchmark.final_name = benchmark.final_name+".ens"
 

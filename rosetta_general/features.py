@@ -58,7 +58,9 @@ def create_features_db(pdb_list,
         pass
         #Need to combine MPI databases, move them to outdir, and remove the temp directory.
 
-def rm_features_db(outdir, out_name, score_weights, xml_name):
-    db_name = outdir+'/'+out_name+'.'+xml_name+'.'+score_weights+".db3"
-    if os.path.exists(db_name):
-        os.remove(db_name)
+def rm_features_dbs(outdir, out_names):
+
+    for out_name in out_names:
+        db_name = outdir+'/'+out_name
+        if os.path.exists(db_name):
+            os.remove(db_name)

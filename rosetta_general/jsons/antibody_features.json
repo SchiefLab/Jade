@@ -1,9 +1,7 @@
 { "program": "rosetta_scripts",
-  "xml_script": "features_inputs/antibody_features.xml",
+  "xml_script": "antibody_features.xml",
   "script_vars": {
-    "name": "ab_features",
-    "batch": "NA",
-    "pack_tegether": "false",
+    "pack_together": "false",
     "pack_separated": "true"
   },
   "db_mode": "sqlite3",

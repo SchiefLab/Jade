@@ -29,7 +29,7 @@ p = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append(p); #Allows all modules to use all other modules, without needing to update pythonpath
 
 #PyIgD
-import bin.RAbD_Analyze as analyze_strat
+import bin.RAbD_FeatDB as analyze_strat
 from sequence.ClustalRunner import *
 from tools.StatementCreator import *
 from antibody.cdr_data.CDRData import *

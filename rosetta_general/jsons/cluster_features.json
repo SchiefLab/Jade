@@ -1,12 +1,10 @@
 { "program": "rosetta_scripts",
   "xml_script": "cluster_features.xml",
   "script_vars": {
-    "name": "ab_features",
-    "batch": "NA",
-    "pack_tegether": "false",
+    "pack_together": "false",
     "pack_separated": "true"
   },
-  "db_mode":"sqlite3",
+  "db_mode": "sqlite3",
   "flags": [
     "-no_output",
     "-check_cdr_chainbreaks false",

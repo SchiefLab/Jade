@@ -39,30 +39,32 @@ class BenchmarkRAbD(RunRosetta):
         self.current_mintype = None
         self.current_l_chain = None
 
-    def _add_args(self):
-        RunRosetta._add_args(self)
+    def _add_args(self, parser = None):
+        RunRosetta._add_args(self, parser)
 
 
         ############################ RAbD Specific Options ################################
 
-        self.parser.add_argument("--outer_cycle_rounds")
+        rabd_options = self.parser.add_argument_group("RAbD Benchmark Options", "Options specific for RAbD Benchmarking")
 
-        self.parser.add_argument("--json_rabd",
+        rabd_options.add_argument("--outer_cycle_rounds")
+
+        rabd_options.add_argument("--json_rabd",
                                help = "JSON file for setting up specific benchmark")
 
-        self.parser.add_argument("--mintypes",
+        rabd_options.add_argument("--mintypes",
                                default = "pack,min,relax")
 
-        self.parser.add_argument("--paper_ab_db",
+        rabd_options.add_argument("--paper_ab_db",
                                default = True)
 
-        self.parser.add_argument("--with_antigen",
+        rabd_options.add_argument("--with_antigen",
                                default = True)
 
-        self.parser.add_argument("--dataset",
+        rabd_options.add_argument("--dataset",
                                default = "new_20")
 
-        self.parser.add_argument("--dock",
+        rabd_options.add_argument("--dock",
                                default = False,
                                action = "store_true")
 

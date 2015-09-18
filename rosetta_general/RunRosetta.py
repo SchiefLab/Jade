@@ -10,6 +10,7 @@ import sys
 import re
 import argparse
 from tools.general import get_platform
+from tools.path import *
 
 from rosetta_general.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
 
@@ -98,6 +99,7 @@ class RunRosetta(object):
         self._add_args(parser)
         self._parse_args()
         self._setup_base_options()
+
         if self.options.json_run:
             extra_options = SetupRosettaOptionsGeneral(self.options.json_run)
             self._set_extra_options(extra_options)
@@ -223,7 +225,12 @@ class RunRosetta(object):
                             choices = ["sqlite3", "mysql", "postgres"])
 
         db_group.add_argument("--db_name",
-                            help = "In or Out database name")
+                              help = "In or Out database name",
+                              default = "features.db")
+
+        db_group.add_argument("--db_batch",
+                              help = "Batch of structures.",
+                              default ="feat")
 
         db_group.add_argument("--db_in",
                               help = "Use an input database",
@@ -252,6 +259,8 @@ class RunRosetta(object):
             sys.exit("No Base Json Given.  This is required for general cluster settings.")
         self.base_options = SetupRosettaOptionsGeneral(self.options.json_base)
 
+    def set_json_run(self, json_run):
+        self._set_extra_options(SetupRosettaOptionsGeneral( json_run))
     def _set_extra_options(self, extra_options):
         """
         Set extra options (derived SetupRosettaOptionsGeneral or baseclass) for benchmarking runs.
@@ -260,6 +269,7 @@ class RunRosetta(object):
         self.extra_options = extra_options
         if not isinstance(extra_options, SetupRosettaOptionsGeneral):
             sys.exit()
+        self._resolve_options()
 
     def _get_extra_rosetta_options_string(self):
         if not self.options.extra_options:
@@ -315,12 +325,12 @@ class RunRosetta(object):
             elif self.base_options.get_job_manager_opts():
                 self.options.machine_file = self.base_options.get_job_manager_opts()
 
-        def _setup_prgram():
-            if self.options.program:
+        def _setup_program():
+            if hasattr(self.options, "program") and self.options.program:
                 self.program = self.options.program
             elif self.extra_options.get_program():
                 self.program = self.extra_options.get_program()
-            elif self.base_options.get_prgram():
+            elif self.base_options.get_program():
                 self.program = self.base_options.get_program()
 
         def _set_db_mode():
@@ -331,13 +341,18 @@ class RunRosetta(object):
             elif self.base_options.get_db_mode():
                 self.options.db_mode = self.base_options.get_db_mode()
 
+        def _clean_up_db_name():
+            if not re.search(".db", self.options.db_name):
+                self.options.db_name = self.options.db_name+".db"
+
         #Resolve options overrides
         _set_nstruct()
         #_set_exp()
         _set_db_mode()
+        _clean_up_db_name()
         _set_machine_file()
         _set_job_manager_opts()
-        _setup_prgram()
+        _setup_program()
 
 
     def get_root(self):
@@ -434,18 +449,12 @@ class RunRosetta(object):
         #if self.get_out_prefix(*args, **kwargs):
         #    s = s + " -out:prefix "+self.get_out_prefix(*args, **kwargs)
 
-        #DB Mode
-        if self.options.db_mode:
-            s = s + " -inout:dbms:mode "+self.options.db_mode
 
-        if self.options.db_name:
-            s = s + " -inout:dbms:database_name " +self.options.db_name
 
-        if self.options.db_in:
-            s = s + " -in:use_database"
 
-        if self.options.db_out:
-            s = s + " -ou:use_database"
+
+
+
 
         #Nstruct
         s = s + " -nstruct " + str(self.options.nstruct)
@@ -461,6 +470,35 @@ class RunRosetta(object):
         #For these benchmarks, there are only a single root directory.
         s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options.get_root())
 
+        #DB Mode
+        if self.options.db_in:
+            s = s + " -in:use_database"
+            if not self.options.db_mode:
+                sys.exit("Please select the database mode you wish to use.")
+
+        if self.options.db_out:
+            s = s + " -out:use_database"
+            if not self.options.db_mode:
+                sys.exit("Please select the database mode you wish to use. ")
+
+            if self.options.db_mode == "sqlite3" and (not re.search('separate_db_per_mpi_process', s)) :
+                s = s + " -separate_db_per_mpi_process"
+
+        if self.options.db_mode:
+            s = s + " -inout:dbms:mode "+self.options.db_mode
+
+        if self.options.db_name:
+            s = s + " -inout:dbms:database_name " +self.options.db_name
+
+
+        if re.search("features", self.base_options.get_xml_script() + self.extra_options.get_xml_script()):
+
+            if self.options.db_name:
+                s = s +" -parser:script_vars name="+self.options.db_name
+            if self.options.db_batch:
+                s = s +" -parser:script_vars batch="+self.options.db_batch
+
+
         #Input decoys
         if self.options.l:
 
@@ -468,7 +506,8 @@ class RunRosetta(object):
             # Change this to be smarter or add an option if this is a problem.
 
             p = os.path.dirname(self.options.l)
-            s = s+ " -in:path "+p
+            if p != "":
+                s = s+ " -in:path "+p
 
             s = s+ " -l "+self.options.l
 
@@ -508,8 +547,11 @@ class RunRosetta(object):
         else:
             cmd = cmd + " "+ cmd_string
 
-
-
+        if self.options.db_mode == "sqlite3":
+            cmd = cmd + "\n"
+            cmd = cmd + "cd "+self.options.outdir+"\n"
+            cmd = cmd + "bash "+ get_rosetta_features_root()+"/sample_sources/merge.sh "+self.options.db_name + " "+self.options.db_name+"_*\n"
+            cmd = cmd + "cd -"
         return cmd
 
 

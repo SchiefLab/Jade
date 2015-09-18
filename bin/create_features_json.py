@@ -6,7 +6,7 @@
 #I am just really sick of doing this by hand.
 #Example Cmd-line:  python create_features_json.py --database databases/baseline_comparison.txt --scripts cluster
 
-from optparse import OptionParser, IndentedHelpFormatter
+from argparse import ArgumentParser
 import os
 import sys
 import json
@@ -105,7 +105,8 @@ class JsonCreator:
     A nicer implementation would be a GUI for running the FeaturesReporter scripts.
     """
     def __init__(self, out_path, script_type):
-        self.script_types = ["antibody", "interface", "cluster", "antibody_min_hbond_analysis", "antibody_no_hbond_analysis"]
+        self.out_path = out_path
+        self.script_types = ["antibody", "interface", "cluster", "antibody_minimal","antibody_min_hbond_analysis", "antibody_no_hbond_analysis"]
         if not script_type in self.script_types:
             sys.exit(script_type +" unrecognized.  Available JSON script types are: "+repr(self.script_types))
 
@@ -136,6 +137,10 @@ class JsonCreator:
 
     def run_json(self):
         run_features_json(self.json_path)
+        if os.path.exists("build"):
+            c = glob.glob("build/*")
+            for d in c:
+                os.system("mv "+d+" "+self.out_path)
 
 
 def run_features_json(json_path):
@@ -150,67 +155,71 @@ def run_features_json(json_path):
 if __name__ == "__main__":
 
 
-    parser = OptionParser()
+    parser = ArgumentParser()
 
-    parser.add_option("--databases", "-d",
-        help = "Path to database file.  2 - 3 columns.  "
-               "db_name, short_name, ref keyword if the reference database. One entry per line. Comments ok. "
+    parser.add_argument("--databases", "-l",
+        help = "List of dbs: db_name,short_name,ref keyword if the reference databaseSeparated by white space. ",
+        default = [],
+        nargs = "*",
+
+
     )
 
-    parser.add_option("--script", "-s",
-        help = "Script type.  Options are cluster, antibody, interface.  Will setup the appropriate output formats and R scripts"
+    parser.add_argument("--script", "-s",
+        help = "Script type.  Will setup the appropriate output formats and R scripts",
+        default = "antibody_minimal",
+        choices = ["cluster", "antibody", "interface", "antibody_minimal"]
     )
 
-    parser.add_option("--db_path", "-p",
+    parser.add_argument("--db_path", "-p",
         help = "Path to databases.  Default is pwd/databases",
         default=os.getcwd()+"/databases")
 
-    parser.add_option("--out_path", "-o",
+    parser.add_argument("--outdir", "-o",
         help = "Where to put the result of the analysis scripts.  Currently unsupported by the features framework.",
-        default=os.getcwd())
+        default=os.getcwd()+"/plots")
 
-    parser.add_option("--out_name", "-n",
+    parser.add_argument("--outname", "-n",
         help = "Output file name of json file",
-        default = "local_json.json" )
+        default = "local_json_compare_ss.json" )
 
-    parser.add_option("--add_comparison_to_this_json", "-a",
-        help = "Add all this data as another sample source comparison to passed in json file path. Untested")
+    parser.add_argument("--add_comparison_to_this_json", "-a",
+        help = "Add all this data to this json as more sample sources.")
 
-    (options, args) = parser.parse_args(sys.argv[1:])
+    parser.add_argument("--run", "-r",
+        help = "Go ahead and run compare_sample_sources.R.  Must be in path!!",
+        default = False,
+        action = "store_true")
 
-    if not os.path.exists(options.databases):
-        sys.exit("Database file does not exist!!")
+    options = parser.parse_args()
+
+    if not options.databases:
+        sys.exit("No databases given!!")
 
     if not os.path.exists(options.db_path):
-        sys.exit("SQLITE3 database path does not exist!!")
+        options.db_path = os.getcwd()
 
-    script_types = ["cluster", "antibody", "interface"]
+    if not os.path.exists(options.outdir):
+        os.mkdir(options.outdir)
 
-    if not options.scripts in script_types:
-        sys.exit("Unrecognized script type. Options are: "+repr(script_types))
+    json_creator = JsonCreator(options.outdir, options.script)
 
+    for db in options.databases:
+        dbSP = db.split(',')
 
-    json_creator = JsonCreator(options.out_path, options.script)
-
-    INFILE = open(options.databases, "r")
-    for line in INFILE:
-
-        line = line.strip()
-        if not line: continue
-        if line[0] == "#" or line[0] == " ": continue
-
-        lineSP = line.split()
         ref = False
-        if len(lineSP) == 3 and lineSP[2] == "ref": ref = True
-
-        db_path = options.db_path+"/"+lineSP[0]; id= lineSP[1]
-
+        if len(dbSP) == 3 and dbSP[2] == "ref": ref = True
+        db_path = options.db_path+"/"+dbSP[0]; id= dbSP[1]
         json_creator.add_sample_source_info(db_path, id, ref)
-        #print repr(json_dict)
 
-    INFILE.close()
+    if options.add_comparison_to_this_json:
+        json_creator.add_current_sample_sources_to_json_dict(options.add_comparison_to_this_json)
 
-    json_creator.add_current_sample_sources_to_json_dict(options.add_comparison_to_this_json)
-    json_creator.save_json(options.out_path)
+    if not re.search("json", options.outname): options.outname = options.outname+".json"
+
+    json_creator.save_json(options.outdir+"/"+options.outname)
+
+    if options.run:
+        json_creator.run_json()
 
     print "Complete"

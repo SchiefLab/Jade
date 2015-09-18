@@ -15,11 +15,11 @@ def get_rosetta_features_root():
     return os.getenv('ROSETTA3_DB')+"/../tests/features"
 
 def get_feat_input_path():
-    p  = os.path.split(os.path.abspath(__file__))[0]+"../rosetta_general/features_input"
+    p  = os.path.split(os.path.abspath(__file__))[0]+"/../rosetta_general/features_input"
     return p
 
 def get_xml_scripts_path():
-    p  = os.path.split(os.path.abspath(__file__))[0]+"../rosetta_general/xml_scripts"
+    p  = os.path.split(os.path.abspath(__file__))[0]+"/../rosetta_general/xml_scripts"
     return p
 
 

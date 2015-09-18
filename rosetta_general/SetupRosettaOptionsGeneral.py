@@ -80,7 +80,9 @@ class SetupRosettaOptionsGeneral(object):
 
         """
         s = " "
-        s = s + " -parser:protocol "+self.get_xml_script()
+
+        if self.get_xml_script():
+            s = s + " -parser:protocol "+self.get_xml_script()
         s = s + self.get_xml_var_string()
 
         if len(self._get_flags_files()) > 0:
