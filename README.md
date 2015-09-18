@@ -27,59 +27,82 @@ Set the job manager using the option <code>--job_manager</code>. Current options
 
 Be sure to set <code>--np</code> and <code>--nstruct</code> (if not set in flags files or extra_options)
 
-If you think a GUI would be useful for this, let me know!
+Relational Database support has been added.  See database section.  If using sqlite3, it will automatically combine the databases at the end of the run.  Very useful for running antibody_features reporters.  
 
+If you think a GUI would be useful for this, let me know!
 See below for the current full help of the program:
 
 
+
 ```
-usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub. in
-       Relative paths are accepted.
-       
-       [-h] [--program PROGRAM] [--np NP] [--nodes NODES] [--ppn PPN]
-       [--nstruct NSTRUCT] [-s S] [-l L] [--outdir OUTDIR]
-       [--compiler {gcc,clang}] [--job_manager {slurm,qsub,local}]
-       [--job_manager_opts JOB_MANAGER_OPTS] [--machine_file MACHINE_FILE]
-       [--print_only] [--json_base JSON_BASE] [--json_run JSON_RUN]
-       [--root ROOT] [--job_name JOB_NAME]
-       [--extra_options [EXTRA_OPTIONS [EXTRA_OPTIONS ...]]] [--one_file_mpi]
+usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  Relative paths are accepted.
+       [-h] [--job_manager {slurm,qsub,local}]
+       [--job_manager_opts [JOB_MANAGER_OPTS [JOB_MANAGER_OPTS ...]]]
+       [--np NP] [--nodes NODES] [--ppn PPN] [--nstruct NSTRUCT]
+       [--compiler {gcc,clang}] [--machine_file MACHINE_FILE]
+       [--job_name JOB_NAME] [--program PROGRAM] [-s S] [-l L]
+       [--outdir OUTDIR] [--json_base JSON_BASE] [--json_run JSON_RUN]
+       [--root ROOT] [--extra_options [EXTRA_OPTIONS [EXTRA_OPTIONS ...]]]
+       [--one_file_mpi] [--print_only] [--db_mode {sqlite3,mysql,postgres}]
+       [--db_name DB_NAME] [--db_batch DB_BATCH] [--db_in] [--db_out]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --program PROGRAM     Define the Rosetta program to use if not set in
-                        json_run
-  --np NP               
-  --nodes NODES         
+
+Job Setup:
+  --job_manager {slurm,qsub,local}
+                        Job Manager to launch job. Default = 'slurm '
+  --job_manager_opts [JOB_MANAGER_OPTS [JOB_MANAGER_OPTS ...]]
+                        Extra options for the job manager, such as queue or
+                        processor requests
+  --np NP               Number of processors to use for MPI. Default = 101
+  --nodes NODES         Number of nodes to ask for. Optional.
   --ppn PPN             Processors per node for qsub. NTasks is np for slurm
   --nstruct NSTRUCT
-  -s S                  Path to a pdb file.
-  -l L                  Path to a list of pdb files
-  --outdir OUTDIR, -o OUTDIR
-                        Outpath. Default = 'pwd/decoys'
   --compiler {gcc,clang}, -c {gcc,clang}
                         Set the compiler used. Will set clang automatically
                         for macos. Default = 'gcc'
-  --job_manager {slurm,qsub,local}
-                        Job Manager to launch job. Default = 'slurm '
-  --job_manager_opts JOB_MANAGER_OPTS
-                        Extra options for the job manager, such as queue or
-                        processor requests
   --machine_file MACHINE_FILE
                         Optional machine file for passing to MPI
-  --print_only          Do not actually run anything. Just print setup for
-                        review.
+  --job_name JOB_NAME   Set the job name used for mpi_tracer_to_file dir and
+                        queue. Default = 'rosetta_run'. (Benchmarking:
+                        Override any set in json_base.)
+
+Protocol Setup:
+  --program PROGRAM     Define the Rosetta program to use if not set in
+                        json_run
+  -s S                  Path to a pdb file
+  -l L                  Path to a list of pdb files
+  --outdir OUTDIR, -o OUTDIR
+                        Outpath. Default = 'pwd/decoys'
   --json_base JSON_BASE
                         JSON file for setting up base paths/etc. for the
                         cluster.Default = 'file_dir/jsons/common_flags.json'
-  --json_run JSON_RUN   JSON file for specific Rosetta run.
-  --root ROOT           Set the root directory. Default = pwd.
-  --job_name JOB_NAME   Set the job name used for mpi_tracer_to_file dir and
-                        queue. Default = 'rosetta_run'. 
+  --json_run JSON_RUN   JSON file for specific Rosetta run. Not required.
+  --root ROOT           Set the root directory. Default = pwd. (Benchmarking:
+                        Override any set in json_base.)
   --extra_options [EXTRA_OPTIONS [EXTRA_OPTIONS ...]], -e [EXTRA_OPTIONS [EXTRA_OPTIONS ...]]
                         Extra Rosetta options. Specify like:
                         cdr_instructions=my_file other_option=setting. Note NO
                         - charactor. Booleans do not need an = sign.
   --one_file_mpi        Don't setup mpi_tracer_to_file.
+  --print_only          Do not actually run anything. Just print setup for
+                        review.
+
+Relational Databases:
+  Options for Rosetta Database input and output. Use for features or for
+  inputting and output structures as databases
+
+  --db_mode {sqlite3,mysql,postgres}
+                        Set the mode for Rosetta to use if using a database.
+                        Features will be output to a database. If not sqlite3,
+                        must build Rosetta with extras. If any post-processing
+                        is required, such as combining sqlite3 dbs, will do
+                        this. Default DB mode for features is sqlite3.
+  --db_name DB_NAME     In or Out database name
+  --db_batch DB_BATCH   Batch of structures.
+  --db_in               Use an input database
+  --db_out              Use an output database
 
 ```
 
