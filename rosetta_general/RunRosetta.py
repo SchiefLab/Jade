@@ -130,7 +130,8 @@ class RunRosetta(object):
 
         job_setup.add_argument("--job_manager_opts",
                                  help = "Extra options for the job manager, such as queue or processor requests",
-                                 default = "")
+                                 default = [],
+                                 nargs = "*")
 
 
         job_setup.add_argument("--np",
@@ -367,14 +368,11 @@ class RunRosetta(object):
 
     def get_job_manager_opts(self):
         opts = []
-        if len(self.options.job_manager_opts) == 1:
-            return self.options.job_manager_opts
-        else:
-            for opt in self.options.job_manager_opts:
-                if re.search('-', opt):
-                    opts.append(opt)
-                else:
-                    opts.append("--"+opt)
+        for opt in self.options.job_manager_opts:
+            if re.search('-', opt):
+                opts.append(opt)
+            else:
+                opts.append("--"+opt)
         return " ".join(opts)
 
     def get_job_name(self, *args, **kwargs):
