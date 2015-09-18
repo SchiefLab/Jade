@@ -165,7 +165,6 @@ class RunRosetta(object):
                                        "(Benchmarking: Override any set in json_base.)",)
 
 
-
         protocol_setup = self.parser.add_argument_group("Protocol Setup")
 
         if not self.program:
@@ -366,6 +365,17 @@ class RunRosetta(object):
         else:
             return os.getcwd()
 
+    def get_job_manager_opts(self):
+        opts = []
+        if len(self.options.job_manager_opts) == 1:
+            return self.options.job_manager_opts
+        else:
+            for opt in self.options.job_manager_opts:
+                if re.search('-', opt):
+                    opts.append(opt)
+                else:
+                    opts.append("--"+opt)
+        return " ".join(opts)
 
     def get_job_name(self, *args, **kwargs):
         """
@@ -576,10 +586,10 @@ class RunRosetta(object):
             os.system(cmd)
 
         elif self.options.job_manager == "qsub":
-            run_on_qsub(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.options.job_manager_opts)
+            run_on_qsub(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.get_job_manager_opts())
 
         elif self.options.job_manager == "slurm":
-            run_on_slurm(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.np, self.options.print_only, self.options.job_manager_opts)
+            run_on_slurm(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.np, self.options.print_only, self.get_job_manager_opts())
 
 
 if __name__ == "__main__":
