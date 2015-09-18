@@ -35,7 +35,8 @@ See below for the current full help of the program:
 
 
 ```
-usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  Relative paths are accepted.
+usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  
+Relative paths are accepted.
        [-h] [--job_manager {slurm,qsub,local}]
        [--job_manager_opts [JOB_MANAGER_OPTS [JOB_MANAGER_OPTS ...]]]
        [--np NP] [--nodes NODES] [--ppn PPN] [--nstruct NSTRUCT]
@@ -54,7 +55,8 @@ Job Setup:
                         Job Manager to launch job. Default = 'slurm '
   --job_manager_opts [JOB_MANAGER_OPTS [JOB_MANAGER_OPTS ...]]
                         Extra options for the job manager, such as queue or
-                        processor requests
+                        processor requestsRemove double dashes. Specify like:
+                        -p imperial exlusive.
   --np NP               Number of processors to use for MPI. Default = 101
   --nodes NODES         Number of nodes to ask for. Optional.
   --ppn PPN             Processors per node for qsub. NTasks is np for slurm
