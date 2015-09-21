@@ -10,7 +10,6 @@ from argparse import ArgumentParser
 
 #Module DB Imports
 
-from rosetta_general.DesignBreakdown import *
 from rosetta_general.features import *
 from rosetta_general.RunRosetta import RunRosetta
 
