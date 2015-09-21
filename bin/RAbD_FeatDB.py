@@ -132,13 +132,21 @@ def main():
 
 
 
-
-
 def make_pdblists(in_dir):
 
-    pdblists = []
-    pdb_list = glob.glob(in_dir+"/*.pdb*")
-    rel_list = glob.glob(in_dir+"/ds_rel*.pdb*")
+    pdblists = [] #List of PDBLists.
+
+    pdb_list = []
+    rel_list = []
+
+    pdbs = glob.glob(in_dir+"/*.pdb*")
+
+    for pdb in pdbs:
+        if (re.search("ds_rel", pdb) or re.search("pre_model", pdb) ):
+            rel_list.append(pdb)
+        else:
+            pdb_list.append(pdb)
+
 
     OUTFILE = open(in_dir+"/PDBLIST.txt", 'w')
 
