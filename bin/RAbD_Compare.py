@@ -23,26 +23,19 @@ from Tkinter import *
 from tkFont import *
 import tkFileDialog
 import tkSimpleDialog
-import tkMessageBox
 
 p = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append(p); #Allows all modules to use all other modules, without needing to update pythonpath
 
 #PyIgD
-import bin.RAbD_FeatDB as analyze_strat
-from sequence.ClustalRunner import *
-from tools.StatementCreator import *
-from antibody.cdr_data.CDRData import *
+import bin.RunRabD_Feat as analyze_strat
+from pymol.PyMolScriptWriter import *
 from antibody.cdr_data.CDRDataTypes import *
-from antibody.decoy_data.DecoyData import *
 from antibody.decoy_data.DecoyDataTypes import *
-from tools.filters.DataFilter import *
 from tools.filters.DataFilters import *
 from tools.filters.FilterSettings import *
-
 from RAbD.window_modules.FilterSettingsWindow import *
 from sequence import fasta
-
 
 #Rosetta Tools
 import create_features_json as json_creator
@@ -545,9 +538,9 @@ class CompareAntibodyDesignStrategies:
 
         return outdir
 
-    def _setup_outdir_individual(self, subdirs):
+    def _setup_outdir_individual(self, subdirs, use_outdir_name = False):
 
-        return self._setup_outdir(["individual_data", self.out_dir_name.get()] + subdirs, False)
+        return self._setup_outdir(["individual_data", self.out_dir_name.get()] + subdirs, use_outdir_name)
 
     def _setup_outdir_combined(self, subdirs):
         return self._setup_outdir(["combined_data", self.out_dir_name.get()]+subdirs, False)
@@ -1013,7 +1006,7 @@ class CompareAntibodyDesignStrategies:
                     os.system('cp '+decoy+" "+out_dir+"/"+"top_"+repr(i)+"_"+os.path.basename(decoy))
                     SCORELIST.write(repr(i)+"\t"+get_str(decoys[decoy].score)+"\t"+os.path.basename(decoy)+"\n")
                     i+=1
-                analyze_strat.make_pymol_session_on_top(out_dir, decoy_list, load_as, out_dir, score.get_outname(), top_n, native_path)
+                make_pymol_session_on_top(out_dir, decoy_list, load_as, out_dir, score.get_outname(), top_n, native_path)
                 SCORELIST.close()
 
         print "Complete"
@@ -1050,7 +1043,7 @@ class CompareAntibodyDesignStrategies:
                 SCORELIST.write(repr(i)+"\t"+get_str(decoys[decoy].score)+"\t"+os.path.basename(decoy)+"\n")
                 i+=1
 
-            analyze_strat.make_pymol_session_on_top(outdir_top_pdbs, decoy_list, load_as, outdir_top_sessions, score.get_outname(), top_n, native_path)
+            make_pymol_session_on_top(outdir_top_pdbs, decoy_list, load_as, outdir_top_sessions, score.get_outname(), top_n, native_path)
             SCORELIST.close()
 
         print "Complete"
@@ -1084,7 +1077,7 @@ class CompareAntibodyDesignStrategies:
                     load_as.append("model_"+repr(i)+"_"+score.get_outname()+"_"+get_str(decoys[decoy].score))
                     os.system('cp '+decoy+" "+out_dir+"/top_"+repr(i)+"_"+os.path.basename(decoy))
                     i+=1
-                analyze_strat.make_pymol_session_on_top(out_dir, decoy_list, load_as, out_dir, score.get_outname(), None, native_path)
+                make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(), None, native_path)
 
         #Overall Strategy:
         for score in scores:
@@ -1100,7 +1093,7 @@ class CompareAntibodyDesignStrategies:
                 os.system('cp '+decoy+" "+out_dir+"/top_"+repr(i)+"_"+os.path.basename(decoy))
                 i+=1
             session_dir = out_dir = self._setup_outdir_combined(["all_sessions"])
-            analyze_strat.make_pymol_session_on_top(out_dir, decoy_list, load_as, session_dir, score.get_outname(), None, native_path)
+            make_pymol_session_on_top(decoy_list, load_as, out_dir, session_dir, score.get_outname(), None, native_path)
 
         print "Complete"
 

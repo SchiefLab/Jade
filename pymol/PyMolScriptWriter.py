@@ -5,10 +5,27 @@ import os
 import sys
 import re
 from collections import defaultdict
+from tools.path import *
 
 class PyMolScriptWriter:
     """
     Class to help build PyMol scripts using arbitrary lists of PDBs.
+
+    Example for loading all top models into PyMol, aligning them to the native, and labeling them:
+
+        scripter = PyMolScriptWriter(outpath)
+
+        if native_path:
+            scripter.add_load_pdb(native_path, "native_"+os.path.basename(native_path))
+
+        scripter.add_load_pdbs(pdb_path_list, load_as_list)
+        scripter.add_align_all_to(scripter.get_final_names()[0])
+        scripter.add_show("cartoon")
+        scripter.add_line("center")
+        scripter.add_save_session(pse_path)
+        scripter.write_script("load_align_top.pml")
+        run_pymol_script(top_dir+"/"+"load_align_top.pml")
+
     """
     def __init__(self, outdir):
         self.base_dir = os.path.split(os.path.abspath(__file__))[0]
@@ -50,9 +67,12 @@ class PyMolScriptWriter:
         print "Done reading PyMol color types"
 
     def set_outdir(self, outdir):
-        self.output_dir = outdir
-        if not os.path.exists(outdir):
-            os.mkdir(outdir)
+        if outdir:
+            self.output_dir = outdir
+            if not os.path.exists(outdir):
+                os.mkdir(outdir)
+        else:
+            self.output_dir = os.getcwd()
 
     def write_script(self, fname):
         OUTFILE = open(self.output_dir+"/"+fname, 'w')
@@ -134,8 +154,11 @@ class PyMolScriptWriter:
 
     def add_save_session(self, session_path):
         """
-        Add a line to save the session to a path
+        Add a line to save the session to a FULL path
         """
+
+        if not re.search(".pse", session_path): session_path = session_path+".pse"
+
         self.script_lines.append("cmd.save('"+session_path+"')")
 
     def add_show(self, vis_type, sele=""):
@@ -174,6 +197,7 @@ class PyMolScriptWriter:
         Optionally load them as a particular name
         Will then set the final names PyMol uses to the object.
         """
+        print "PDB"+repr(pdb_path)
         self.pdbs.append(pdb_path)
         name = os.path.basename(pdb_path)
         name = "".join(name.split(".")[0:-1])
@@ -269,7 +293,12 @@ def run_pymol_script(script_path, run_gui = False, delete_script = False):
     """
 
     if not os.path.exists(script_path):
-        raise Exception(script_path +" does not exist...")
+        if os.path.exists(os.getcwd()+script_path):
+            script_path = os.getcwd()+script_path
+        elif os.path.exists(os.getcwd()+"/"+script_path):
+            script_path = os.getcwd()+"/"+script_path
+        else:
+            raise Exception(script_path +" does not exist...")
 
     if run_gui:
         os.system("pymol "+script_path)
@@ -278,3 +307,89 @@ def run_pymol_script(script_path, run_gui = False, delete_script = False):
 
     if delete_script:
         os.remove(script_path)
+
+def make_pymol_session_on_top(pdb_path_list, load_as_list, script_dir, session_dir, out_name, top_num = None, native_path = None):
+    """
+    Make a pymol session on a set of decoys.  Usually an ordered decoy list.
+    :param top_dir:
+    :param pdb_path_list: List of PDB Paths
+    :param load_as_list: List of PDB Path names for pymol.
+    :param outdir:
+    :param out_name:
+    :param top_num:
+    :param native_path:
+    :return:
+    """
+    if top_num:
+        pse_path = session_dir+"/"+out_name+"_top_"+str(top_num)+".pse"
+    else:
+        pse_path = session_dir+"/"+out_name+"_all"+".pse"
+    if os.path.exists(pse_path):
+        print "Not overriding PSE: "+pse_path
+        #return
+
+    if len(pdb_path_list) == 0:
+        print "PDB list path empty.  Skipping creation of pymol session"
+        return
+
+    scripter = PyMolScriptWriter(script_dir)
+
+    if native_path:
+        scripter.add_load_pdb(native_path, "native_"+os.path.basename(native_path))
+
+    scripter.add_load_pdbs(pdb_path_list, load_as_list)
+    scripter.add_align_all_to(scripter.get_final_names()[0])
+    scripter.add_show("cartoon")
+    scripter.add_line("center")
+    scripter.add_save_session(pse_path)
+    scripter.write_script("load_align_top.pml")
+    run_pymol_script(script_dir+"/"+"load_align_top.pml")
+
+def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, out_name, top_num = None, native_path = None):
+    """
+    Make a pymol session on a set of decoys with a tuple of [[score, pdb], ... ]
+
+    Pymol names will be: model_n_RosettaModelNumber_score
+
+    :param top_dir:
+    :param pdb_path_list: List of PDB Paths
+    :param load_as_list: Scores of the PDBs.
+    :param outdir:
+    :param out_name: Output name.  NO extension
+    :param top_num:
+    :param native_path:
+    :return:
+    """
+
+    out_name = out_name.replace(".pse", "")
+    if top_num and top_num != -1:
+        pse_path = session_dir+"/"+out_name+"_top_"+str(top_num)+".pse"
+    else:
+        pse_path = session_dir+"/"+out_name+"_all"+".pse"
+    if os.path.exists(pse_path):
+        print "Not overriding PSE: "+pse_path
+        #return
+
+    if len(pdbpaths_scores) == 0:
+        print "PDB list path empty.  Skipping creation of pymol session"
+        return
+
+    scripter = PyMolScriptWriter(script_dir)
+
+    if native_path:
+        scripter.add_load_pdb(native_path, "native_"+os.path.basename(native_path))
+
+    i = 1
+    for score_pdb in pdbpaths_scores:
+        print repr(score_pdb)
+        decoy = get_decoy_path(score_pdb[1])
+        print repr(decoy)
+        scripter.add_load_pdb(decoy, "model_"+repr(i)+"_"+score_pdb[1].split("_")[-1]+"_%.2f"%(score_pdb[0]))
+        i+=1
+
+    scripter.add_align_all_to(scripter.get_final_names()[0])
+    scripter.add_show("cartoon")
+    scripter.add_line("center")
+    scripter.add_save_session(pse_path)
+    scripter.write_script("load_align_top.pml")
+    run_pymol_script(script_dir+"/"+"load_align_top.pml")

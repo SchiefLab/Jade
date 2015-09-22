@@ -434,6 +434,9 @@ class RunRosetta(object):
         return log_path
 
 
+    def set_outdir(self, outdir):
+        self.options.outdir = outdir
+        self.get_make_out_path()
 
     def get_make_out_path(self, *args, **kwargs):
         """
@@ -549,7 +552,7 @@ class RunRosetta(object):
         if self.options.job_manager == "slurm":
             cmd = "cd "+ self.get_root()+" \n"+"mpiexec "
         else:
-            cmd = "cd "+ self.get_root()+" \n"+"mpiexec -np " + self.options.np
+            cmd = "cd "+ self.get_root()+" \n"+"mpiexec -np " + str(self.options.np)
 
         if self.options.machine_file:
             cmd = cmd + " --machine_file "+self.options.machine_file+" "+ cmd_string

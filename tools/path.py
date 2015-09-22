@@ -18,6 +18,44 @@ def get_feat_input_path():
     p  = os.path.split(os.path.abspath(__file__))[0]+"/../rosetta_general/features_input"
     return p
 
+def get_pdb_path(decoy, alternate_paths = None):
+    return get_decoy_path(decoy, alternate_paths)
+
+def get_decoy_path(decoy, alternate_paths = None):
+    """
+    Search no extensions or with .pdb or .pdb.gz.
+    Search alternative search paths.
+    Return found path or NONE.
+
+    :param decoy:
+    :param alternate_paths:
+    :return:
+    """
+
+    #This is a hack due to wierd issues with the score file vs pdb file and an extra '_'
+
+    decoy = decoy.replace('pre_model_1_', 'pre_model_1__')
+
+    if alternate_paths:
+        for dir in alternate_paths:
+            decoy = dir +"/"+decoy
+        if os.path.exists(decoy):
+            return decoy
+        elif os.path.exists(decoy+".pdb"):
+            return decoy+".pdb"
+        elif os.path.exists(decoy+".pdb.gz"):
+            return decoy+".pdb.gz"
+        else:
+            return None
+    else:
+        if os.path.exists(decoy):
+            return decoy
+        elif os.path.exists(decoy+".pdb"):
+            return decoy+".pdb"
+        elif os.path.exists(decoy+".pdb.gz"):
+            return decoy+".pdb.gz"
+        else:
+            return None
 def get_xml_scripts_path():
     p  = os.path.split(os.path.abspath(__file__))[0]+"/../rosetta_general/xml_scripts"
     return p
