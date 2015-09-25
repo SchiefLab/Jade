@@ -6,13 +6,14 @@
 #I am just really sick of doing this by hand.
 #Example Cmd-line:  python create_features_json.py --database databases/baseline_comparison.txt --scripts cluster
 
+import subprocess
 from argparse import ArgumentParser
 import os
 import sys
 import json
 from collections import defaultdict
 from tools.path import *
-
+from tools.Threader import *
 
 
 def setup_baseline_scripts_and_formats(json_dict, type):
@@ -106,7 +107,7 @@ class JsonCreator:
     """
     def __init__(self, out_path, script_type):
         self.out_path = out_path
-        self.script_types = ["antibody", "interface", "cluster", "antibody_minimal","antibody_min_hbond_analysis", "antibody_no_hbond_analysis"]
+        self.script_types = ["antibody", "interface", "cluster", "antibody_minimal","antibody_min_hbond_analysis", "antibody_no_hbond_analysis", "antibody_minimal_min_hbond_analysis"]
         if not script_type in self.script_types:
             sys.exit(script_type +" unrecognized.  Available JSON script types are: "+repr(self.script_types))
 
@@ -135,22 +136,28 @@ class JsonCreator:
         print "Json written to: "+out_path
         print "Json path set to JsonCreator"
 
-    def run_json(self):
-        run_features_json(self.json_path)
+    def run_json(self, backround = False):
+        run_features_json(self.json_path, backround)
         if os.path.exists("build"):
             c = glob.glob("build/*")
             for d in c:
                 os.system("mv "+d+" "+self.out_path)
 
 
-def run_features_json(json_path):
+def run_features_json(json_path, backround = False):
     """
     Convenience function
     Run compare_sample_sources with json path.
     """
     r_cmd = get_rosetta_features_root()+"/compare_sample_sources.R --config "+json_path
     print "Running: "+r_cmd
-    os.system(r_cmd)
+
+    if backround:
+        runner = Threader()
+        p, wait_p = runner.run_system_command(r_cmd)
+        return p, wait_p
+    else:
+        os.system(r_cmd)
 
 if __name__ == "__main__":
 

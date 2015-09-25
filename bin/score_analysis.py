@@ -33,7 +33,9 @@ class ScoreFiles:
         o = json.loads(line)
         # print o[self.decoy_field_name]
         # print repr(o)
-        self.decoys.append(o)
+        if not re.search("initial_benchmark_perturbation", o[self.decoy_field_name]):
+          self.decoys.append(o)
+        #self.decoys.append(o)
       except ValueError:
         print >> sys.stderr, "Failed to parse JSON object; skipping line:\n", line
 
@@ -84,7 +86,8 @@ class ScoreFiles:
 
     # Collect data
     for decoy_name in scores:
-      if decoy_name in decoy_names: continue
+      if not decoy_name in decoy_names:
+        continue
       decoy = scores[decoy_name]
 
       if stats == None:
@@ -133,7 +136,7 @@ class ScoreFiles:
       decoy_names = self.getDecoyNames()
 
     if scoreterm == "hbonds_int" or scoreterm == "dSASA_int": reverse = True
-    return sorted([[x[scoreterm], x[self.decoy_field_name]] for x in self.decoys if x[self.decoy_field_name] in decoy_names], reverse=reverse)[:top_n]
+    return sorted([[x[scoreterm], x[self.decoy_field_name]] for x in self.decoys if x[self.decoy_field_name] in decoy_names and scoreterm in x ], reverse=reverse)[:top_n]
 
   def getScore(self, decoy, scoreterm):
     for o in self.decoys:
@@ -257,7 +260,6 @@ def main(argv):
                       default=False,
                       help="List score term names", )
 
-
   pymol_opts = parser.add_argument_group("PyMol", "Options for pymol session output")
 
   pymol_opts.add_argument("--pymol_session",
@@ -285,7 +287,7 @@ def main(argv):
   if options.decoy_names:
     options.decoy_names = [x.replace(".pdb.gz", "") for x in options.decoy_names]
     options.decoy_names = [x.replace(".pdb", "") for x in options.decoy_names]
-
+    options.decoy_names = [x.replace("pre_model_1__", "pre_model_1_") for x in options.decoy_names]
 
   s = 0
   for filename in options.scorefiles:
@@ -299,7 +301,7 @@ def main(argv):
 
     sf = ScoreFiles(filename)
 
-    printVerbose("       Decoys: %d" % sf.getDecoyCount())
+    printVerbose("  File Decoys: %d" % sf.getDecoyCount())
     printVerbose("  Score terms: %s" % ", ".join(sf.getScoreTermNames()))
     printVerbose("")
 

@@ -12,7 +12,7 @@ from weblogolib import *
 
 import os
 from collections import defaultdict
-from tools import biopython_util as bio
+from tools.biopython_util import *
 
 import re
 import sys
@@ -103,7 +103,7 @@ def fasta_from_sequences(sequences, outdir, outname):
     OUTFILE.close()
     return outpath
 
-def output_fasta_from_pdbs_biopython(path_header_dict, out_path, native_path = None, native_label = "Native", is_camelid = False):
+def output_fasta_from_pdbs_biopython(path_header_dict, out_path, native_path = None, native_label = "native", is_camelid = False):
     """
     Used only for L and H chains!  Concatonates the L and H in order if present, otherwise assumes camelid at H.
     """
@@ -112,7 +112,7 @@ def output_fasta_from_pdbs_biopython(path_header_dict, out_path, native_path = N
 
     OUTFILE = open(out_path, 'w')
     if native_path:
-        structure = get_biopython_structure(native_path)
+        structure =  get_biopython_structure(native_path)
         if is_camelid or len(structure[0]) == 1:
             seq = get_seq_from_biostructure(structure, 'H')
         else:
@@ -179,9 +179,9 @@ def chain_fasta_files_from_biostructure(structure, prefix, outdir):
     num_chains = len(model)
     fasta_files = []
     for biochain in model:
-        if bio.get_chain_length(biochain) == 0:
+        if get_chain_length(biochain) == 0:
             continue
-        seq = bio.get_biochain_sequence(biochain)
+        seq = get_biochain_sequence(biochain)
         chain = biochain.id
         outname = prefix+"_"+chain+".fasta"
         FILE = open(outdir+"/"+outname, 'w')
@@ -203,7 +203,7 @@ def chain_fasta_from_biostructure(structure, outname, outdir):
     num_chains = len(model)
     FILE = open(outdir+"/"+outname+".fasta", 'w')
     for chain in model:
-        seq = bio.get_biochain_sequence(chain)
+        seq = get_biochain_sequence(chain)
         write_fasta(seq, chain.id, FILE)
         FILE.write("\n")
 

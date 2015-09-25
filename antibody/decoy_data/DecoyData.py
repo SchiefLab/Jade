@@ -101,7 +101,7 @@ class DecoyData:
 
         decoys = self.get_ordered_decoy_list(strategy)
         last_entry = math.ceil(len(decoys)/float(top_percent))
-        print "Using top "+repr(last_entry)+"entries as subset"
+        print "Using top "+repr(last_entry)+" entries as subset"
         return self.get_energy_for_decoy(strategy, decoys[ int(last_entry) -1])
 
 

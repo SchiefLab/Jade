@@ -6,17 +6,12 @@ import os
 import re
 import glob
 import sqlite3
-import numpy
-import math
-import multiprocessing
+
 import shutil
-import copy
 
-from optparse import OptionParser
+
+from argparse import ArgumentParser
 from collections import defaultdict
-
-#from Bio.PDB.PDBParser import PDBParser
-#from Bio.PDB import PDBIO
 
 #TkInter
 from Tkinter import *
@@ -49,12 +44,12 @@ sys.path.append(p); #Allows all modules to use all other modules, without needin
 
 from rosetta import *
 
-#Rosetta is only used for set_native_data_from_rosetta function for clusters.
+#Rosetta is only used for set_native_data_from_rosetta function for clusters. (CDRClusterer - which uses a pose to get dihedrals.  needs refactoring.)
 rosetta.init(" -ignore_unrecognized_res -ignore_zero_occupancy false -ex1 -ex2 -use_input_sc"
              " -antibody:numbering_scheme AHO_Scheme "
              " -antibody:cdr_definition North")
 
-#We assume that the names of each decoy is different.
+#We assume that the names of each decoy is different.  How can we remove this dependency?
 #  This may be a problem if people do not use out:prefix or out:suffix to name their decoys...
 
 ### Setup Enums ###
@@ -63,17 +58,40 @@ rosetta.init(" -ignore_unrecognized_res -ignore_zero_occupancy false -ex1 -ex2 -
 
 
 def main():
+    parser = ArgumentParser()
+    parser.add_argument("--db_dir",
+                        help = "Directory with databases to compare",
+                        default = "databases")
+    
+    parser.add_argument("--analysis_name",
+                        help = "Main directory to complete analysis",
+                        default = "prelim_analysis")
 
-    main_dir = ""
-    out_dir_name = ""
-    strategies = []
+    parser.add_argument("--native",
+                        help = "Any native structure to compare to")
 
-    if len(sys.argv) >= 2: main_dir      =  sys.argv[1]
-    if len(sys.argv) >= 3: out_dir_name  =  sys.argv[2]
-    if len(sys.argv) >= 4: strategies    =  sys.argv[3:]
+    parser.add_argument("--root_dir",
+                        help = "Root directory to run analysis from",
+                        default = os.getcwd())
 
+    parser.add_argument("--cdrs",
+                        help = "A list of CDRs for the analysis (Not used for Features Reporters)",
+                        choices = ["L1, l1, H1, h1, L1, l2, H2, h2, L3, l3, H3, h3, DE, CDR4, L4, H4"],
+                        nargs = '*',
+                        default = ["L1", "L2", "L3", "H1", "H2", "H3"])
 
-    GUI = CompareAntibodyDesignStrategies_GUI(Tk(), main_dir, out_dir_name, strategies)
+    options = parser.parse_args()
+
+    if options.root_dir != os.getcwd():
+        print "Changing to root."
+        os.chdir(options.root_dir)
+
+    GUI = CompareAntibodyDesignStrategies_GUI(Tk(), options.db_dir, options.analysis_name)
+
+    #Set any values
+    if options.native:
+        GUI.native_path = options.native
+
     GUI.run()
 
 class Listbox(Listbox):
@@ -96,15 +114,15 @@ class Listbox(Listbox):
             self.config(width=width+w)
 
 class CompareAntibodyDesignStrategies_GUI:
-    def __init__(self, main , main_dir = "", out_dir_name = "", strategies = []):
+    def __init__(self, main , db_dir = "", analysis_dir = "", strategies = []):
 
         self._tk_ = main
         self._tk_.title("PyIgDesign Compare")
-        self.compare_designs = CompareAntibodyDesignStrategies(main_dir, out_dir_name, strategies)
-        if self.compare_designs.main_dir and not self.compare_designs.strategies:
+        self.compare_designs = CompareAntibodyDesignStrategies(db_dir, analysis_dir, strategies)
+        if self.compare_designs.db_dir and not self.compare_designs.strategies:
             self.compare_designs.set_strategies_from_databases()
 
-        self.current_dir = os.path.split(os.path.abspath(__file__))[0]
+        self.current_dir = os.getcwd()
 
         self.clustal_procs = IntVar(value = multiprocessing.cpu_count())
         self.clustal_output_format = StringVar(value = "clu")
@@ -123,11 +141,11 @@ class CompareAntibodyDesignStrategies_GUI:
         self._tk_.mainloop()
 
     def set_tk(self):
-        self.main_dir_entry = Entry(self._tk_, textvariable = self.compare_designs.main_dir, justify = CENTER)
+        #self.db_dir_entry = Entry(self._tk_, textvariable = self.compare_designs.out_dir_name, justify = CENTER)
         self.out_dir_entry = Entry(self._tk_, textvariable = self.compare_designs.out_dir_name, justify = CENTER)
 
-        self.main_dir_label = Label(self._tk_, text = "Main Analysis Directory", justify = CENTER)
-        self.out_dir_label = Label(self._tk_, text = "Root Name", justify = CENTER)
+        #self.root_dir_label = Label(self._tk_, text = "Root Directory", justify = CENTER)
+        self.out_dir_label = Label(self._tk_, text = "Analysis Name", justify = CENTER)
 
         self.all_strategies_listbox = Listbox(self._tk_)
         self.current_strategies_listbox = Listbox(self._tk_)
@@ -144,8 +162,8 @@ class CompareAntibodyDesignStrategies_GUI:
 
     def sho_tk(self, r = 0, c = 0):
 
-        self.main_dir_label.grid(row = r+0, column = c+0, columnspan = 2, sticky = W+E, pady = 7)
-        self.main_dir_entry.grid( row = r+1, column = c+0, columnspan = 2, sticky = W+E, padx = 5)
+        #self.root_dir_label.grid(row = r+0, column = c+0, columnspan = 2, sticky = W+E, pady = 7)
+        #self.db_dir_entry.grid( row = r+1, column = c+0, columnspan = 2, sticky = W+E, padx = 5)
 
         self.all_strategies_listbox.grid(row = r+2, column = c+0, padx = 6, pady = 10)
         self.current_strategies_listbox.grid(row = r+2, column = c+1, padx = 6, pady = 10)
@@ -182,12 +200,13 @@ class CompareAntibodyDesignStrategies_GUI:
         ## File Menu ##
         self.file_menu = Menu(self.main_menu, tearoff=0)
 
+
         self.file_menu.add_checkbutton(label = "Camelid Antibody", variable = self.compare_designs.is_camelid)
         #self.dtypes_menu = Menu(self.main_menu, tearoff = 0)
         #self.dtypes_menu.add_checkbutton(label = "Group by dG", variable = self.compare_designs.group_dG)
 
         self.file_menu.add_command(label = "Filter Models", command = lambda: self.filter_settings_window.setup_sho_gui(Toplevel(self._tk_)))
-        self.file_menu.add_command(label = "Read Strategies from Main", command = lambda: self.read_from_main_set_strategies())
+        self.file_menu.add_command(label = "Read Strategies from DB DIR", command = lambda: self.read_from_db_dir_set_strategies())
         self.file_menu.add_command(label = "Add Strategy", command = lambda: self.add_main_strategy())
         self.file_menu.add_separator()
         self.file_menu.add_command(label = "Set Reference Native", command = lambda :self.set_native_path())
@@ -196,9 +215,10 @@ class CompareAntibodyDesignStrategies_GUI:
         self.file_menu.add_command(label = "Set top N", command = lambda: self.set_top_n())
         self.file_menu.add_command(label = "Set top N For Combined", command = lambda: self.set_top_n_combined())
         self.file_menu.add_separator()
-        self.file_menu.add_command(label = "Set Strategy DIR as Working Directory")
+        self.file_menu.add_command(label = "Change Root Dir", command = lambda: self.change_root())
         self.file_menu.add_separator()
         self.file_menu.add_checkbutton(label = "Reload Query Data", variable = self.compare_designs.reload_scores)
+        self.file_menu.add_checkbutton(label = "Backround Features", variable = self.compare_designs.backround_features)
         self.file_menu.add_separator()
 
         for name in sorted(self.compare_designs.scores_on.keys()):
@@ -276,13 +296,13 @@ class CompareAntibodyDesignStrategies_GUI:
 
     def show_strat_items(self):
         item = self.all_strategies_listbox.get(self.all_strategies_listbox.curselection())
-        items = glob.glob(self.compare_designs.main_dir.get()+"/*"+item+"*")
+        items = glob.glob(self.compare_designs.db_dir.get()+"/*"+item+"*")
         #for i in items:
             #print i
 
-        if os.path.exists(self.compare_designs.main_dir.get()+"/databases"):
+        if os.path.exists(self.compare_designs.db_dir.get()+"/databases"):
             print "\n Databases:"
-            dbs = glob.glob(self.compare_designs.main_dir.get()+"/databases/*"+item+"*")
+            dbs = glob.glob(self.compare_designs.db_dir.get()+"/databases/*"+item+"*")
             for db in dbs:
                 print db
 
@@ -313,18 +333,31 @@ class CompareAntibodyDesignStrategies_GUI:
         if not strategy_name:
             return
 
+        strategy_path = tkFileDialog.askdirectory(initialdir = self.current_dir, title = "Strategy Path")
+        self.compare_designs.strategies.append(strategy_name)
+        self.compare_designs.db_paths[strategy_name] = strategy_path
+
+
         self.all_strategies_listbox.insert(END, strategy_name)
 
-    def read_from_main_set_strategies(self):
+    def change_root(self):
+        root = tkFileDialog.askdirectory(initialdir = self.current_dir, title = "Root Directory")
+        if not root:
+            return
+        self.current_dir = root
+        os.chdir(root)
+        print "Root directory changed to: "+root
+
+    def read_from_db_dir_set_strategies(self):
         self.compare_designs.strategies = []
 
-        if not self.compare_designs.main_dir.get():
+        if not self.compare_designs.db_dir.get() or not os.path.exists(self.compare_designs.db_dir.get()):
 
-            strat_dir = tkFileDialog.askdirectory(initialdir = self.current_dir, title = "Strategy Analysis Directory")
-            if not strat_dir:
+            db_dir = tkFileDialog.askdirectory(initialdir = self.current_dir, title = "Database DIR")
+            if not db_dir:
                 return
-            self.current_dir = strat_dir
-            self.main_dir.set(strat_dir)
+            self.current_dir = db_dir
+            self.db_dir.set(db_dir)
         self.compare_designs.set_strategies_from_databases()
         self.populate_all_strategies()
 
@@ -336,7 +369,7 @@ class CompareAntibodyDesignStrategies_GUI:
         return strategies
 
     def set_reference_db(self):
-        d = tkFileDialog.askopenfilename(title = "Reference DB", initialdir = self.current_dir)
+        d = tkFileDialog.askopenfilename(title = "Reference DB", initialdir = self.compare_designs.db_dir.get())
         if not d: return
         self.current_dir = os.path.dirname(d)
         self.compare_designs.reference_db.set(d)
@@ -461,9 +494,11 @@ class CompareAntibodyDesignStrategies:
     """
     Class mainly for comparing different Antibody Design strategies using our Features Databases.
     """
-    def __init__(self, main_analysis_dir, out_dir_name, strategies = []):
+    def __init__(self, db_dir, out_dir_name, strategies = []):
 
-        self.main_dir = StringVar(value = main_analysis_dir)
+        self.scorefxn = "talaris2013"
+        self.db_dir = StringVar(value = db_dir)
+        self.main_dir = StringVar()
         self.out_dir_name = StringVar(value = out_dir_name)
         self.reference_db = StringVar()
         self.clustal_soft_wrap = IntVar(value = 100)
@@ -473,7 +508,7 @@ class CompareAntibodyDesignStrategies:
         self.top_n_combined = IntVar(value = 20)
 
         self.strategies = strategies
-        self.strategy_scorefxns = defaultdict()
+        self.db_paths = defaultdict()
 
         self.filter_settings = FilterSettings()
 
@@ -482,6 +517,7 @@ class CompareAntibodyDesignStrategies:
 
         self.is_camelid = IntVar(); self.is_camelid.set(0)
         self.top_total_percent = IntVar(); self.top_total_percent.set(10)
+        self.backround_features = IntVar(); self.backround_features.set(1)
 
         total_scores = TotalDecoyData(); dg_scores = dGDecoyData(); dsasa_scores = dSASADecoyData(); top10_by_10 = dGTotalScoreSubset()
 
@@ -500,7 +536,7 @@ class CompareAntibodyDesignStrategies:
             self.scores_on[score_name] = IntVar(value = 0)
 
         self.scores_on["dG"].set(1)
-        self.scores_on["dG_top_Ptotal"].set(0)
+        self.scores_on["dG_top_Ptotal"].set(1)
 
         self.query_hbonds = IntVar(value = 0)
 
@@ -519,16 +555,16 @@ class CompareAntibodyDesignStrategies:
 
         filters = self._setup_filters()
 
-        if self.out_dir_name.get() and use_out_dir_name and filters:
-            outdir = self.main_dir.get()+"/"+self.out_dir_name.get()+"_"+self.filter_settings.name.get()
-        elif self.out_dir_name.get() and use_out_dir_name:
-            outdir = self.main_dir.get()+"/"+self.out_dir_name.get()
-        elif not self.main_dir.get():
-            sys.exit("Main StrategyAnalysis DIR must exist.  Please use analyze_antibody_design_strategy to populate")
-        elif filters:
-            outdir = self.main_dir.get()+"/"+self.filter_settings.name.get()
-        else:
-            outdir = self.main_dir.get()
+        #if self.out_dir_name.get() and use_out_dir_name and filters:
+        #    outdir = self.main_dir.get()+"/"+self.out_dir_name.get()+"_"+self.filter_settings.name.get()
+        #elif self.out_dir_name.get() and use_out_dir_name:
+        #    outdir = self.main_dir.get()+"/"+self.out_dir_name.get()
+        #elif filters:
+        #    outdir = self.out_dir_name.get()+"/"+self.filter_settings.name.get()
+        #else:
+
+        outdir = os.getcwd()
+
         if not os.path.exists(outdir): os.mkdir(outdir)
 
         for subdir in subdirs:
@@ -540,10 +576,10 @@ class CompareAntibodyDesignStrategies:
 
     def _setup_outdir_individual(self, subdirs, use_outdir_name = False):
 
-        return self._setup_outdir(["individual_data", self.out_dir_name.get()] + subdirs, use_outdir_name)
+        return self._setup_outdir(["analysis_individual", self.out_dir_name.get()] + subdirs, use_outdir_name)
 
     def _setup_outdir_combined(self, subdirs):
-        return self._setup_outdir(["combined_data", self.out_dir_name.get()]+subdirs, False)
+        return self._setup_outdir(["analysis_combined", self.out_dir_name.get()]+subdirs, False)
 
     def _setup_scores(self, features_type = "antibody", use_all = False):
         """
@@ -684,8 +720,8 @@ class CompareAntibodyDesignStrategies:
 
         return data_class
 
-    def set_strategies_from_main_dir_top_dir(self):
-        dirs = glob.glob(self.main_dir.get()+"/TOP_*")
+    def set_strategies_from_db_dir_top_dir(self):
+        dirs = glob.glob(self.db_dir.get()+"/TOP_*")
         non_redun = defaultdict()
         for d in sorted(dirs):
             #print d
@@ -698,28 +734,43 @@ class CompareAntibodyDesignStrategies:
 
     def set_strategies_from_databases(self):
         """
-        Set the strategies from the main_dir/databases directory
+        Set the strategies from the db_dir/databases directory
         :return:
         """
-        if not os.path.exists(self.main_dir.get()+"/databases"):
-            print "Could not find any databases to use for analysis.  Please make sure databases are in "+self.main_dir.get()+"/databases"
+        if not os.path.exists(self.db_dir.get()):
+            print "Could not find any databases to use for analysis.  Please make sure databases are in "+self.db_dir.get()
             print "Databases should end with .db or .db3 extension.  Naming format of databases: strategy.features_type.scorefunction.db"
+            print "WTF?"
             return
 
-        dbs = glob.glob(self.main_dir.get()+"/databases/*.db*")
+        dbs = glob.glob(self.db_dir.get()+"/*.db*")
+
         if len(dbs) == 0:
-            print "Could not find any databases to use for analysis.  Please make sure databases are in "+self.main_dir.get()+"/databases"
+            print "Could not find any databases to use for analysis.  Please make sure databases are in "+self.db_dir.get()
             print "Databases should end with .db or .db3 extension.  Naming format of databases: strategy.features_type.scorefunction.db"
             return
 
+        print repr(dbs)
         nr_dbs = defaultdict()
         for db in sorted(dbs):
-            strategy = os.path.basename(".".join(db.split('.')[:-3]))
+            print db
+            x = os.path.basename(db)
+
+            ##Example naming convention: 'ch103_5_CDR_prelim.norm_ab_features.db'
+            strategy = '.'.join(x.split('.')[:-2])
+            print strategy
+            if len(x.split('.')[-2].split('_'))>2:
+                strategy = strategy+'.'+'_'.join(x.split('.')[-2].split('_')[:-2])
+                print strategy
+
             if not nr_dbs.has_key(strategy):
 
                 self.strategies.append(strategy)
-                self.strategy_scorefxns[strategy] = db.split('.')[-2]
                 nr_dbs[strategy] = " "
+                self.db_paths[strategy] =[]
+                self.db_paths[strategy].append(db)
+            else:
+                self.db_paths[strategy].append(db)
 
     def set_strategies(self, strategies):
         self.strategies = strategies
@@ -728,15 +779,26 @@ class CompareAntibodyDesignStrategies:
         return self.strategies
 
     def get_db_path(self, strategy, features_type = 'antibody'):
-        db_dir = self.main_dir.get()+"/databases"
-        db_path = db_dir+"/"+strategy+"."+features_type+"_features."+self.strategy_scorefxns[strategy]+".db3"; #This may need to change later
-        return db_path
+
+        names = {
+            'antibody':['ab','antibody'],
+            'cluster' :['cl', 'cluster', 'ab', 'antibody']
+        }
+
+
+        for p in self.db_paths[strategy]:
+            for match in names[features_type]:
+                if re.search(match, p):
+                    return p
+
+        print "Matching database name not found for features type: "+features_type
+        print "Database must have any of these names in them: "+repr(names[features_type])
 
     def get_full_features_type(self, type):
-        if type == "cluster_features":
+        if type == "cluster":
             return type
         else:
-            return type+self.features_hbond_sets[ self.features_hbond_set.get() ]
+            return type+"_minimal"+self.features_hbond_sets[ self.features_hbond_set.get() ]
 
     ################ Main Functions #######################
     def run_features(self, type, plot_name = ""):
@@ -749,12 +811,12 @@ class CompareAntibodyDesignStrategies:
             return
 
         outdir = self._setup_outdir(["features_plots", plot_name], False)
-        db_dir = self.main_dir.get()+"/databases"
+        db_dir = self.db_dir.get()
 
         if len(self.strategies) == 0:
             return
 
-        if not os.path.exists(db_dir): sys.exit("Please run Features reporter and copy databases to main Strategy Analysis DIR /databases.")
+        if not os.path.exists(db_dir): sys.exit("Please run Features reporter and copy databases to db directory.")
 
         fulltype = self.get_full_features_type(type)
         creator = json_creator.JsonCreator(outdir, fulltype)
@@ -781,7 +843,7 @@ class CompareAntibodyDesignStrategies:
             creator.add_sample_source_info(db_path, id)
 
         creator.save_json(outdir+"/"+type+"_"+plot_name+".json")
-        creator.run_json()
+        creator.run_json(self.backround_features.get())
 
         #pwd = os.getcwd()
         #os.chdir("build")
@@ -827,7 +889,7 @@ class CompareAntibodyDesignStrategies:
 
                 for tup in sorted(data.keys(), reverse = reverse):
                     triple = data[tup]
-                    OUTFILE.write(os.path.basename(triple.decoy)+"\t"+get_str(triple.score)+"\t"+triple.strategy+"\n")
+                    OUTFILE.write(get_str(triple.score)+"\t"+triple.strategy+"\t"+os.path.basename(triple.decoy)+"\n")
                 OUTFILE.close()
 
 
@@ -1006,7 +1068,7 @@ class CompareAntibodyDesignStrategies:
                     os.system('cp '+decoy+" "+out_dir+"/"+"top_"+repr(i)+"_"+os.path.basename(decoy))
                     SCORELIST.write(repr(i)+"\t"+get_str(decoys[decoy].score)+"\t"+os.path.basename(decoy)+"\n")
                     i+=1
-                make_pymol_session_on_top(out_dir, decoy_list, load_as, out_dir, score.get_outname(), top_n, native_path)
+                make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(), top_n, native_path)
                 SCORELIST.close()
 
         print "Complete"
@@ -1228,7 +1290,7 @@ class CompareAntibodyDesignStrategies:
             header = header+":"+os.path.basename(decoy)
             decoy_header_dict[decoy] = header
 
-        fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "Native", self.is_camelid.get())
+        fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "native", self.is_camelid.get())
         clustal_runner = ClustalRunner(fasta_path)
         clustal_runner.set_threads(processors)
         clustal_runner.set_hard_wrap(self.clustal_soft_wrap.get())
@@ -1254,9 +1316,9 @@ class CompareAntibodyDesignStrategies:
 
             OUTFILE = open(outdir+"/"+outname, 'w')
             if native_path:
-                header = "#decoy\tscore\tnative_matches"
+                header = "#score\tnative_matches\tdecoy"
             else:
-                header = "#decoy\tscore"
+                header = "#score\tdecoy"
             for cdr in type_data.cdrs:
                 header = header+"\t"+cdr
             OUTFILE.write(header+"\n")
@@ -1265,7 +1327,7 @@ class CompareAntibodyDesignStrategies:
             all_type_data = type_data.get_concatonated_map()
 
             if native_path:
-                line = "Native::"+os.path.basename(native_path)+"\t...\tNA"
+                line = "..."+"\tNA"
                 if all_type_data.has_key((cdr, "native")):
                     native_info = type_data[(cdr, "native")]
                 else:
@@ -1275,16 +1337,18 @@ class CompareAntibodyDesignStrategies:
 
                 for cdr in type_data.cdrs:
                     line = line+"\t"+str(native_info.get_value_for_cdr(cdr)).rjust(10)
+                line = line+"\tnative"
                 OUTFILE.write(line+"\n")
 
                 for decoy in top_decoys:
                     decoy_info = all_type_data[decoy]
                     score_info = all_data[decoy]
                     counts = count_native_matches(decoy_info, native_info, type_data.cdrs)
-                    line = os.path.basename(decoy)+"\t"+get_str(score_info.score)+"\t"+repr(counts)
+                    line = get_str(score_info.score)+"\t"+repr(counts)
                     for cdr in type_data.cdrs:
                         line = line+"\t"+str(get_star_if_native(decoy_info, native_info, cdr))
 
+                    line = line+"\t"+os.path.basename(decoy)
                     OUTFILE.write(line+"\n")
             else:
                 for decoy in top_decoys:
@@ -1294,9 +1358,11 @@ class CompareAntibodyDesignStrategies:
                     print repr(score_info)
                     print repr(score_info.score)
 
-                    line = os.path.basename(decoy)+"\t"+get_str(score_info.score)
+                    line = get_str(score_info.score)
                     for cdr in type_data.cdrs:
                         line = line+"\t"+str(decoy_info.get_value_for_cdr(cdr))
+
+                    line = line+"\t"+os.path.basename(decoy)
                     OUTFILE.write(line+"\n")
 
             OUTFILE.close()
@@ -1349,12 +1415,13 @@ class CompareAntibodyDesignStrategies:
             return header
 
         def _add_native_line(self, native_info, type_data, OUTFILE):
-            line = "Native::"+os.path.basename(native_path)+"\tNA"
+            line = "\tNA"
 
             if isinstance(native_info, CDRDataInfo): pass
 
             for cdr in type_data.cdrs:
                 line = line+"\t"+str(native_info.get_value_for_cdr(cdr))
+            line += "\tnative"
             OUTFILE.write(line+"\n")
 
         def _add_recovery_line(self, label, decoys, type_data, OUTFILE, strategy = None):
@@ -1366,12 +1433,13 @@ class CompareAntibodyDesignStrategies:
                 enrichment_data = calculate_recovery(type_data.get_native_data(), type_data, cdr, decoys)
                 total = total + enrichment_data.get_perc_decimal()
             avg = total/6.0
-            line = label+"\t%.3f"%avg
+            line = "%.3f"%avg
             for cdr in type_data.cdrs:
                 enrichment_data = calculate_recovery(type_data.get_native_data(), type_data, cdr, decoys)
 
                 line = line+"\t%.3f"%enrichment_data.get_perc_decimal()
 
+            line += "\tlabel"
             OUTFILE.write(line+"\n")
 
 
@@ -1453,34 +1521,13 @@ class CompareAntibodyDesignStrategies:
             #This should be done manually by getting struct_id and copying all the data in a new database via python sqlite3
             #I do not have time to figure that out and get it working right now, so this will have to do.
 
-            analyze_strat.create_features_db(temp_name, fdir, features_type+"_features", self.rosetta_extension.get(), self.strategy_scorefxns[ strategy ], out_db_name, out_db_batch, self.main_dir.get(), False)
+            analyze_strat.create_features_db(temp_name, fdir, features_type+"_features", self.rosetta_extension.get(), self.scorefxn, out_db_name, out_db_batch, self.db_dir.get(), False)
 
 
             os.remove(temp_name)
 
-########################################################################################################################
-###   Window Modules
-########################################################################################################################
 
-
-########################################################################################################################
-###   Filters
-########################################################################################################################
-
-
-
-########################################################################################################################
-###   CDRData
-########################################################################################################################
-
-
-
-########################################################################################################################
-### Helper Classes
-########################################################################################################################
-
-
-class EnrichmentInfo:
+class Perc:
     """
     Simple class for holding enrichment/recovery information
     """
@@ -1540,7 +1587,7 @@ def calculate_recovery(native_data, all_decoy_data, cdr, decoy_list = None):
         if cdr_info.get_value_for_cdr(cdr) == native_data.get_value_for_cdr(cdr):
             count+=1
 
-    enrich_info = EnrichmentInfo(count, len(decoy_list))
+    enrich_info = Perc(count, len(decoy_list))
     return enrich_info
 
 def calculate_observed_value(value, all_decoy_data, cdr, decoy_list = None):
@@ -1561,7 +1608,7 @@ def calculate_observed_value(value, all_decoy_data, cdr, decoy_list = None):
         if cdr_info.get_value_for_cdr(cdr) == value:
             count+=1
 
-    enrich_info = EnrichmentInfo(count, len(decoy_list))
+    enrich_info = Perc(count, len(decoy_list))
     return enrich_info
 
 def count_native_matches(decoy_data, native_data, cdrs):
