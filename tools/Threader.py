@@ -17,7 +17,7 @@ class Threader:
     wait_p.start()
     return p, wait_p
 
-def print_loop(self, p, print_interval = 3):
+def print_loop(p, print_interval = 3):
   while not p.poll():
     if not print_interval == 0:
       time.sleep(print_interval)
