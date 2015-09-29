@@ -11,6 +11,9 @@ def get_database_path():
 
     return p
 
+def get_bin_path():
+    return os.path.split(os.path.abspath(__file__))[0]+"/../bin"
+
 def get_rosetta_features_root():
     return os.getenv('ROSETTA3_DB')+"/../tests/features"
 
