@@ -113,7 +113,7 @@ class DecoyData:
         or if by_score_tuple:
             [score, decoy] = DataTriple
         """
-        print self.name
+        #print self.name
         if by_score_tuple:
             out_dict = defaultdict()
             for decoy in self.all_data[strategy]:

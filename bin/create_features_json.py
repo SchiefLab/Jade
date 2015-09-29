@@ -144,7 +144,7 @@ class JsonCreator:
                 os.system("mv "+d+" "+self.out_path)
 
 
-def run_features_json(json_path, backround = False):
+def run_features_json(json_path):
     """
     Convenience function
     Run compare_sample_sources with json path.
@@ -152,12 +152,8 @@ def run_features_json(json_path, backround = False):
     r_cmd = get_rosetta_features_root()+"/compare_sample_sources.R --config "+json_path
     print "Running: "+r_cmd
 
-    if backround:
-        runner = Threader()
-        p, wait_p = runner.run_system_command(r_cmd)
-        return p, wait_p
-    else:
-        os.system(r_cmd)
+
+    os.system(r_cmd)
 
 if __name__ == "__main__":
 

@@ -1,7 +1,7 @@
 import os
 import sys
 import multiprocessing
-
+from tools.Threader import Threader
 
 
 class ClustalRunner:
@@ -22,6 +22,7 @@ class ClustalRunner:
         self.hard_wrap = 100
         self.threads = multiprocessing.cpu_count()
         self.extra_options = ""
+
 
     def set_fasta_path(self, fasta_path):
         """
@@ -88,5 +89,8 @@ class ClustalRunner:
             cmd_line = cmd_line+ " --threads "+repr(self.threads)
 
         print "Running Clustal Omega: "+cmd_line
+
+
+
 
         os.system(cmd_line)

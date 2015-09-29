@@ -6,6 +6,7 @@ import sys
 import re
 from collections import defaultdict
 from tools.path import *
+from tools.Threader import Threader
 
 class PyMolScriptWriter:
     """
@@ -287,7 +288,7 @@ class PyMolScriptWriter:
 ## Helper Functions
 ########################################################################################################################
 
-def run_pymol_script(script_path, run_gui = False, delete_script = False):
+def run_pymol_script(script_path, run_gui = False, delete_script = False, parellel_process = True):
     """
     Run the script of the given path.
     """
@@ -300,13 +301,23 @@ def run_pymol_script(script_path, run_gui = False, delete_script = False):
         else:
             raise Exception(script_path +" does not exist...")
 
+
     if run_gui:
-        os.system("pymol "+script_path)
+        cmd = "pymol "+script_path
     else:
-        os.system("pymol -c "+script_path)
+        cmd = "pymol -c "+script_path
+
+    print "Running: "+cmd
+    if parellel_process:
+        threader = Threader()
+        #threader.run_system_command(cmd)
+        threader.run_functions([lambda: os.system(cmd)])
+    else:
+        os.system(cmd)
 
     if delete_script:
         os.remove(script_path)
+
 
 def make_pymol_session_on_top(pdb_path_list, load_as_list, script_dir, session_dir, out_name, top_num = None, native_path = None):
     """
@@ -345,6 +356,7 @@ def make_pymol_session_on_top(pdb_path_list, load_as_list, script_dir, session_d
     scripter.write_script("load_align_top.pml")
     run_pymol_script(script_dir+"/"+"load_align_top.pml")
 
+
 def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, out_name, top_num = None, native_path = None):
     """
     Make a pymol session on a set of decoys with a tuple of [[score, pdb], ... ]
@@ -381,9 +393,9 @@ def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, o
 
     i = 1
     for score_pdb in pdbpaths_scores:
-        print repr(score_pdb)
+        #print repr(score_pdb)
         decoy = get_decoy_path(score_pdb[1])
-        print repr(decoy)
+        #print repr(decoy)
         scripter.add_load_pdb(decoy, "model_"+repr(i)+"_"+score_pdb[1].split("_")[-1]+"_%.2f"%(score_pdb[0]))
         i+=1
 
