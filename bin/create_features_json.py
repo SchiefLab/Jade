@@ -137,23 +137,34 @@ class JsonCreator:
         print "Json path set to JsonCreator"
 
     def run_json(self, backround = False):
-        run_features_json(self.json_path, backround)
-        if os.path.exists("build"):
-            c = glob.glob("build/*")
-            for d in c:
-                os.system("mv "+d+" "+self.out_path)
+        run_features_json(self.json_path, backround, self.out_path)
 
 
-def run_features_json(json_path):
+def run_features_json(json_path, backround = False, outpath = ""):
     """
     Convenience function
     Run compare_sample_sources with json path.
     """
+    def move_delete_build():
+        if os.path.exists("build"):
+            c = glob.glob("build/*")
+            for d in c:
+                os.system("mv "+d+" "+outpath)
+
     r_cmd = get_rosetta_features_root()+"/compare_sample_sources.R --config "+json_path
     print "Running: "+r_cmd
 
+    if backround:
+        thread = Threader()
 
-    os.system(r_cmd)
+        f = []
+        f.append(lambda: os.system(r_cmd))
+        f.append(lambda: move_delete_build())
+        thread.run_functions(f)
+
+    else:
+        os.system(r_cmd)
+        move_delete_build()
 
 if __name__ == "__main__":
 

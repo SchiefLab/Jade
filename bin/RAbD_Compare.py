@@ -262,10 +262,13 @@ class CompareAntibodyDesignStrategies_GUI:
         self.file_menu.add_command(label="Set top N For Combined", command=lambda: self.set_top_n_combined())
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Change Root Dir", command=lambda: self.change_root())
+        self.file_menu.add_command(label = "Print current threads", command = lambda: self.print_threads())
         self.file_menu.add_separator()
         self.file_menu.add_checkbutton(label="Reload Query Data", variable=self.compare_designs.reload_scores)
         self.file_menu.add_checkbutton(label="Backround Features", variable=self.compare_designs.backround_features)
+
         self.file_menu.add_separator()
+
 
         for name in sorted(self.compare_designs.scores_on.keys()):
             self.file_menu.add_checkbutton(label=name, variable=self.compare_designs.scores_on[name])
@@ -357,6 +360,12 @@ class CompareAntibodyDesignStrategies_GUI:
 
 
         ########### Callbacks ############
+
+    def print_threads(self):
+        print "Total running threads: "+repr(threads.n_alive())
+        for pid in range(0, len(threads)):
+            if threads.is_alive(pid):
+                print "Thread "+repr(pid)+" is alive."
 
     def show_strat_items(self):
         item = self.all_strategies_listbox.get(self.all_strategies_listbox.curselection())

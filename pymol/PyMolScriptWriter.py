@@ -319,7 +319,7 @@ def run_pymol_script(script_path, run_gui = False, delete_script = False, parell
         os.remove(script_path)
 
 
-def make_pymol_session_on_top(pdb_path_list, load_as_list, script_dir, session_dir, out_name, top_num = None, native_path = None):
+def make_pymol_session_on_top(pdb_path_list, load_as_list, script_dir, session_dir, out_name, top_num = None, native_path = None, antibody = True):
     """
     Make a pymol session on a set of decoys.  Usually an ordered decoy list.
     :param top_dir:
@@ -352,6 +352,11 @@ def make_pymol_session_on_top(pdb_path_list, load_as_list, script_dir, session_d
     scripter.add_align_all_to(scripter.get_final_names()[0])
     scripter.add_show("cartoon")
     scripter.add_line("center")
+    scripter.add_line("hide lines")
+    scripter.add_line("group models, model*")
+    if antibody:
+        color_cdrs_path = get_bin_path()+"/color_cdrs.pml"
+        scripter.add_line("@"+color_cdrs_path)
     scripter.add_save_session(pse_path)
     scripter.write_script("load_align_top.pml")
     run_pymol_script(script_dir+"/"+"load_align_top.pml")

@@ -13,7 +13,7 @@ from tools.general import get_platform
 from tools.path import *
 
 from rosetta_general.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
-
+import copy
 
 def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts = ""):
     script_path = write_queue_file(cmd, queue_dir, name)
@@ -227,7 +227,7 @@ class RunRosetta(object):
 
         db_group.add_argument("--db_name",
                               help = "In or Out database name",
-                              default = "features.db")
+                                )
 
         db_group.add_argument("--db_batch",
                               help = "Batch of structures.",
@@ -277,15 +277,29 @@ class RunRosetta(object):
             return ""
         else:
             opts = []
-            for o in self.options.extra_options:
+
+            skip_next = False
+            for i in range(0, len(self.options.extra_options)):
+
+                o = self.options.extra_options[ i ]
+                if skip_next:
+                    skip_next = False
+                    continue
+
                 oSP = o.split('=')
 
                 if len(oSP) == 2:
                     opts.append('-'+oSP[0]+" "+oSP[1])
                 elif len(oSP) == 1:
                     #Boolean options
-                    if oSP[0][0] == '@':
+                    if oSP[0][0] == '@' and len(oSP[0]) != 1:
                         opts.append(oSP[0])
+                    elif oSP[0][0] == '@':
+                        opts.append(oSP[0])
+
+                        opts.append(self.options.extra_options[ i + 1 ])
+                        skip_next = True
+
                     else:
                         opts.append('-'+oSP[0])
                 else:
@@ -343,8 +357,9 @@ class RunRosetta(object):
                 self.options.db_mode = self.base_options.get_db_mode()
 
         def _clean_up_db_name():
-            if not re.search(".db", self.options.db_name):
-                self.options.db_name = self.options.db_name+".db"
+            if self.options.db_name:
+                if not re.search(".db", self.options.db_name):
+                    self.options.db_name = self.options.db_name+".db"
 
         #Resolve options overrides
         _set_nstruct()
@@ -461,7 +476,9 @@ class RunRosetta(object):
         #if self.get_out_prefix(*args, **kwargs):
         #    s = s + " -out:prefix "+self.get_out_prefix(*args, **kwargs)
 
-
+        if re.search("out:path:all", self._get_extra_rosetta_options_string()):
+            print self._get_extra_rosetta_options_string()
+            sys.exit( "Please use --outdir script option instead of out:path:all" )
 
 
 
@@ -565,8 +582,7 @@ class RunRosetta(object):
             cmd = cmd + "bash "+ get_rosetta_features_root()+"/sample_sources/merge.sh "+self.options.db_name + " "+self.options.db_name+"_*\n"
             cmd = cmd + "cd -"
 
-        if re.search("out:path:all", cmd):
-            sys.exit( "Please use --outdir script option instead of out:path:all" )
+
         return cmd
 
 
