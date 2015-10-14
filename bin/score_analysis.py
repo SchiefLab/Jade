@@ -288,6 +288,7 @@ def main(argv):
     options.decoy_names = [x.replace(".pdb.gz", "") for x in options.decoy_names]
     options.decoy_names = [x.replace(".pdb", "") for x in options.decoy_names]
     options.decoy_names = [x.replace("pre_model_1__", "pre_model_1_") for x in options.decoy_names]
+    options.decoy_names = [os.path.basename( x ) for x in options.decoy_names]
 
   s = 0
   for filename in options.scorefiles:
