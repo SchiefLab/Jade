@@ -84,12 +84,12 @@ class ScoreFiles:
     if not decoy_names:
       decoy_names = self.getDecoyNames()
 
+    print repr(decoy_names)
     # Collect data
     for decoy_name in scores:
-      if not decoy_name in decoy_names:
+      if not decoy_name in [ os.path.basename(x) for x in decoy_names]:
         continue
       decoy = scores[decoy_name]
-
       if stats == None:
         columns = decoy.keys()
         stats = {k: [] for k in columns}
@@ -324,6 +324,7 @@ def main(argv):
       print fmt % (max_width, "TERM", "n", "Min", "Max", "Mean", "Median", "StdDev")
 
       for column in stats:
+        if column == "top_n_by_10": continue
         v = stats[column]
         for f in ['min', 'max', 'mean', 'median', 'stddev']:
           if not v[f] == None:
