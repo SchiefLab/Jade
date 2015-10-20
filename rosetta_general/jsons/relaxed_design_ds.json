@@ -1,6 +1,8 @@
 { "program": "relax",
   "flags": [
+    "-dualspace",
+    "-nonideal",
     "-respect_resfile",
-    "-out:prefix rel_"
+    "-out:prefix ds_"
   ]
 }
