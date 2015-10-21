@@ -113,7 +113,7 @@ def main():
             run_mpi_rosetta.set_json_run("antibody_features.json")
             run_mpi_rosetta.options.l = pdb_list[1]
             run_mpi_rosetta.options.db_name = options.db_prefix+"."+pdb_list[0]+"ab_"+db_suffix
-            run_mpi_rosetta.options.job_name = starting_job_name+"_"+pdb_list[0:-1]
+            run_mpi_rosetta.options.job_name = starting_job_name+"_"+pdb_list[0][0:-1]
             print "DB Name " + run_mpi_rosetta.options.db_name
             run_mpi_rosetta.run()
 
@@ -128,7 +128,7 @@ def main():
             run_mpi_rosetta.set_json_run("cluster_features.json")
             run_mpi_rosetta.options.l = pdb_list[1]
             run_mpi_rosetta.options.db_name = options.db_prefix+"."+pdb_list[0]+"cl_"+db_suffix
-            run_mpi_rosetta.options.job_name = starting_job_name+"_"+pdb_list[0:-1]
+            run_mpi_rosetta.options.job_name = starting_job_name+"_"+pdb_list[0][0:-1]
             run_mpi_rosetta.run()
 
             '''
