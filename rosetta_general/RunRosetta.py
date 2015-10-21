@@ -227,6 +227,7 @@ class RunRosetta(object):
 
         db_group.add_argument("--db_name",
                               help = "In or Out database name",
+                              default = "features.db"
                                 )
 
         db_group.add_argument("--db_batch",

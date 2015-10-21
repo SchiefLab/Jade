@@ -362,7 +362,7 @@ def make_pymol_session_on_top(pdb_path_list, load_as_list, script_dir, session_d
     run_pymol_script(script_dir+"/"+"load_align_top.pml")
 
 
-def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, out_name, top_num = None, native_path = None, antibody=True):
+def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, out_name, top_num = None, native_path = None, antibody=True, parellel = True):
     """
     Make a pymol session on a set of decoys with a tuple of [[score, pdb], ... ]
 
@@ -415,4 +415,4 @@ def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, o
 
     scripter.add_save_session(pse_path)
     scripter.write_script("load_align_top.pml")
-    run_pymol_script(script_dir+"/"+"load_align_top.pml")
+    run_pymol_script(script_dir+"/"+"load_align_top.pml", parellel_process=parellel)

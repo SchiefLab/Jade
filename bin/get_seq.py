@@ -30,6 +30,8 @@ if __name__ == "__main__":
     parser.add_argument("--prefix", "-t",
                         help = "Tag to add before chain")
 
+    parser.add_argument("--region",
+                        help = "specify a particular region, start:end:chain")
 
     options = parser.parse_args()
 

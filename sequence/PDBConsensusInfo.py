@@ -6,8 +6,8 @@ from structure.Structure import Residue
 from structure.Structure import ResidueRegion
 from structure.Structure import AntibodyResidue
 from structure.Structure import PDBResInfo
-from structure.SequenceStats import SequenceStats
 from structure.RestypeDefinitions import RestypeDefinitions
+from sequence.SequenceStats import SequenceStats
 from sequence.ClustalRunner import ClustalRunner
 import fasta
 
