@@ -28,6 +28,8 @@ import tkSimpleDialog
 #Toolkit Imports
 from prettytable.prettytable import *
 from structure.RestypeDefinitions import RestypeDefinitions
+from sequence.SequenceInfo import SequenceInfo
+from sequence.SequenceResults import SequenceResults
 
 class DesignBreakdown:
     """
@@ -42,12 +44,12 @@ class DesignBreakdown:
           However, it does output a raw_data table in the SQLITE3 database, which will allow advanced querys to get this answer.
     """
 
-    def __init__(self, fasta_path, reference_path, output_directory=False, region=False):
+    def __init__(self, fasta_path, reference_path, output_directory="sequence_results", region=False, prefix=""):
 
         self.output_directory = output_directory
         self.sequences = []; # List of SequenceInfo objects
         self.reference_path = reference_path
-
+        self.prefix = prefix
 
         self.reference_sequence = None
         self.reference_pose = Pose()
@@ -193,7 +195,7 @@ class DesignBreakdown:
         reference_line = "#\t"
         resnum_line = "\t"
         conserved_line = "#\t"
-        OUTFILE = open(self.output_directory+"/RAW_DESIGN_TABLE.txt", 'w')
+        OUTFILE = open(self.output_directory+"/"+self.prefix+"_"+"RAW_DESIGN_TABLE.txt", 'w')
         OUTFILE.write("# TOTAL_SEQUENCES "+repr(len(self.sequences))+"\n")
         for num in resnums:
             pdb_num = self.reference_pose.pdb_info().pose2pdb(num)
@@ -216,7 +218,7 @@ class DesignBreakdown:
         OUTFILE.close()
 
     def output_prettytable(self):
-        OUTFILE = open(self.output_directory+"/PRETTY_DESIGN_TABLE.txt", 'w')
+        OUTFILE = open(self.output_directory+"/"+self.prefix+"_"+"PRETTY_DESIGN_TABLE.txt", 'w')
         OUTFILE.write("# TOTAL_SEQUENCES "+repr(len(self.sequences))+"\n")
         resnums = self.results.get_all_residue_numbers()
         main_row = ["residue"]
@@ -269,7 +271,7 @@ class DesignBreakdown:
         OUTFILE.close()
 
     def output_database(self):
-        self.db_path = self.output_directory+"/SQL_DESIGN_TABLE.db"
+        self.db_path = self.output_directory+"/"+self.prefix+"_"+"SQL_DESIGN_TABLE.db"
         db = sqlite3.connect(self.db_path)
         cur = db.cursor()
         resnums = self.results.get_all_residue_numbers()
@@ -424,200 +426,3 @@ class DesignBreakdown:
                     l+=1
             return l
 
-class SequenceResults:
-    """
-    Simple class for holding, calculating, + accessing result data
-    Residue Numbers are in Rosetta numbering.
-    """
-    def __init__(self):
-        self.data = dict()
-        self.reference = dict()
-
-    def add_residue(self, resnum, one_letter_code, decoy):
-        if not self.data.has_key(resnum):
-            self.data[resnum]=dict()
-            self.data[resnum][one_letter_code]=dict()
-            self.data[resnum][one_letter_code]['freq']=1
-            self.data[resnum][one_letter_code]['decoys']=[]
-            self.data[resnum][one_letter_code]['decoys'].append(decoy);#This is to keep track of which decoys have which mutation.
-
-        else:
-            if not self.data[resnum].has_key(one_letter_code):
-                self.data[resnum][one_letter_code]=dict()
-                self.data[resnum][one_letter_code]['freq']=0
-                self.data[resnum][one_letter_code]['decoys']=[]
-            self.data[resnum][one_letter_code]['freq']+=1
-            self.data[resnum][one_letter_code]['decoys'].append(decoy)
-
-    def add_reference_residue(self, resnum, one_letter_code):
-        self.reference[resnum]=one_letter_code
-
-    def get_freq(self, resnum, one_letter_code):
-        try:
-            x = self.data[resnum][one_letter_code]['freq']
-            return x
-        except KeyError:
-            return 0
-
-    def get_total(self, resnum):
-        total = 0
-        for code in self.data[resnum]:
-            freq = self.get_freq(resnum, code)
-            total = total +freq
-        return total
-
-    def get_percent(self, resnum, one_letter_code):
-        total = self.get_total(resnum)
-        freq = self.get_freq(resnum, one_letter_code)
-
-        percent = float(freq)/float(total)
-        return percent
-
-    def get_percent_string(self, resnum, one_letter_code):
-        return "%.2f"%self.get_percent(resnum, one_letter_code)
-
-    def get_reference_residue(self, resnum):
-        return self.reference[resnum]
-
-    def get_all_residues_observed(self, resnum):
-        return sorted(self.data[resnum].keys())
-
-    def get_all_residue_numbers(self):
-        return sorted(self.data.keys())
-
-    def get_decoys_with_aa(self, resnum, one_letter_code):
-        """
-        Returns all decoys with a specific mutation at a position.
-        """
-        try:
-            return self.data[resnum][one_letter_code]['decoys']
-        except KeyError:
-            return []
-
-    def get_decoys_with_joint_aa(self, resnum_one_letter_code_pair):
-        """
-        Will output decoys that have x, y, z mutations at positions a, b, c
-        """
-        pass
-
-    ### reference Comparison Functions ###
-    def get_all_mutated_positions(self):
-        mutated_positions = []
-        for resnum in self.data:
-            if not self.reference.has_key(resnum):
-                print "Position in data does not match position in reference"
-
-            if self.get_percent(resnum, self.reference[resnum])==1.0:
-                pass
-            else:
-                mutated_positions.append(resnum)
-
-        if mutated_positions:return mutated_positions
-        else:print "No mutations found"
-
-    def get_all_reference_percent_observed(self):
-        """
-        Returns array of tripplets of [postion, one_letter_code, percent] of reference amino acid found.
-        """
-        tripplet_array = []
-        for resnum in self.reference:
-            if not self.data.has_key(resnum):
-                print "Position in reference does not match any position in data"
-
-            percent = self.get_percent(resnum, self.reference[resnum])
-            tripplet = [resnum, self.reference[resnum], percent]
-            tripplet_array.append(tripplet)
-        return tripplet_array
-
-class SequenceInfo:
-    """
-    Simple class for holding + accessing sequence metadata
-    """
-
-    def __init__(self):
-        pass
-
-    def get_sequence(self):
-        return self.sequence
-    def get_length(self):
-        return len(self.sequence)
-    def get_pdbID(self):
-        return self.pdbID
-    def get_pdbpath(self):
-        return self.pdbpath
-    def get_region(self):
-        return self.region
-    def get_start_residue(self):
-        return self.start
-    def get_end_residue(self):
-        return self.end
-    def get_chain(self):
-        return self.chain
-
-    def get_residue(self, resnum):
-        """
-        If region is given, resnum is residue number of PDB
-        If not, resnum in Rosetta resnum
-        """
-
-        if self.start:
-            index_num = resnum-self.start
-            one_letter_code = self.sequence[index_num]
-            return one_letter_code
-        else:
-            one_letter_code = self.sequence[resnum-1]
-            return one_letter_code
-
-    def set_sequence(self, sequence):
-        self.sequence = sequence
-    def set_pdbID(self, pdbID):
-        self.pdbID = pdbID
-    def set_pdbpath(self, pdbpath):
-        self.pdbpath = pdbpath
-    def set_region(self, region):
-        self.region = region
-        rSP = region.split(":")
-        self.start = int(rSP[0])
-        self.end = int(rSP[1])
-        self.chain = rSP[2]
-
-if __name__ == '__main__':
-    """
-    For testing and use outside of GUI.
-
-    """
-    Tk()
-    rosetta.init()
-
-    parser = OptionParser()
-    args = sys.argv
-    parser.add_option("--fasta", "-f",
-        help = "Path to FASTA file for design comparisons"
-    )
-    parser.add_option("--outpath","-o",
-        default="/RESULTS",
-        help = "Full output directory path.  Default is fasta file path /Results"
-    )
-
-    parser.add_option("--reference", "-r",
-        default=None,
-        help = "Reference pose for numbering and comparison (Required)"
-    )
-
-    parser.add_option("--region", "-g",
-        default=None,
-        help = "Region  - if none is given in Fasta + Not whole structure used for comparison (region designated as start:end:chain)"
-    )
-
-    (options, args) = parser.parse_args(args=args[1:])
-    if not options.fasta or not os.path.exists(options.fasta):
-        sys.exit("Please specify a FASTA file to use for calculations.")
-    if options.outpath == "/RESULTS":
-        options.outpath = os.path.dirname(options.fasta)+"/RESULTS"
-
-    if not options.reference:
-        sys.exit("Reference pdb required.")
-
-
-    breakdown = DesignBreakdown(options.fasta, options.reference, options.outpath, options.region)
-    breakdown.run_outputs()
