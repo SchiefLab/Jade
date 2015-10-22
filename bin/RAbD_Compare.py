@@ -194,6 +194,9 @@ class CompareAntibodyDesignStrategies_GUI:
 
                 # self.separator = Separator(self._tk_, orient = HORIZONTAL)
 
+        self.individual_analysis = Checkbutton(self._tk_, text = "Individual Analysis", variable=self.compare_designs.individual_analysis)
+        self.combined_analysis = Checkbutton(self._tk_, text = "Combined Analysis", variable = self.compare_designs.combined_analysis)
+
     def sho_tk(self, r=0, c=0):
 
         # self.root_dir_label.grid(row = r+0, column = c+0, columnspan = 2, sticky = W+E, pady = 7)
@@ -201,20 +204,23 @@ class CompareAntibodyDesignStrategies_GUI:
 
 
 
-        self.all_strategies_listbox.grid(row=r + 2, column=c + 0, columnspan=3, padx=6, pady=10)
-        self.current_strategies_listbox.grid(row=r + 2, column=c + 3, columnspan=3, padx=6, pady=10)
+        self.all_strategies_listbox.grid(row=r + 1, column=c + 0, columnspan=3, padx=6, pady=10)
+        self.current_strategies_listbox.grid(row=r + 1, column=c + 3, columnspan=3, padx=6, pady=10)
 
         position = 0
 
         for cdr_button in self.L_chain_buttons:
-            cdr_button.grid(row=r + 3, column=c + position)
+            cdr_button.grid(row=r + 2, column=c + position)
             position += 1
 
         for cdr_button in self.H_chain_buttons:
-            cdr_button.grid(row=r + 3, column=c + position)
+            cdr_button.grid(row=r + 2, column=c + position)
             position += 1
 
         # self.separator.grid(row = r+3, column = c, columnspan = 2, sticky = W+E, pady = 15)
+
+        self.individual_analysis.grid(row = r+3, column = c+3, columnspan = 3, pady=5, sticky=W+E)
+        self.combined_analysis.grid(row = r+4, column = c+3, columnspan = 3, pady = 5, sticky= W+E)
 
         self.out_dir_label.grid(row=r + 5, column=c + 0, columnspan=3, pady=5)
         self.out_dir_entry.grid(row=r + 5, column=c + 3, columnspan=3, padx=5, pady=5)
@@ -278,14 +284,10 @@ class CompareAntibodyDesignStrategies_GUI:
 
         ## Score Menu ##
         self.score_menu = Menu(self.main_menu, tearoff=0)
-        self.score_menu.add_command(label="Output All Score Stats", command=lambda: self.run_output_all_stats())
-        self.score_menu.add_command(label="Output Per-Strategy Score Data",
-                                    command=lambda: self.run_output_strategy_stats())
+        self.score_menu.add_command(label="Output Score Stats", command=lambda: self.compare_designs.output_stats())
         self.pymol_menu = Menu(self.main_menu, tearoff=0)
-        self.pymol_menu.add_command(label="Top Per Strategy",
-                                    command=lambda: self.compare_designs.copy_top_strategy(self.native_path))
-        self.pymol_menu.add_command(label="Top Combined",
-                                    command=lambda: self.compare_designs.copy_top_combined(self.native_path))
+        self.pymol_menu.add_command(label="Top Models",
+                                    command=lambda: self.compare_designs.copy_top(self.native_path))
         self.pymol_menu.add_command(label="All Models",
                                     command=lambda: self.compare_designs.copy_all_models(self.native_path))
 
@@ -298,10 +300,8 @@ class CompareAntibodyDesignStrategies_GUI:
         self.clustal_menu.add_command(label="Set Output format", command=lambda: self.set_clustal_output_format())
         self.clustal_menu.add_command(label="Set Soft Wrap", command=lambda: self.set_clustal_soft_wrap())
         self.clustal_menu.add_separator()
-        self.clustal_menu.add_command(label="Run Clustal Omega on Strategies",
-                                      command=lambda: self.run_clustal_on_strategies())
-        self.clustal_menu.add_command(label="Run Clustal Omega on Top Combined Decoys",
-                                      command=lambda: self.run_clustal_on_top_combined())
+        self.clustal_menu.add_command(label="Run Clustal Omega on Top Decoys",
+                                      command=lambda: self.run_clustal_omega())
         self.clustal_menu.add_command(label="Run Clustal Omega on ALL Combined Decoys",
                                       command=lambda: self.run_clustal_on_all_combined())
         self.main_menu.add_cascade(label="Clustal", menu=self.clustal_menu)
@@ -518,28 +518,9 @@ class CompareAntibodyDesignStrategies_GUI:
         self.compare_designs.set_strategies(strategies)
         self.compare_designs.run_features(type)
 
-    def run_output_all_stats(self):
-        # do_hb_analysis = tkMessageBox.askyesno(title = "Hbonds", message="Query Hbonds for ALL stats?  May take a few minutes...")
-        # self.compare_designs.query_hbonds.set(do_hb_analysis)
-        self.compare_designs.output_stats()
-
-    def run_output_strategy_stats(self):
-        # do_hb_analysis = tkMessageBox.askyesno(title = "Hbonds", message="Query Hbonds for ALL stats?  May take a few minutes...")
-        # self.compare_designs.query_hbonds.set(do_hb_analysis)
-        self.compare_designs.output_score_extra_stats()
-
     def run_copy_all(self):
         self.compare_designs.copy_all_models(self.native_path)
 
-    def run_clustal_on_strategies(self):
-
-        extra_options = tkSimpleDialog.askstring(title="Extra Options", prompt="Clustal Extra Options",
-                                                 initialvalue=self.base_clustal_options)
-        if not extra_options:
-            return
-
-        self.compare_designs.run_clustal_omega_on_strategies(self.clustal_procs.get(), self.clustal_output_format.get(),
-                                                             extra_options, self.native_path)
 
     def run_clustal_on_all_combined(self):
 
@@ -548,21 +529,20 @@ class CompareAntibodyDesignStrategies_GUI:
         if not extra_options:
             return
 
-        self.compare_designs.run_clustal_omega_on_all_combined(self.compare_designs.out_dir_name.get(),
-                                                               self.clustal_procs.get(),
+        self.compare_designs.run_clustal_omega_on_all_combined(self.clustal_procs.get(),
                                                                self.clustal_output_format.get(),
-                                                               extra_options, self.native_path)
+                                                               extra_options=extra_options, native_path=self.native_path)
 
-    def run_clustal_on_top_combined(self):
+    def run_clustal_omega(self):
 
         extra_options = tkSimpleDialog.askstring(title="Extra Options", prompt="Clustal Extra Options",
                                                  initialvalue=self.base_clustal_options)
         if not extra_options:
             return
 
-        self.compare_designs.run_clustal_omega_on_top_combined(self.clustal_procs.get(),
+        self.compare_designs.run_clustal_omega(self.clustal_procs.get(),
                                                                self.clustal_output_format.get(),
-                                                               extra_options, self.native_path)
+                                                               extra_options=extra_options, native_path=self.native_path)
 
     def create_subset_databases(self, score_name):
         rosetta_extension = tkSimpleDialog.askstring(title="Rosetta Extension",
@@ -634,6 +614,9 @@ class CompareAntibodyDesignStrategies:
 
         self.rosetta_extension = StringVar();
         self.rosetta_extension.set("linuxclangrelease")
+
+        self.individual_analysis = IntVar(value = 1);
+        self.combined_analysis = IntVar(value = 0);
 
     def _init_scores(self):
         total_scores = TotalDecoyData()
@@ -947,6 +930,7 @@ class CompareAntibodyDesignStrategies:
             print "No root name set!"
             return
 
+        os.system("rm build")
         outdir = self._setup_outdir(["plots", plot_name], False)
         db_dir = self.db_dir.get()
 
@@ -988,276 +972,284 @@ class CompareAntibodyDesignStrategies:
         # os.system("mv build build_old")
         # os.chdir(pwd)
 
-        # This is because outdir still doesn't work in Features.  I swear I have fixed it like 3 times already.
-        dirs = glob.glob("build/*")
-        for d in dirs:
-            os.system('cp -r ' + d + ' ' + outdir)
-        if os.path.exists("build"):
-            shutil.rmtree("build")
-
         print "Plots ignore any set filters.  To plot with filters, create new databases through query..."
         print "Complete..."
 
     def output_stats(self):
 
-        if len(self.strategies) == 0:
-            print "No strategies set..."
-            return
+        def output_all_stats():
 
-        if not self.out_dir_name.get():
-            print "No root name set!"
-            return
+            if len(self.strategies) == 0:
+                print "No strategies set..."
+                return
 
-        outdir_stats = self._setup_outdir_combined(["stats"])
-        outdir_lists = self._setup_outdir_combined(["ordered_pdb_lists"])
+            if not self.out_dir_name.get():
+                print "No root name set!"
+                return
 
-        scores = self._setup_scores("antibody", True)
-        top_n = self.top_n.get()
-        top_n_combined = self.top_n_combined.get()
+            outdir_stats = self._setup_outdir_combined(["stats"])
+            outdir_lists = self._setup_outdir_combined(["ordered_pdb_lists"])
 
-        # Output Strategy data:
-        for score_class in scores:
-            if isinstance(score_class, DecoyData): pass
+            scores = self._setup_scores("antibody", True)
+            top_n = self.top_n.get()
+            top_n_combined = self.top_n_combined.get()
 
-            if score_class.name == "dSASA":
-                reverse = True
-            else:
-                reverse = False
+            # Output Strategy data:
+            for score_class in scores:
+                if isinstance(score_class, DecoyData): pass
+
+                if score_class.name == "dSASA":
+                    reverse = True
+                else:
+                    reverse = False
+
+                for strategy in self.strategies:
+                    OUTFILE = open(outdir_lists + "/" + strategy + "_ORDERED_" + score_class.get_outname() + ".txt", 'w')
+                    data = score_class.get_strategy_data(strategy, True)
+
+                    for tup in sorted(data.keys(), reverse=reverse):
+                        triple = data[tup]
+                        OUTFILE.write(
+                            get_str(triple.score) + "\t" + triple.strategy + "\t" + os.path.basename(triple.decoy) + "\n")
+                    OUTFILE.close()
+
+
+            # This is broken for some unkown reason. - Ends up skipping pretty much everything.
+
+            # Output Combined Data:
+            COMBINED = open(outdir_stats + "/combined_selection_data.txt", 'w')
+            COMBINED.write("#strategy decoy " + " ".join([score_class.get_outname() for score_class in scores]) + "\n")
+            total_scores = scores[0]
+            all_data = total_scores.get_concatonated_map()
+            for decoy in all_data:
+                strategy = all_data[decoy].strategy
+                line = strategy + " " + os.path.basename(decoy)
+                # print strategy
+                for score_class in scores:
+                    if score_class.name == "combined_str_score" or score_class.name == "dG_top_Ptotal": continue
+
+                    if not score_class.all_data[strategy].has_key(decoy):
+                        print "Skipping " + strategy + " " + decoy
+                        continue
+
+                    line = line + " " + get_str(score_class.all_data[strategy][decoy].score)
+                COMBINED.write(line + "\n")
+            COMBINED.close()
+
+
+            # Output Stats:
+            STATS = open(outdir_stats + "/combined_selection_data_stats.txt", 'w')
+            STATS.write("#strategy " + " ".join(
+                [score_class.get_outname() + "_avg" + " " + score_class.get_outname() + "_sd " for score_class in
+                 scores]) + "\n")
 
             for strategy in self.strategies:
-                OUTFILE = open(outdir_lists + "/" + strategy + "_ORDERED_" + score_class.get_outname() + ".txt", 'w')
-                data = score_class.get_strategy_data(strategy, True)
+                line = strategy
+                for score_class in scores:
+                    if not score_class.has_real_values() or score_class.name == "combined_str_score": continue
+                    raw_scores_tuple = score_class.get_strategy_data(strategy, True)
+                    raw_scores = [s[0] for s in raw_scores_tuple]
+                    m = numpy.mean(raw_scores)
+                    sd = numpy.std(raw_scores)
+                    line = line + " %.3f" % m + " " + "%.3f" % sd
+                STATS.write(line + "\n")
+            STATS.close()
 
-                for tup in sorted(data.keys(), reverse=reverse):
-                    triple = data[tup]
-                    OUTFILE.write(
-                        get_str(triple.score) + "\t" + triple.strategy + "\t" + os.path.basename(triple.decoy) + "\n")
-                OUTFILE.close()
+            # Output Top Stats:
+            STATS = open(outdir_stats + "/combined_selection_data_top_" + repr(top_n) + "_stats.txt", 'w')
+            STATS.write("#strategy " + " ".join(
+                [score_class.get_outname() + "_avg" + " " + score_class.get_outname() + "_sd " for score_class in
+                 scores]) + "\n")
+            for strategy in self.strategies:
+                line = strategy
+                for score_class in scores:
+                    if not score_class.has_real_values() or score_class.name == "combined_str_score": continue
+                    raw_scores_tuple = score_class.get_top_strategy_data(strategy, top_n, True)
+                    raw_scores = [s[0] for s in raw_scores_tuple]
+                    m = numpy.mean(raw_scores)
+                    sd = numpy.std(raw_scores)
+                    line = line + " %.3f" % m + " " + "%.3f" % sd
+                STATS.write(line + "\n")
+            STATS.close()
+            print "Complete"
 
+        def output_score_extra_stats():
+            top_n = self.top_n.get()
+            main_scores = self._setup_scores()
+            all_scores = self._setup_scores("antibody", True)
 
-        # This is broken for some unkown reason. - Ends up skipping pretty much everything.
+            if self.individual_analysis.get():
+                out_dir = self._setup_outdir_individual(["raw_score_data"])
 
-        # Output Combined Data:
-        COMBINED = open(outdir_stats + "/combined_selection_data.txt", 'w')
-        COMBINED.write("#strategy decoy " + " ".join([score_class.get_outname() for score_class in scores]) + "\n")
-        total_scores = scores[0]
-        all_data = total_scores.get_concatonated_map()
-        for decoy in all_data:
-            strategy = all_data[decoy].strategy
-            line = strategy + " " + os.path.basename(decoy)
-            # print strategy
-            for score_class in scores:
-                if score_class.name == "combined_str_score" or score_class.name == "dG_top_Ptotal": continue
+                # Top, then all
+                for strategy in self.strategies:
+                    for score in main_scores:
+                        if score.name == "combined_str_score":
+                            continue
 
-                if not score_class.all_data[strategy].has_key(decoy):
-                    print "Skipping " + strategy + " " + decoy
-                    continue
+                        if isinstance(score, DecoyData): pass
 
-                line = line + " " + get_str(score_class.all_data[strategy][decoy].score)
-            COMBINED.write(line + "\n")
-        COMBINED.close()
+                        # Get TopN of that particular score
+                        decoy_list = score.get_ordered_decoy_list(strategy, top_n)
 
+                        outfile = out_dir + "/scores_of_top_" + score.name + "_" + strategy + ".txt"
+                        print "writing " + outfile
+                        OUT = open(outfile, 'w')
 
-        # Output Stats:
-        STATS = open(outdir_stats + "/combined_selection_data_stats.txt", 'w')
-        STATS.write("#strategy " + " ".join(
-            [score_class.get_outname() + "_avg" + " " + score_class.get_outname() + "_sd " for score_class in
-             scores]) + "\n")
+                        if not score.name == "dG_top_Ptotal":
+                            header = "#decoy\t" + score.name
+                        else:
+                            header = "#decoy"
 
-        for strategy in self.strategies:
-            line = strategy
-            for score_class in scores:
-                if not score_class.has_real_values() or score_class.name == "combined_str_score": continue
-                raw_scores_tuple = score_class.get_strategy_data(strategy, True)
-                raw_scores = [s[0] for s in raw_scores_tuple]
-                m = numpy.mean(raw_scores)
-                sd = numpy.std(raw_scores)
-                line = line + " %.3f" % m + " " + "%.3f" % sd
-            STATS.write(line + "\n")
-        STATS.close()
+                        for a_score in all_scores:
+                            if a_score.name == "combined_str_score" or a_score.name == "dG_top_Ptotal": continue
+                            if a_score.name == score.name: continue
 
-        # Output Top Stats:
-        STATS = open(outdir_stats + "/combined_selection_data_top_" + repr(top_n) + "_stats.txt", 'w')
-        STATS.write("#strategy " + " ".join(
-            [score_class.get_outname() + "_avg" + " " + score_class.get_outname() + "_sd " for score_class in
-             scores]) + "\n")
-        for strategy in self.strategies:
-            line = strategy
-            for score_class in scores:
-                if not score_class.has_real_values() or score_class.name == "combined_str_score": continue
-                raw_scores_tuple = score_class.get_top_strategy_data(strategy, top_n, True)
-                raw_scores = [s[0] for s in raw_scores_tuple]
-                m = numpy.mean(raw_scores)
-                sd = numpy.std(raw_scores)
-                line = line + " %.3f" % m + " " + "%.3f" % sd
-            STATS.write(line + "\n")
-        STATS.close()
-        print "Complete"
+                            header = header + "\t" + a_score.name
 
-    def output_score_extra_stats(self):
-        top_n = self.top_n.get()
-        main_scores = self._setup_scores()
-        all_scores = self._setup_scores("antibody", True)
+                        OUT.write(header + "\n")
 
-        out_dir = self._setup_outdir_individual(["raw_score_data"])
+                        for decoy in decoy_list:
 
-        # Top, then all
-        for strategy in self.strategies:
-            for score in main_scores:
-                if score.name == "combined_str_score":
-                    continue
+                            if not score.name == "dG_top_Ptotal":
+                                line = os.path.basename(decoy) + "\t" + get_str(score.get_score_for_decoy(strategy, decoy))
+                            else:
+                                line = os.path.basename(decoy)
 
-                if isinstance(score, DecoyData): pass
+                            for a_score in all_scores:
+                                if a_score.name == "combined_str_score": continue
+                                if a_score.name == score.name: continue
 
-                # Get TopN of that particular score
-                decoy_list = score.get_ordered_decoy_list(strategy, top_n)
+                                line = line + "\t" + get_str(a_score.get_score_for_decoy(strategy, decoy))
+                            OUT.write(line + "\n")
+                        OUT.close()
 
-                outfile = out_dir + "/scores_of_top_" + score.name + "_" + strategy + ".txt"
-                print "writing " + outfile
-                OUT = open(outfile, 'w')
+                # All decoys
 
-                if not score.name == "dG_top_Ptotal":
-                    header = "#decoy\t" + score.name
-                else:
-                    header = "#decoy"
+                score = main_scores[0]
 
-                for a_score in all_scores:
-                    if a_score.name == "combined_str_score" or a_score.name == "dG_top_Ptotal": continue
-                    if a_score.name == score.name: continue
+                for strategy in self.strategies:
+                    all_decoys = score.get_ordered_decoy_list(strategy)
 
-                    header = header + "\t" + a_score.name
+                    out_file = out_dir + "/all_scores_" + strategy + ".txt"
+                    print "writing " + out_file
 
-                OUT.write(header + "\n")
-
-                for decoy in decoy_list:
+                    OUT = open(out_file, 'w')
 
                     if not score.name == "dG_top_Ptotal":
-                        line = os.path.basename(decoy) + "\t" + get_str(score.get_score_for_decoy(strategy, decoy))
+                        header = "#decoy\t" + score.name
                     else:
-                        line = os.path.basename(decoy)
+                        header = "#decoy"
 
                     for a_score in all_scores:
-                        if a_score.name == "combined_str_score": continue
+                        if a_score.name == "combined_str_score" or a_score.name == "dG_top_Ptotal": continue
                         if a_score.name == score.name: continue
 
-                        line = line + "\t" + get_str(a_score.get_score_for_decoy(strategy, decoy))
-                    OUT.write(line + "\n")
-                OUT.close()
+                        header = header + "\t" + a_score.name
+                    OUT.write(header + "\n")
 
-        # All decoys
+                    for decoy in all_decoys:
+                        if not score.name == "dG_top_Ptotal":
 
-        score = main_scores[0]
+                            line = os.path.basename(decoy) + "\t" + get_str(score.get_score_for_decoy(strategy, decoy))
+                        else:
+                            line = os.path.basename(decoy)
+                        for a_score in all_scores:
+                            if a_score.name == "combined_str_score": continue
+                            if a_score.name == score.name: continue
 
-        for strategy in self.strategies:
-            all_decoys = score.get_ordered_decoy_list(strategy)
+                            line = line + "\t" + get_str(a_score.get_score_for_decoy(strategy, decoy))
+                        OUT.write(line + "\n")
+                    OUT.close()
 
-            out_file = out_dir + "/all_scores_" + strategy + ".txt"
-            print "writing " + out_file
-
-            OUT = open(out_file, 'w')
-
-            if not score.name == "dG_top_Ptotal":
-                header = "#decoy\t" + score.name
-            else:
-                header = "#decoy"
-
-            for a_score in all_scores:
-                if a_score.name == "combined_str_score" or a_score.name == "dG_top_Ptotal": continue
-                if a_score.name == score.name: continue
-
-                header = header + "\t" + a_score.name
-            OUT.write(header + "\n")
-
-            for decoy in all_decoys:
-                if not score.name == "dG_top_Ptotal":
-
-                    line = os.path.basename(decoy) + "\t" + get_str(score.get_score_for_decoy(strategy, decoy))
-                else:
-                    line = os.path.basename(decoy)
-                for a_score in all_scores:
-                    if a_score.name == "combined_str_score": continue
-                    if a_score.name == score.name: continue
-
-                    line = line + "\t" + get_str(a_score.get_score_for_decoy(strategy, decoy))
-                OUT.write(line + "\n")
-            OUT.close()
-
+        if self.individual_analysis.get():
+            print "Outputting individual stats"
+            output_score_extra_stats()
+        if self.combined_analysis.get():
+            print "Outputting combined stats"
+            output_all_stats()
         print "Complete"
 
-    def copy_top_strategy(self, native_path=None):
+    def copy_top(self, native_path=None):
+        def copy_top_strategy(native_path=None):
 
-        top_n = self.top_n.get()
-        scores = self._setup_scores()
+            top_n = self.top_n.get()
+            scores = self._setup_scores()
 
-        if not self.out_dir_name.get():
-            print "No root name set!"
-            return
+            if not self.out_dir_name.get():
+                print "No root name set!"
+                return
 
-        print "Copying Top Models.."
-        # Each Strategy Top Scoring (Skip total score here for now):
-        for strategy in self.strategies:
+            print "Copying Top Models.."
+            # Each Strategy Top Scoring (Skip total score here for now):
+            for strategy in self.strategies:
+                for score in scores:
+                    if score.name == "combined_str_score":
+                        continue
+
+                    out_dir = self._setup_outdir_individual(
+                        ["pdbs_sessions", "top_" + repr(top_n) + "_" + score.get_outname() + "_" + strategy])
+                    SCORELIST = open(out_dir + "/MODELS.txt", 'w')
+                    print "Copying " + strategy + " " + score.get_outname() + " to: " + out_dir
+                    if isinstance(score, DecoyData): pass
+
+                    decoys = score.get_top_strategy_data(strategy, top_n)
+                    decoy_list = score.get_ordered_decoy_list(strategy, top_n)
+                    load_as = []
+                    i = 1
+                    for decoy in decoy_list:
+                        load_as.append("model_" + repr(i) + "_" + score.get_outname() + "_" + get_str(decoys[decoy].score))
+                        os.system('cp ' + decoy + " " + out_dir + "/" + "top_" + repr(i) + "_" + os.path.basename(decoy))
+                        SCORELIST.write(
+                            repr(i) + "\t" + get_str(decoys[decoy].score) + "\t" + os.path.basename(decoy) + "\n")
+                        i += 1
+                    make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(), top_n,
+                                              native_path)
+                    SCORELIST.close()
+
+        def copy_top_combined(native_path=None):
+            """
+            Outputs total_score,
+            """
+            if not self.out_dir_name.get():
+                print "No root name set!"
+                return
+
+            top_n = self.top_n_combined.get()
+            scores = self._setup_scores()
+
+            # Overall Strategy:
             for score in scores:
                 if score.name == "combined_str_score":
                     continue
 
-                out_dir = self._setup_outdir_individual(
-                    ["pdbs_sessions", "top_" + repr(top_n) + "_" + score.get_outname() + "_" + strategy])
-                SCORELIST = open(out_dir + "/MODELS.txt", 'w')
-                print "Copying " + strategy + " " + score.get_outname() + " to: " + out_dir
                 if isinstance(score, DecoyData): pass
+                outdir_top_pdbs = self._setup_outdir_combined(["top_structures", score.get_outname()])
+                outdir_top_sessions = self._setup_outdir_combined(["top_sessions"])
 
-                decoys = score.get_top_strategy_data(strategy, top_n)
-                decoy_list = score.get_ordered_decoy_list(strategy, top_n)
+                SCORELIST = open(outdir_top_pdbs + "/MODELS.txt", 'w')
+                print "Copying " + score.get_outname() + " to: " + outdir_top_pdbs
+                decoys = score.get_top_all_data(top_n)
+                decoy_list = score.get_ordered_decoy_list_all(top_n)
                 load_as = []
                 i = 1
                 for decoy in decoy_list:
                     load_as.append("model_" + repr(i) + "_" + score.get_outname() + "_" + get_str(decoys[decoy].score))
-                    os.system('cp ' + decoy + " " + out_dir + "/" + "top_" + repr(i) + "_" + os.path.basename(decoy))
-                    SCORELIST.write(
-                        repr(i) + "\t" + get_str(decoys[decoy].score) + "\t" + os.path.basename(decoy) + "\n")
+                    os.system('cp ' + decoy + " " + outdir_top_pdbs + "/top_" + repr(i) + "_" + os.path.basename(decoy))
+                    SCORELIST.write(repr(i) + "\t" + get_str(decoys[decoy].score) + "\t" + os.path.basename(decoy) + "\n")
                     i += 1
-                make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(), top_n,
+
+                make_pymol_session_on_top(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(),
+                                          top_n,
                                           native_path)
                 SCORELIST.close()
 
-
-    def copy_top_combined(self, native_path=None):
-        """
-        Outputs total_score,
-        """
-        if not self.out_dir_name.get():
-            print "No root name set!"
-            return
-
-        top_n = self.top_n_combined.get()
-        scores = self._setup_scores()
-
-        # Overall Strategy:
-        for score in scores:
-            if score.name == "combined_str_score":
-                continue
-
-            if isinstance(score, DecoyData): pass
-            outdir_top_pdbs = self._setup_outdir_combined(["top_structures", score.get_outname()])
-            outdir_top_sessions = self._setup_outdir_combined(["top_sessions"])
-
-            SCORELIST = open(outdir_top_pdbs + "/MODELS.txt", 'w')
-            print "Copying " + score.get_outname() + " to: " + outdir_top_pdbs
-            decoys = score.get_top_all_data(top_n)
-            decoy_list = score.get_ordered_decoy_list_all(top_n)
-            load_as = []
-            i = 1
-            for decoy in decoy_list:
-                load_as.append("model_" + repr(i) + "_" + score.get_outname() + "_" + get_str(decoys[decoy].score))
-                os.system('cp ' + decoy + " " + outdir_top_pdbs + "/top_" + repr(i) + "_" + os.path.basename(decoy))
-                SCORELIST.write(repr(i) + "\t" + get_str(decoys[decoy].score) + "\t" + os.path.basename(decoy) + "\n")
-                i += 1
-
-            make_pymol_session_on_top(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(),
-                                      top_n,
-                                      native_path)
-            SCORELIST.close()
-
+        if self.individual_analysis.get():
+            print "Outputting individual sessions"
+            copy_top_strategy(native_path)
+        if self.combined_analysis.get():
+            print "Outputting combined sessions"
+            copy_top_combined(native_path)
 
     def copy_all_models(self, native_path=None):
 
@@ -1306,102 +1298,108 @@ class CompareAntibodyDesignStrategies:
             session_dir = out_dir = self._setup_outdir_combined(["all_sessions"])
             make_pymol_session_on_top(decoy_list, load_as, out_dir, session_dir, score.get_outname(), None, native_path)
 
+    def run_clustal_omega(self, processors, output_format="fasta", extra_options="", native_path=None):
 
-    def run_clustal_omega_on_strategies(self, processors, output_format="fasta", extra_options="", native_path=None):
+        def run_clustal_omega_on_strategies():
 
-        if not self.out_dir_name.get():
-            print "No root name set!"
-            return
+            if not self.out_dir_name.get():
+                print "No root name set!"
+                return
 
-        scores = self._setup_scores()
-        top_n = self.top_n.get()
+            scores = self._setup_scores()
+            top_n = self.top_n.get()
 
-        for strategy in self.strategies:
-            print "\nRunning Clustal on: " + strategy
-            score_zero = scores[0]
-            if isinstance(score_zero, DecoyData): pass
+            for strategy in self.strategies:
+                print "\nRunning Clustal on: " + strategy
+                score_zero = scores[0]
+                if isinstance(score_zero, DecoyData): pass
 
-            # Output per strategy ALL
-            decoys = score_zero.get_strategy_data(strategy)
-            decoy_header_dict = defaultdict()
-
-            for decoy in decoys:
-                decoy_header_dict[decoy] = os.path.basename(decoy)
-
-            fasta_dir = self._setup_outdir_individual(["sequences"])
-            fasta_path = fasta_dir + "/" + strategy + "_all.fasta"
-            fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "Native",
-                                                   self.is_camelid.get())
-
-            aln_dir = self._setup_outdir_individual(["clustal"])
-            aln_name = strategy + "_all.clus"
-            clustal_runner = ClustalRunner(fasta_path)
-            clustal_runner.set_hard_wrap(self.clustal_soft_wrap.get())
-            clustal_runner.set_threads(processors)
-            clustal_runner.set_extra_options(extra_options)
-            clustal_runner.set_output_format(output_format)
-            clustal_runner.output_alignment(aln_dir, aln_name)
-
-            # Output on Top Scoring:
-
-            for score in scores:
-                print score
-                if isinstance(score, DecoyData): pass
-
-                basename = strategy + "_" + score.get_outname() + "_top_" + str(top_n)
-                fasta_path = fasta_dir + "/" + basename + ".fasta"
-                aln_name = basename + ".clus"
-
+                # Output per strategy ALL
+                decoys = score_zero.get_strategy_data(strategy)
                 decoy_header_dict = defaultdict()
-                decoys = score.get_top_strategy_data(strategy, top_n)
+
                 for decoy in decoys:
-                    header = "v" + get_str(decoys[decoy].score) + "::" + os.path.basename(decoy)
-                    decoy_header_dict[decoy] = header
+                    decoy_header_dict[decoy] = os.path.basename(decoy)
+
+                fasta_dir = self._setup_outdir_individual(["sequences"])
+                fasta_path = fasta_dir + "/" + strategy + "_all.fasta"
                 fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "Native",
                                                        self.is_camelid.get())
-                clustal_runner.set_fasta_path(fasta_path)
+
+                aln_dir = self._setup_outdir_individual(["clustal"])
+                aln_name = strategy + "_all.clus"
+                clustal_runner = ClustalRunner(fasta_path)
+                clustal_runner.set_hard_wrap(self.clustal_soft_wrap.get())
                 clustal_runner.set_threads(processors)
                 clustal_runner.set_extra_options(extra_options)
                 clustal_runner.set_output_format(output_format)
                 clustal_runner.output_alignment(aln_dir, aln_name)
 
-        print "Complete"
+                # Output on Top Scoring:
 
-    def run_clustal_omega_on_top_combined(self, processors, output_format, extra_options="", native_path=None):
+                for score in scores:
+                    print score
+                    if isinstance(score, DecoyData): pass
 
-        if not self.out_dir_name.get():
-            print "No root name set!"
-            return
+                    basename = strategy + "_" + score.get_outname() + "_top_" + str(top_n)
+                    fasta_path = fasta_dir + "/" + basename + ".fasta"
+                    aln_name = basename + ".clus"
 
-        scores = self._setup_scores()
-        top_n = self.top_n.get()
+                    decoy_header_dict = defaultdict()
+                    decoys = score.get_top_strategy_data(strategy, top_n)
+                    for decoy in decoys:
+                        header = "v" + get_str(decoys[decoy].score) + "::" + os.path.basename(decoy)
+                        decoy_header_dict[decoy] = header
+                    fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "Native",
+                                                           self.is_camelid.get())
+                    clustal_runner.set_fasta_path(fasta_path)
+                    clustal_runner.set_threads(processors)
+                    clustal_runner.set_extra_options(extra_options)
+                    clustal_runner.set_output_format(output_format)
+                    clustal_runner.output_alignment(aln_dir, aln_name)
 
-        for score in scores:
-            print "Running Clustal Omega on " + score.get_outname()
-            if isinstance(score, DecoyData): pass
-            decoys = score.get_top_all_data(top_n, False)
+            print "Complete"
 
-            decoy_header_dict = defaultdict()
-            for decoy in decoys:
-                header = "v" + get_str(decoys[decoy].score) + "::" + os.path.basename(decoy)
-                decoy_header_dict[decoy] = header
+        def run_clustal_omega_on_top_combined():
 
-            root_name = self.out_dir_name.get()
-            basename = root_name + "_" + score.get_outname() + "_top_" + repr(top_n)
-            fasta_dir = self._setup_outdir_combined(["sequences"])
-            fasta_path = fasta_dir + "/" + basename + ".fasta"
+            if not self.out_dir_name.get():
+                print "No root name set!"
+                return
 
-            clustal_dir = self._setup_outdir_combined(["clustal"])
-            clustal_name = basename + ".aln"
+            scores = self._setup_scores()
+            top_n = self.top_n.get()
 
-            fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "Native",
-                                                   self.is_camelid.get())
-            clustal_runner = ClustalRunner(fasta_path)
-            clustal_runner.set_threads(processors)
-            clustal_runner.set_hard_wrap(self.clustal_soft_wrap.get())
-            clustal_runner.set_extra_options(extra_options)
-            clustal_runner.set_output_format(output_format)
-            clustal_runner.output_alignment(clustal_dir, clustal_name)
+            for score in scores:
+                print "Running Clustal Omega on " + score.get_outname()
+                if isinstance(score, DecoyData): pass
+                decoys = score.get_top_all_data(top_n, False)
+
+                decoy_header_dict = defaultdict()
+                for decoy in decoys:
+                    header = "v" + get_str(decoys[decoy].score) + "::" + os.path.basename(decoy)
+                    decoy_header_dict[decoy] = header
+
+                root_name = self.out_dir_name.get()
+                basename = root_name + "_" + score.get_outname() + "_top_" + repr(top_n)
+                fasta_dir = self._setup_outdir_combined(["sequences"])
+                fasta_path = fasta_dir + "/" + basename + ".fasta"
+
+                clustal_dir = self._setup_outdir_combined(["clustal"])
+                clustal_name = basename + ".aln"
+
+                fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "Native",
+                                                       self.is_camelid.get())
+                clustal_runner = ClustalRunner(fasta_path)
+                clustal_runner.set_threads(processors)
+                clustal_runner.set_hard_wrap(self.clustal_soft_wrap.get())
+                clustal_runner.set_extra_options(extra_options)
+                clustal_runner.set_output_format(output_format)
+                clustal_runner.output_alignment(clustal_dir, clustal_name)
+
+        if self.individual_analysis.get():
+            run_clustal_omega_on_strategies()
+        if self.combined_analysis.get():
+            run_clustal_omega_on_top_combined()
 
         print "Complete"
 
@@ -1547,29 +1545,31 @@ class CompareAntibodyDesignStrategies:
         if isinstance(data_class, CDRData): pass
 
         ### Top/All  each Strategy
-        outdir = self._setup_outdir_individual(['cdr_alignments'])
-        for strategy in self.strategies:
+        if self.individual_analysis.get():
+            outdir = self._setup_outdir_individual(['cdr_alignments'])
+            for strategy in self.strategies:
 
-            for score in scores:
-                if isinstance(score, DecoyData): pass
-                top_decoys = score.get_ordered_decoy_list(strategy, top_n)
-                all_decoys = score.get_ordered_decoy_list(strategy)
-                # print "Top: "+repr(top_decoys)
+                for score in scores:
+                    if isinstance(score, DecoyData): pass
+                    top_decoys = score.get_ordered_decoy_list(strategy, top_n)
+                    all_decoys = score.get_ordered_decoy_list(strategy)
+                    # print "Top: "+repr(top_decoys)
 
-                print "Working on : " + strategy + " " + score.name
-                _output_alignment(self, outdir, top_decoys, score, data_class, strategy, "top")
-                _output_alignment(self, outdir, all_decoys, score, data_class, strategy, "all")
+                    print "Working on : " + strategy + " " + score.name
+                    _output_alignment(self, outdir, top_decoys, score, data_class, strategy, "top")
+                    _output_alignment(self, outdir, all_decoys, score, data_class, strategy, "all")
 
 
         ### Top/All each combined
-        outdir = self._setup_outdir_combined(['cdr_alignments'])
-        for score in scores:
-            top_decoys = score.get_ordered_decoy_list_all(top_n)
-            all_decoys = score.get_ordered_decoy_list_all()
+        if self.combined_analysis.get():
+            outdir = self._setup_outdir_combined(['cdr_alignments'])
+            for score in scores:
+                top_decoys = score.get_ordered_decoy_list_all(top_n)
+                all_decoys = score.get_ordered_decoy_list_all()
 
-            print "Top: " + repr(len(top_decoys)) + score.name
-            _output_alignment(self, outdir, top_decoys, score, data_class, None, "top")
-            _output_alignment(self, outdir, all_decoys, score, data_class, None, "all")
+                print "Top: " + repr(len(top_decoys)) + score.name
+                _output_alignment(self, outdir, top_decoys, score, data_class, None, "top")
+                _output_alignment(self, outdir, all_decoys, score, data_class, None, "all")
 
         print "Complete"
 
@@ -1642,43 +1642,43 @@ class CompareAntibodyDesignStrategies:
         if isinstance(data_class, CDRData): pass
 
         # Each strategy + Top Values
-        outdir = self._setup_outdir_individual(['enrichment'])
-        OUTFILE = open(outdir + "/" + "cdr_type_recoveries_" + alignment_type + "_.txt", 'w')
-        OUTFILE.write(_get_header(self, data_class) + "\n")
-        _add_native_line(self, data_class.get_native_data(), data_class, OUTFILE)
-        for strategy in self.strategies:
-            outname = strategy
-            decoys = scores[0].get_strategy_data(strategy).keys()
-            _add_recovery_line(self, outname, decoys, data_class, OUTFILE, strategy)
-            for score in scores:
-                if isinstance(score, DecoyData): pass
-                if score.name == "combined_str_score": continue
+        if self.individual_analysis.get():
+            outdir = self._setup_outdir_individual(['enrichment'])
+            OUTFILE = open(outdir + "/" + "cdr_type_recoveries_" + alignment_type + "_.txt", 'w')
+            OUTFILE.write(_get_header(self, data_class) + "\n")
+            _add_native_line(self, data_class.get_native_data(), data_class, OUTFILE)
+            for strategy in self.strategies:
+                outname = strategy
+                decoys = scores[0].get_strategy_data(strategy).keys()
+                _add_recovery_line(self, outname, decoys, data_class, OUTFILE, strategy)
+                for score in scores:
+                    if isinstance(score, DecoyData): pass
+                    if score.name == "combined_str_score": continue
 
-                top_decoys = score.get_ordered_decoy_list(strategy, top_n)
-                outname = strategy + "_" + score.get_outname() + "_top_" + repr(top_n)
-                _add_recovery_line(self, outname, top_decoys, data_class, OUTFILE, strategy)
-        OUTFILE.close()
+                    top_decoys = score.get_ordered_decoy_list(strategy, top_n)
+                    outname = strategy + "_" + score.get_outname() + "_top_" + repr(top_n)
+                    _add_recovery_line(self, outname, top_decoys, data_class, OUTFILE, strategy)
+            OUTFILE.close()
 
 
         # Combined + Top Values
-        outdir = self._setup_outdir_combined(['enrichment'])
-        OUTFILE = open(outdir + "/" + "cdr_type_recoveries_all_" + alignment_type + "_.txt", 'w')
-        OUTFILE.write(_get_header(self, data_class) + "\n")
-        _add_native_line(self, data_class.get_native_data(), data_class, OUTFILE)
-        outname = "combined_all"
-        _add_recovery_line(self, outname, scores[0].get_concatonated_map().keys(), data_class, OUTFILE)
-        for score in scores:
-            if score.name == "combined_str_score": continue
-            top_decoys = score.get_ordered_decoy_list_all(top_n)
-            outname = "combined_" + score.get_outname() + "_top_" + repr(top_n)
-            # print "Top: "+repr(top_decoys)
-            _add_recovery_line(self, outname, top_decoys, data_class, OUTFILE)
-        OUTFILE.close()
+        if self.combined_analysis.get():
+            outdir = self._setup_outdir_combined(['enrichment'])
+            OUTFILE = open(outdir + "/" + "cdr_type_recoveries_all_" + alignment_type + "_.txt", 'w')
+            OUTFILE.write(_get_header(self, data_class) + "\n")
+            _add_native_line(self, data_class.get_native_data(), data_class, OUTFILE)
+            outname = "combined_all"
+            _add_recovery_line(self, outname, scores[0].get_concatonated_map().keys(), data_class, OUTFILE)
+            for score in scores:
+                if score.name == "combined_str_score": continue
+                top_decoys = score.get_ordered_decoy_list_all(top_n)
+                outname = "combined_" + score.get_outname() + "_top_" + repr(top_n)
+                # print "Top: "+repr(top_decoys)
+                _add_recovery_line(self, outname, top_decoys, data_class, OUTFILE)
+            OUTFILE.close()
         print "Complete"
 
     def output_len_or_clus_enrichment(self, alignment_type, features_type='antibody', native_path = None):
-
-        outdir = self._setup_outdir_individual(["enrichment"])
 
 
         def _add_enrichments(self, label, decoys, type_data):
@@ -1704,40 +1704,43 @@ class CompareAntibodyDesignStrategies:
 
 
         ##Individual Enrichments
-        outdir = self._setup_outdir_individual(["enrichment"])
+
         top_n = self.top_n.get()
         data_class = self._setup_cdr_types(alignment_type, self.is_camelid.get(), features_type, native_path)
 
         scores = self._setup_scores(features_type)
-        if isinstance(data_class, CDRData): pass
+
+        if self.individual_analysis.get():
+            outdir = self._setup_outdir_individual(["enrichment"])
+            if isinstance(data_class, CDRData): pass
 
 
 
-        for strategy in self.strategies:
-            outname = strategy
-            decoys = scores[0].get_strategy_data(strategy).keys()
-            _add_enrichments(self, outname, decoys, data_class)
+            for strategy in self.strategies:
+                outname = strategy
+                decoys = scores[0].get_strategy_data(strategy).keys()
+                _add_enrichments(self, outname, decoys, data_class)
 
-            for score in scores:
-                if isinstance(score, DecoyData): pass
-                if score.name == "combined_str_score": continue
+                for score in scores:
+                    if isinstance(score, DecoyData): pass
+                    if score.name == "combined_str_score": continue
 
-                top_decoys = score.get_ordered_decoy_list(strategy, top_n)
-                outname = strategy + "_" + score.get_outname() + "_top_" + repr(top_n)
-                _add_enrichments(self, outname, top_decoys, data_class)
+                    top_decoys = score.get_ordered_decoy_list(strategy, top_n)
+                    outname = strategy + "_" + score.get_outname() + "_top_" + repr(top_n)
+                    _add_enrichments(self, outname, top_decoys, data_class)
 
 
         #Combined Enrichments
-
-        outdir = self._setup_outdir_combined(["enrichment"])
-        outname = "combined_all"
-        _add_enrichments(self, outname, scores[0].get_concatonated_map().keys(), data_class)
-        for score in scores:
-            if score.name == "combined_str_score": continue
-            top_decoys = score.get_ordered_decoy_list_all(top_n)
-            outname = "combined_" + score.get_outname() + "_top_" + repr(top_n)
-            # print "Top: "+repr(top_decoys)
-            _add_enrichments(self, outname, top_decoys, data_class)
+        if self.combined_analysis.get():
+            outdir = self._setup_outdir_combined(["enrichment"])
+            outname = "combined_all"
+            _add_enrichments(self, outname, scores[0].get_concatonated_map().keys(), data_class)
+            for score in scores:
+                if score.name == "combined_str_score": continue
+                top_decoys = score.get_ordered_decoy_list_all(top_n)
+                outname = "combined_" + score.get_outname() + "_top_" + repr(top_n)
+                # print "Top: "+repr(top_decoys)
+                _add_enrichments(self, outname, top_decoys, data_class)
 
         print "Complete"
 

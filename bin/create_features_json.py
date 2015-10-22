@@ -11,6 +11,7 @@ from argparse import ArgumentParser
 import os
 import sys
 import json
+import shutil
 from collections import defaultdict
 from tools.path import *
 from tools.Threader import *
@@ -149,7 +150,9 @@ def run_features_json(json_path, backround = False, outpath = ""):
         if os.path.exists("build"):
             c = glob.glob("build/*")
             for d in c:
-                os.system("mv "+d+" "+outpath)
+                os.system("cp -r "+d+" "+outpath)
+        if os.path.exists("build"):
+            shutil.rmtree("build")
 
     r_cmd = get_rosetta_features_root()+"/compare_sample_sources.R --config "+json_path
     print "Running: "+r_cmd
