@@ -2,6 +2,8 @@ from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB import PDBIO
 import sys
 import os
+import gzip
+
 from structure.RestypeDefinitions import RestypeDefinitions
 
 
@@ -18,15 +20,13 @@ def has_id(model, id):
 
 def get_biopython_structure(path, model_id = None):
     structure = None
-
+    path = path.strip()
     parser = PDBParser()
-
     if not model_id:
         model_id = os.path.basename(path)
     if os.path.basename(path).split('.')[-1] == "pdb":
         structure = parser.get_structure(model_id, path)
-
-    elif os.path.basename(path).split('.')[-1] == "gz":
+    elif os.path.basename(path).split('.')[-1] == 'gz':
         GZ = gzip.open(path, 'rb')
         structure = parser.get_structure(model_id, GZ)
         GZ.close()
