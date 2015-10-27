@@ -78,6 +78,10 @@ def main():
                         nargs='*',
                         default=["L1", "L2", "L3", "H1", "H2", "H3"])
 
+    parser.add_argument("--cdr_dir",
+                        help = "Directory of CDR structures with overhangs from PyIgClassify for use in alignment during output of pymol structures.",
+                        default = "")
+
     options = parser.parse_args()
 
     if options.root_dir != os.getcwd():
@@ -91,6 +95,7 @@ def main():
         GUI.native_path = options.native
 
     GUI.compare_designs.set_cdrs_from_list(options.cdrs)
+    GUI.compare_designs.origin_pdb_directory.set(options.cdr_dir)
 
     GUI.run()
 
@@ -276,6 +281,7 @@ class CompareAntibodyDesignStrategies_GUI:
         self.file_menu.add_separator()
 
 
+
         for name in sorted(self.compare_designs.scores_on.keys()):
             self.file_menu.add_checkbutton(label=name, variable=self.compare_designs.scores_on[name])
 
@@ -290,9 +296,12 @@ class CompareAntibodyDesignStrategies_GUI:
                                     command=lambda: self.compare_designs.copy_top(self.native_path))
         self.pymol_menu.add_command(label="All Models",
                                     command=lambda: self.compare_designs.copy_all_models(self.native_path))
-
         self.score_menu.add_cascade(label="Create PyMol Sessions", menu=self.pymol_menu)
-        self.main_menu.add_cascade(label="PyMol", menu=self.score_menu)
+        self.score_menu.add_separator()
+        self.score_menu.add_checkbutton(label="Align Origin CDRs", variable=self.compare_designs.load_origin_pdbs)
+        self.score_menu.add_command(label="Set CDR Directory", command = lambda: self.set_origin_pdb_dir)
+
+        self.main_menu.add_cascade(label="PyMol and Stats", menu=self.score_menu)
 
         ## Clustal Menu ##
         self.clustal_menu = Menu(self.main_menu, tearoff=0)
@@ -506,6 +515,14 @@ class CompareAntibodyDesignStrategies_GUI:
             self.current_dir = os.path.dirname(native_path)
             self.native_path = native_path
 
+    def set_origin_pdb_dir(self):
+        origin_path = tkFileDialog.askopenfilename(title = "CDR origin path (PyIgClassify)", inititaldir = self.current_dir)
+        if not origin_path:
+            return
+        else:
+            self.current_dir = os.path.dirname(origin_path)
+            self.compare_designs.origin_pdb_directory.set(origin_path)
+
 
             ######## Main Analysis ############
 
@@ -605,18 +622,21 @@ class CompareAntibodyDesignStrategies:
         self.features_hbond_set.set(1)
         self.query_hbonds = IntVar(value=0)
 
-        self.is_camelid = IntVar();
+        self.is_camelid = IntVar()
         self.is_camelid.set(0)
-        self.top_total_percent = IntVar();
+        self.top_total_percent = IntVar()
         self.top_total_percent.set(10)
-        self.backround_features = IntVar();
+        self.backround_features = IntVar()
         self.backround_features.set(1)
 
-        self.rosetta_extension = StringVar();
+        self.rosetta_extension = StringVar()
         self.rosetta_extension.set("linuxclangrelease")
 
-        self.individual_analysis = IntVar(value = 1);
-        self.combined_analysis = IntVar(value = 0);
+        self.individual_analysis = IntVar(value = 1)
+        self.combined_analysis = IntVar(value = 0)
+
+        self.load_origin_pdbs = IntVar(value = 1)
+        self.origin_pdb_directory = StringVar()
 
     def _init_scores(self):
         total_scores = TotalDecoyData()
@@ -1203,8 +1223,17 @@ class CompareAntibodyDesignStrategies:
                         SCORELIST.write(
                             repr(i) + "\t" + get_str(decoys[decoy].score) + "\t" + os.path.basename(decoy) + "\n")
                         i += 1
-                    make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(), top_n,
-                                              native_path)
+
+                    if self.load_origin_pdbs:
+                        if not self.origin_pdb_directory.get() or not os.path.exists(self.origin_pdb_directory.get()):
+                            print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
+                            return
+
+                        make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.origin_pdb_directory.get(),
+                                                                         top_num=top_n, native_path=native_path)
+                    else:
+                        make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
+                                                                         top_num=top_n, native_path=native_path)
                     SCORELIST.close()
 
         def copy_top_combined(native_path=None):
@@ -1239,9 +1268,17 @@ class CompareAntibodyDesignStrategies:
                     SCORELIST.write(repr(i) + "\t" + get_str(decoys[decoy].score) + "\t" + os.path.basename(decoy) + "\n")
                     i += 1
 
-                make_pymol_session_on_top(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(),
-                                          top_n,
-                                          native_path)
+                if self.load_origin_pdbs:
+                    if not self.origin_pdb_directory.get() or not os.path.exists(self.origin_pdb_directory.get()):
+                        print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
+                        return
+
+                    make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(), self.origin_pdb_directory.get(),
+                                                                     top_num=top_n, native_path=native_path)
+                else:
+                    make_pymol_session_on_top(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(),
+                                                                     top_num=top_n, native_path=native_path)
+
                 SCORELIST.close()
 
         if self.individual_analysis.get():
@@ -1280,7 +1317,17 @@ class CompareAntibodyDesignStrategies:
                     load_as.append("model_" + repr(i) + "_" + score.get_outname() + "_" + get_str(decoys[decoy].score))
                     os.system('cp ' + decoy + " " + out_dir + "/top_" + repr(i) + "_" + os.path.basename(decoy))
                     i += 1
-                make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(), None, native_path)
+
+                if self.load_origin_pdbs:
+                    if not self.origin_pdb_directory.get() or not os.path.exists(self.origin_pdb_directory.get()):
+                        print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
+                        return
+
+                    make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.origin_pdb_directory.get(),
+                                                                     top_num=None, native_path=native_path)
+                else:
+                    make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
+                                                                     top_num=None, native_path=native_path)
 
         # Overall Strategy:
         for score in scores:
@@ -1296,7 +1343,17 @@ class CompareAntibodyDesignStrategies:
                 os.system('cp ' + decoy + " " + out_dir + "/top_" + repr(i) + "_" + os.path.basename(decoy))
                 i += 1
             session_dir = out_dir = self._setup_outdir_combined(["all_sessions"])
-            make_pymol_session_on_top(decoy_list, load_as, out_dir, session_dir, score.get_outname(), None, native_path)
+
+            if self.load_origin_pdbs:
+                if not self.origin_pdb_directory.get() or not os.path.exists(self.origin_pdb_directory.get()):
+                    print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
+                    return
+
+                make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.origin_pdb_directory.get(),
+                                                                 top_num=None, native_path=native_path)
+            else:
+                make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
+                                                                 top_num=None, native_path=native_path)
 
     def run_clustal_omega(self, processors, output_format="fasta", extra_options="", native_path=None):
 

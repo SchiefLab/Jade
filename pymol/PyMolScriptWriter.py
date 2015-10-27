@@ -7,6 +7,8 @@ import re
 from collections import defaultdict
 from tools.path import *
 from tools.Threader import Threader
+from structure import Structure
+from antibody import util as ab_util
 
 class PyMolScriptWriter:
     """
@@ -216,6 +218,12 @@ class PyMolScriptWriter:
             self.final_names.append(load_as)
             self.script_lines.append("load "+pdb_path+", "+load_as)
 
+    def add_superimpose(self, sele1, sele2):
+        """
+        Super impose two selections using the super command
+        """
+        self.add_line("super "+sele1+", "+sele2)
+
     def add_load_pdbs(self, pdb_paths, load_as = ""):
         """
         Add lines to load the list of PDB paths into PyMol
@@ -251,6 +259,7 @@ class PyMolScriptWriter:
     def add_align_to(self, model1, model2, sele1="", sele2 = "", limit_to_bb = True, pair_fit = False):
         """
         Align one model to another, optionally specifying a selection.
+        Recommended to use superimpose instead
         """
 
         align = "align "
@@ -336,7 +345,7 @@ def make_pymol_session_on_top(pdb_path_list, load_as_list, script_dir, session_d
     else:
         pse_path = session_dir+"/"+out_name+"_all"+".pse"
     if os.path.exists(pse_path):
-        print "Not overriding PSE: "+pse_path
+        print "Overriding PSE: "+pse_path
         #return
 
     if len(pdb_path_list) == 0:
@@ -361,6 +370,112 @@ def make_pymol_session_on_top(pdb_path_list, load_as_list, script_dir, session_d
     scripter.write_script("load_align_top.pml")
     run_pymol_script(script_dir+"/"+"load_align_top.pml")
 
+def make_pymol_session_on_top_ab_include_native_cdrs(pdb_path_list, load_as_list, script_dir, session_dir, out_name, cdr_dir, top_num = None, native_path = None):
+    """
+    Make a pymol session on a set of decoys.  These decoys should have REMARK CDR_origin.  These origin pdbs will be aligned and included in the pymol session
+    :param top_dir:
+    :param pdb_path_list: List of PDB Paths
+    :param load_as_list: List of PDB Path names for pymol.
+    :param cdr_dir: The directory of antibody CDRs from PyIgClassify.
+    :return:
+    """
+    if top_num:
+        pse_path = session_dir+"/"+out_name+"_top_"+str(top_num)+".pse"
+    else:
+        pse_path = session_dir+"/"+out_name+"_all"+".pse"
+    if os.path.exists(pse_path):
+        print "Overriding PSE: "+pse_path
+        #return
+
+    if len(pdb_path_list) == 0:
+        print "PDB list path empty.  Skipping creation of pymol session"
+        return
+
+    scripter = PyMolScriptWriter(script_dir)
+
+    if native_path:
+        scripter.add_load_pdb(native_path, "native_"+os.path.basename(native_path))
+
+    scripter.add_load_pdbs(pdb_path_list, load_as_list)
+    scripter.add_align_all_to(scripter.get_final_names()[0])
+
+    scripter.add_line("group models, model*")
+    color_cdrs_path = get_bin_path()+"/color_cdrs.pml"
+    scripter.add_line("@"+color_cdrs_path)
+
+    #For each Model, we need to load and search for origin
+
+    origin_names = defaultdict(list)
+    sorted_origin_names = []
+    for pair in zip(pdb_path_list, load_as_list):
+
+        cdrs_to_align = defaultdict()
+        pdb_path = pair[0]
+        pdb_name = pair[1]
+
+        INFILE = open_file(pdb_path)
+        for line in INFILE:
+            line = line.strip()
+            if not line: continue
+            lineSP = line.split()
+
+            # REMARK L3_origin 5alcL_L3_0001 #
+            if len(lineSP) == 3 and lineSP[0] == "REMARK" and re.search('origin', lineSP[1]):
+                print line
+                cdrs_to_align[lineSP[1]] = lineSP[2]
+            else:
+                continue
+        INFILE.close()
+
+        #Group: L3_origin_pdb_id_model
+        for origin_type in cdrs_to_align:
+            model_num = os.path.basename(pdb_name).split("_")[1]; # model_1_scoretye_score
+            cdr_name = origin_type.split("_")[0]; #L3_origin
+            cdr_object = Structure.CDR(cdr_name)
+            pdbid = cdrs_to_align[ origin_type ].split("_")[0]; #pdbid_cdr_0001
+
+            cdr_path = cdr_dir+"/"+"_".join(cdrs_to_align[origin_type].split("_")[0:-1])+".pdb"
+            print "CDR Path: "+ cdr_path
+            if not os.path.exists(cdr_path): sys.exit("CDR Path does not exist!! "+cdr_path)
+
+            stem_cdr_name = '_'.join(["ste", "mod", model_num, pdbid, cdr_name])
+            cdr_cdr_name = '_'.join(["cdr", "mod", model_num, pdbid, cdr_name])
+            all_cdr_name = '_'.join(["all", "mod", model_num, pdbid, cdr_name])
+
+            model_group = "_".join(["model", model_num, cdr_name])
+            sorted_origin_names.append(model_group)
+            origin_names[model_group].append(stem_cdr_name)
+            origin_names[model_group].append(cdr_cdr_name)
+            origin_names[model_group].append(all_cdr_name)
+
+            scripter.add_load_pdb(cdr_path,  stem_cdr_name)
+            scripter.add_load_pdb(cdr_path,  cdr_cdr_name)
+            scripter.add_load_pdb(cdr_path,  all_cdr_name)
+
+            #SuperImpose stem
+            overhang_sele = ab_util.get_overhang_sele(scripter, cdr_object, 3)
+            scripter.add_superimpose(" ".join([stem_cdr_name, "and", overhang_sele]), " ".join([pdb_name, "and", overhang_sele]))
+
+            #SuperImpose CDR-only (no Stem!)
+            cdr_only_sele = ab_util.get_all_cdr_sele(cdr_object, stem=0)
+            scripter.add_superimpose(" ".join([cdr_cdr_name, "and", cdr_only_sele]), " ".join([pdb_name, "and", cdr_only_sele]))
+
+            #SuperImpose Stem+CDR
+            cdr_and_stem_sele = ab_util.get_all_cdr_sele(cdr_object, stem=3)
+            scripter.add_superimpose(" ".join([all_cdr_name, "and", cdr_and_stem_sele]), " ".join([pdb_name, "and", cdr_and_stem_sele]))
+
+    scripter.add_show("cartoon")
+    scripter.add_line("zoom full_paratope")
+    scripter.add_line("hide lines")
+
+    for origin_type in sorted_origin_names:
+        scripter.add_line("group "+origin_type+", "+" ".join(origin_names[origin_type]))
+        for object_name in origin_names[origin_type]:
+            scripter.add_line("disable "+origin_type); #Make them not show when we load pymol
+    scripter.add_line("group origin_cdrs, "+ " ".join(sorted_origin_names))
+    scripter.add_save_session(pse_path)
+    scripter.write_script("load_align_top.pml")
+    run_pymol_script(script_dir+"/"+"load_align_top.pml")
 
 def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, out_name, top_num = None, native_path = None, antibody=True, parellel = True):
     """
@@ -384,7 +499,7 @@ def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, o
     else:
         pse_path = session_dir+"/"+out_name+"_all"+".pse"
     if os.path.exists(pse_path):
-        print "Not overriding PSE: "+pse_path
+        print "Overriding PSE: "+pse_path
         #return
 
     if len(pdbpaths_scores) == 0:

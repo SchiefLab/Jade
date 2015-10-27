@@ -96,3 +96,4 @@ def get_mask_for_stem_alignment(pose, second_pose, stem_size):
             id_map.set(atom_pose, atom_second_pose)
 
     return id_map
+
