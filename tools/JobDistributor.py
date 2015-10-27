@@ -1,9 +1,22 @@
+
 from multiprocessing import Process
 import time
+
+#Author: Jordan Willis
+
 
 
 class JobDistributor():
     def __init__(self, jobs, limit=10, verbose=True):
+        """
+        Runs a set of processes using a given limit.
+        When one is done, will start the next one untill all jobs from the list are complete.
+
+        :param jobs: A list of multiprocessing.Subprocess objects.  Not yet started.
+        :param limit:
+        :param verbose:
+        :return:
+        """
         self.jobs = jobs
         self.limit = limit
         self.verbose = verbose
