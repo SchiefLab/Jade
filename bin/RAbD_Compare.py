@@ -3,11 +3,8 @@
 # Yes, the imports are all over.  Basically everything I've coded over the past few years.
 import sys
 import os
-import re
-import glob
 import sqlite3
-import atexit
-import shutil
+import pandas
 
 from argparse import ArgumentParser
 from collections import defaultdict
@@ -995,6 +992,14 @@ class CompareAntibodyDesignStrategies:
         print "Plots ignore any set filters.  To plot with filters, create new databases through query..."
         print "Complete..."
 
+    def get_concatonated_top_data_per_model_per_strategy(self):
+        """
+        Get a pandas dataframe of all the data per model for all strategies
+        :return:
+        """
+        columns=["strategy", "decoy", ""]
+        df = pandas.DataFrame(columns=columns)
+
     def output_stats(self):
 
         def output_all_stats():
@@ -1746,7 +1751,7 @@ class CompareAntibodyDesignStrategies:
             for cdr in cdr_names:
                 enrichments = calculate_enrichments(data_class, cdr, decoys)
                 OUTFILE = open(outdir+"/" + "cdr_type_enrichment_"+alignment_type+"_"+label+"_"+cdr+".txt", 'w')
-                OUTFILE.write("group\tcount\tperc\n")
+                OUTFILE.write("#group\tcount\tperc\n")
 
 
                 for c in sorted([[enrichments[c].count, c] for c in enrichments], reverse=True):
