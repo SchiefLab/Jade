@@ -1,6 +1,7 @@
 from Tkinter import *
 from collections import defaultdict
 import math
+import pandas
 
 from tools.StatementCreator import *
 
@@ -34,6 +35,32 @@ class DecoyData:
 
         self.filters = None
         self.filter_name = None
+
+    def get_pandas_dataframe(self):
+        """
+        Gets all data as a pandas dataframe.  Uses the set name as the score.
+        You can then order, or select specific ones using the data frame.
+        :return: pandas.DataFrame
+        """
+        columns = ["strategy", "struct_id", self.name]
+
+        df = pandas.DataFrame(columns=columns)
+        temp_dict = defaultdict(list)
+
+        for strategy in sorted(self.all_data):
+            for decoy in self.all_data[strategy]:
+                for triple in self.all_data[strategy][decoy]:
+                    if isinstance(triple, DecoyDataTriple): pass
+
+                    temp_dict["strategy"].append(strategy)
+                    temp_dict["decoy"].append(decoy)
+                    temp_dict["struct_id"].append(triple.struct_id)
+                    temp_dict[self.name].append(float(triple.score))
+
+        df.from_dict(temp_dict)
+        df.index = df["decoy"]
+        return df
+
 
     def set_interface(self, interface):
         """

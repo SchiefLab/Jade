@@ -1,4 +1,4 @@
-
+import pandas
 from collections import defaultdict
 
 
@@ -22,6 +22,7 @@ class CDRDataInfo:
         line = line+"\n"
         #print line
         return line
+
 
     def get_data(self):
         return self.data
@@ -79,6 +80,33 @@ class CDRData:
 
         self.native_data = None
         self._setup_native_data(native_path)
+
+    def get_pandas_dataframe(self):
+        """
+        Gets all data as a pandas dataframe.  Uses the set name as the score.
+        You can then order, or select specific ones using the data frame.
+        :return: pandas.DataFrame
+        """
+        columns = ["strategy", "decoy"]
+        columns = columns.extend(["_".join([cdr, self.name]) for cdr in self.cdrs])
+
+        temp_dict = defaultdict(list)
+        df = pandas.DataFrame(columns=columns)
+        for strategy in self.all_data:
+            for decoy in self.all_data[strategy]:
+                for triple in self.all_data[strategy][decoy]:
+                    if isinstance(triple, CDRDataInfo): pass
+
+                    temp_dict["strategy"].append(strategy)
+                    temp_dict["decoy"].append(decoy)
+                    for cdr in self.cdrs:
+                        temp_dict["_".join([cdr, self.name])] = triple.get_value_for_cdr(cdr)
+
+        df.from_dict(temp_dict)
+        df.index = df["decoy"]
+        return df
+
+
 
     def _get_stmt(self, column_name):
         if not self.is_camelid:
