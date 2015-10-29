@@ -1,4 +1,5 @@
 import pandas
+import os
 from collections import defaultdict
 
 
@@ -85,25 +86,27 @@ class CDRData:
         """
         Gets all data as a pandas dataframe.  Uses the set name as the score.
         You can then order, or select specific ones using the data frame.
-        :return: pandas.DataFrame
+        :rtype: pandas.DataFrame
         """
-        columns = ["strategy", "decoy"]
-        columns = columns.extend(["_".join([cdr, self.name]) for cdr in self.cdrs])
+
 
         temp_dict = defaultdict(list)
-        df = pandas.DataFrame(columns=columns)
+
         for strategy in self.all_data:
             for decoy in self.all_data[strategy]:
-                for triple in self.all_data[strategy][decoy]:
-                    if isinstance(triple, CDRDataInfo): pass
+                triple = self.all_data[strategy][decoy]
+                if isinstance(triple, CDRDataInfo): pass
 
-                    temp_dict["strategy"].append(strategy)
-                    temp_dict["decoy"].append(decoy)
-                    for cdr in self.cdrs:
-                        temp_dict["_".join([cdr, self.name])] = triple.get_value_for_cdr(cdr)
+                temp_dict["strategy"].append(strategy)
+                temp_dict["decoy"].append(os.path.basename(decoy))
+                for cdr in self.cdrs:
+                    temp_dict["_".join([cdr, self.name])] = triple.get_value_for_cdr(cdr)
 
-        df.from_dict(temp_dict)
+        columns = ["strategy", "decoy"]
+        columns = columns.extend(["_".join([cdr, self.name]) for cdr in self.cdrs])
+        df = pandas.DataFrame(temp_dict, columns=columns)
         df.index = df["decoy"]
+        del df["decoy"]
         return df
 
 

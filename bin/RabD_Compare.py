@@ -89,7 +89,7 @@ def main():
 
     # Set any values
     if options.native:
-        GUI.native_path = options.native
+        GUI.compare_designs.native_path = options.native
 
     GUI.compare_designs.set_cdrs_from_list(options.cdrs)
     GUI.compare_designs.origin_pdb_directory.set(options.cdr_dir)
@@ -130,7 +130,6 @@ class CompareAntibodyDesignStrategies_GUI:
 
         self.clustal_procs = IntVar(value=multiprocessing.cpu_count())
         self.clustal_output_format = StringVar(value="clu")
-        self.native_path = None
         self.clustal_output_formats = ['fasta', 'clustal', 'msf', 'phylip', 'selex', 'stockholm', 'vienna',
                                        'a2m', 'fa', 'clu', 'phy', 'st', 'vie']
         self.base_clustal_options = " -v --auto --force"
@@ -286,19 +285,19 @@ class CompareAntibodyDesignStrategies_GUI:
 
 
         ## Score Menu ##
-        self.score_menu = Menu(self.main_menu, tearoff=0)
-        self.score_menu.add_command(label="Output Score Stats", command=lambda: self.compare_designs.output_stats())
+
+        self.main_pymol_menu = Menu(self.main_menu, tearoff=0)
         self.pymol_menu = Menu(self.main_menu, tearoff=0)
         self.pymol_menu.add_command(label="Top Models",
-                                    command=lambda: self.compare_designs.copy_top(self.native_path))
+                                    command=lambda: self.compare_designs.copy_top())
         self.pymol_menu.add_command(label="All Models",
-                                    command=lambda: self.compare_designs.copy_all_models(self.native_path))
-        self.score_menu.add_cascade(label="Create PyMol Sessions", menu=self.pymol_menu)
-        self.score_menu.add_separator()
-        self.score_menu.add_checkbutton(label="Align Origin CDRs", variable=self.compare_designs.load_origin_pdbs)
-        self.score_menu.add_command(label="Set CDR Directory", command = lambda: self.set_origin_pdb_dir)
+                                    command=lambda: self.compare_designs.copy_all_models())
+        self.main_pymol_menu.add_cascade(label="Create PyMol Sessions", menu=self.pymol_menu)
+        self.main_pymol_menu.add_separator()
+        self.main_pymol_menu.add_checkbutton(label="Align Origin CDRs", variable=self.compare_designs.load_origin_pdbs)
+        self.main_pymol_menu.add_command(label="Set CDR Directory", command = lambda: self.set_origin_pdb_dir)
 
-        self.main_menu.add_cascade(label="PyMol and Stats", menu=self.score_menu)
+        self.main_menu.add_cascade(label="PyMol", menu=self.main_pymol_menu)
 
         ## Clustal Menu ##
         self.clustal_menu = Menu(self.main_menu, tearoff=0)
@@ -310,37 +309,46 @@ class CompareAntibodyDesignStrategies_GUI:
                                       command=lambda: self.run_clustal_omega())
         self.clustal_menu.add_command(label="Run Clustal Omega on ALL Combined Decoys",
                                       command=lambda: self.run_clustal_on_all_combined())
-        self.main_menu.add_cascade(label="Clustal", menu=self.clustal_menu)
+        #self.main_menu.add_cascade(label="Clustal", menu=self.clustal_menu)
 
         ## Alignment ##
-        self.alignment_menu = Menu(self.main_menu, tearoff=0)
+        self.per_model_menu = Menu(self.main_menu, tearoff=0)
 
-        self.alignment_menu.add_command(label="Output Length Alignments",
-                                        command=lambda: self.compare_designs.output_len_or_clus_alignment('length', 'antibody',native_path = self.native_path))
-        self.alignment_menu.add_command(label="Output Cluster Alignments",
-                                        command=lambda: self.compare_designs.output_len_or_clus_alignment('cluster', 'antibody',native_path = self.native_path))
-        self.alignment_menu.add_command(label="Output CDR Sequence Alignments",
-                                        command=lambda: self.compare_designs.output_len_or_clus_alignment('aligned_sequence', 'antibody',native_path = self.native_path))
-        self.alignment_menu.add_separator()
-        self.main_menu.add_cascade(label="Alignment", menu=self.alignment_menu)
+        self.per_model_menu.add_command(label="Output Length Alignments",
+                                        command=lambda: self.compare_designs.output_len_or_clus_alignment('length', 'antibody'))
+        self.per_model_menu.add_command(label="Output Cluster Alignments",
+                                        command=lambda: self.compare_designs.output_len_or_clus_alignment('cluster', 'antibody'))
+        self.per_model_menu.add_command(label="Output CDR Sequence Alignments",
+                                        command=lambda: self.compare_designs.output_len_or_clus_alignment('aligned_sequence', 'antibody'))
+        self.per_model_menu.add_separator()
+        self.per_model_menu.add_command(label="Output to CSV (Top)", command = lambda: self.compare_designs.get_concatonated_top_data_per_model_per_strategy())
+        self.per_model_menu.add_command(label="Output to CSV (ALL)")
+        self.per_model_menu.add_separator()
+        self.per_model_menu.add_cascade(label="Clustal", menu = self.clustal_menu)
+
+        self.main_menu.add_cascade(label="Model Data", menu=self.per_model_menu)
 
 
         ## Recovery ##
+        self.per_strategy_menu = Menu(self.main_menu, tearoff = 0)
         self.recovery_menu = Menu(self.main_menu, tearoff=0)
         self.recovery_menu.add_command(label="Output Length Recovery",
-                                       command=lambda: self.compare_designs.output_len_or_clus_recovery('length', 'antibody', native_path = self.native_path))
+                                       command=lambda: self.compare_designs.output_len_or_clus_recovery('length', 'antibody'))
         self.recovery_menu.add_command(label="Output Cluster Recovery",
-                                       command=lambda: self.compare_designs.output_len_or_clus_recovery('cluster', 'antibody', native_path = self.native_path))
-        self.main_menu.add_cascade(label="Recovery", menu=self.recovery_menu)
+                                       command=lambda: self.compare_designs.output_len_or_clus_recovery('cluster', 'antibody'))
 
         ## Enrichment ##
         self.enrichment_menu = Menu(self.main_menu, tearoff=0)
         self.enrichment_menu.add_command(label="Output Length Enrichments",
-                                         command = lambda: self.compare_designs.output_len_or_clus_enrichment("length", native_path = self.native_path))
+                                         command = lambda: self.compare_designs.output_len_or_clus_enrichment("length"))
         self.enrichment_menu.add_command(label="Output Cluster Enrichments",
-                                         command = lambda: self.compare_designs.output_len_or_clus_enrichment("cluster", native_path = self.native_path))
+                                         command = lambda: self.compare_designs.output_len_or_clus_enrichment("cluster"))
 
-        self.main_menu.add_cascade(label="Enrichment", menu=self.enrichment_menu)
+        self.per_strategy_menu.add_command(label="Output Score Stats", command=lambda: self.compare_designs.output_stats())
+        self.per_strategy_menu.add_cascade(label = "Recovery", menu = self.recovery_menu)
+        self.per_strategy_menu.add_cascade(label = "Enrichment", menu = self.enrichment_menu)
+
+        self.main_menu.add_cascade(label="Strategy Data", menu=self.per_strategy_menu)
 
         self.subset_menu = Menu(self.main_menu, tearoff=0)
 
@@ -510,7 +518,7 @@ class CompareAntibodyDesignStrategies_GUI:
             return
         else:
             self.current_dir = os.path.dirname(native_path)
-            self.native_path = native_path
+            self.compare_designs.native_path = native_path
 
     def set_origin_pdb_dir(self):
         origin_path = tkFileDialog.askopenfilename(title = "CDR origin path (PyIgClassify)", inititaldir = self.current_dir)
@@ -533,7 +541,7 @@ class CompareAntibodyDesignStrategies_GUI:
         self.compare_designs.run_features(type)
 
     def run_copy_all(self):
-        self.compare_designs.copy_all_models(self.native_path)
+        self.compare_designs.copy_all_models()
 
 
     def run_clustal_on_all_combined(self):
@@ -545,7 +553,7 @@ class CompareAntibodyDesignStrategies_GUI:
 
         self.compare_designs.run_clustal_omega_on_all_combined(self.clustal_procs.get(),
                                                                self.clustal_output_format.get(),
-                                                               extra_options=extra_options, native_path=self.native_path)
+                                                               extra_options=extra_options)
 
     def run_clustal_omega(self):
 
@@ -556,7 +564,7 @@ class CompareAntibodyDesignStrategies_GUI:
 
         self.compare_designs.run_clustal_omega(self.clustal_procs.get(),
                                                                self.clustal_output_format.get(),
-                                                               extra_options=extra_options, native_path=self.native_path)
+                                                               extra_options=extra_options)
 
     def create_subset_databases(self, score_name):
         rosetta_extension = tkSimpleDialog.askstring(title="Rosetta Extension",
@@ -587,7 +595,7 @@ class CompareAntibodyDesignStrategies:
         #Init construction options
         self.db_dir = StringVar(value=db_dir)
         self.out_dir_name = StringVar(value=out_dir_name)
-
+        self.native_path = None
         self.strategies = strategies
 
         #Init Classes and data
@@ -696,11 +704,11 @@ class CompareAntibodyDesignStrategies:
 
         return outdir
 
-    def _setup_outdir_individual(self, subdirs, use_outdir_name=False):
+    def _setup_outdir_individual(self, subdirs=[], use_outdir_name=False):
 
         return self._setup_outdir(["analysis_individual", self.out_dir_name.get()] + subdirs, use_outdir_name)
 
-    def _setup_outdir_combined(self, subdirs):
+    def _setup_outdir_combined(self, subdirs=[]):
         return self._setup_outdir(["analysis_combined", self.out_dir_name.get()] + subdirs, False)
 
     def _setup_cdrs(self):
@@ -723,6 +731,7 @@ class CompareAntibodyDesignStrategies:
     def _setup_scores(self, features_type="antibody", use_all=False):
         """
         Setup the Score Classes.  If not use_all, will use only use those set.
+
         """
 
         self._init_scores()
@@ -742,7 +751,7 @@ class CompareAntibodyDesignStrategies:
                     score_subset.append(copy.deepcopy(score_class))
             return score_subset
 
-        hb_loader = InterfaceHBondDecoyDataLoader();
+        hb_loader = InterfaceHBondDecoyDataLoader()
 
         filters = self._setup_filters()
 
@@ -824,19 +833,19 @@ class CompareAntibodyDesignStrategies:
 
         return filters
 
-    def _setup_cdr_types(self, data_type, is_camelid, features_type, native_path=None):
+    def _setup_cdr_types(self, data_type, is_camelid, features_type='antibody'):
         if data_type == "length":
-            data_class = CDRLengthData(native_path, is_camelid)
+            data_class = CDRLengthData(self.native_path, is_camelid)
 
         elif data_type == "cluster":
-            data_class = CDRClusterData(native_path, is_camelid)
+            data_class = CDRClusterData(self.native_path, is_camelid)
 
         elif data_type == "sequence":
-            data_class = CDRSequenceData(native_path, is_camelid)
+            data_class = CDRSequenceData(self.native_path, is_camelid)
 
         elif data_type == "aligned_sequence":
             data_class = CDRAlignedSequenceData(self._setup_outdir_individual(['clustal']),
-                                                self._setup_outdir_combined(['clustal']), native_path, is_camelid)
+                                                self._setup_outdir_combined(['clustal']), self.native_path, is_camelid)
 
         else:
             sys.exit("data_type not understood!")
@@ -995,10 +1004,34 @@ class CompareAntibodyDesignStrategies:
     def get_concatonated_top_data_per_model_per_strategy(self):
         """
         Get a pandas dataframe of all the data per model for all strategies
-        :return:
+
         """
-        columns=["strategy", "decoy", ""]
-        df = pandas.DataFrame(columns=columns)
+
+        dfs = []
+        for score in self._setup_scores(use_all=True):
+            if score.name == "dG_top_Ptotal":continue
+
+            if isinstance(score, DecoyData): pass
+            df = score.get_pandas_dataframe()
+            df.to_csv(open(self._setup_outdir_individual()+"/test_"+score.name+".csv", "w"))
+
+            dfs.append(df)
+
+
+        combined_scores = pandas.concat(dfs, axis=1, join="inner")
+        combined_scores.tail()
+        combined_scores.describe()
+
+        fixed = combined_scores.T.groupby(level=0).first().T
+        fixed.to_csv(open(self._setup_outdir_individual()+"/test_"+"combined.csv", "w"))
+        cdr_types = ["length", "cluster", "sequence", "aligned_sequence"]
+
+        for t in cdr_types:
+            cdr_data = self._setup_cdr_types(t, self.is_camelid.get())
+            df = cdr_data.get_pandas_dataframe()
+            df.to_csv(open(self._setup_outdir_individual()+"/test_"+cdr_data.name+".csv", "w"))
+
+        print "Complete"
 
     def output_stats(self):
 
@@ -1195,8 +1228,8 @@ class CompareAntibodyDesignStrategies:
             output_all_stats()
         print "Complete"
 
-    def copy_top(self, native_path=None):
-        def copy_top_strategy(native_path=None):
+    def copy_top(self):
+        def copy_top_strategy():
 
             top_n = self.top_n.get()
             scores = self._setup_scores()
@@ -1235,13 +1268,13 @@ class CompareAntibodyDesignStrategies:
                             return
 
                         make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.origin_pdb_directory.get(),
-                                                                         top_num=top_n, native_path=native_path)
+                                                                         top_num=top_n, native_path=self.native_path)
                     else:
                         make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
-                                                                         top_num=top_n, native_path=native_path)
+                                                                         top_num=top_n, native_path=self.native_path)
                     SCORELIST.close()
 
-        def copy_top_combined(native_path=None):
+        def copy_top_combined():
             """
             Outputs total_score,
             """
@@ -1279,21 +1312,21 @@ class CompareAntibodyDesignStrategies:
                         return
 
                     make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(), self.origin_pdb_directory.get(),
-                                                                     top_num=top_n, native_path=native_path)
+                                                                     top_num=top_n, native_path=self.native_path)
                 else:
                     make_pymol_session_on_top(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(),
-                                                                     top_num=top_n, native_path=native_path)
+                                                                     top_num=top_n, native_path=self.native_path)
 
                 SCORELIST.close()
 
         if self.individual_analysis.get():
             print "Outputting individual sessions"
-            copy_top_strategy(native_path)
+            copy_top_strategy()
         if self.combined_analysis.get():
             print "Outputting combined sessions"
-            copy_top_combined(native_path)
+            copy_top_combined()
 
-    def copy_all_models(self, native_path=None):
+    def copy_all_models(self):
 
         if not self.out_dir_name.get():
             print "No root name set!"
@@ -1329,10 +1362,10 @@ class CompareAntibodyDesignStrategies:
                         return
 
                     make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.origin_pdb_directory.get(),
-                                                                     top_num=None, native_path=native_path)
+                                                                     top_num=None, native_path=self.native_path)
                 else:
                     make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
-                                                                     top_num=None, native_path=native_path)
+                                                                     top_num=None, native_path=self.native_path)
 
         # Overall Strategy:
         for score in scores:
@@ -1355,12 +1388,12 @@ class CompareAntibodyDesignStrategies:
                     return
 
                 make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.origin_pdb_directory.get(),
-                                                                 top_num=None, native_path=native_path)
+                                                                 top_num=None, native_path=self.native_path)
             else:
                 make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
-                                                                 top_num=None, native_path=native_path)
+                                                                 top_num=None, native_path=self.native_path)
 
-    def run_clustal_omega(self, processors, output_format="fasta", extra_options="", native_path=None):
+    def run_clustal_omega(self, processors, output_format="fasta", extra_options=""):
 
         def run_clustal_omega_on_strategies():
 
@@ -1385,7 +1418,7 @@ class CompareAntibodyDesignStrategies:
 
                 fasta_dir = self._setup_outdir_individual(["sequences"])
                 fasta_path = fasta_dir + "/" + strategy + "_all.fasta"
-                fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "Native",
+                fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, self.native_path, "Native",
                                                        self.is_camelid.get())
 
                 aln_dir = self._setup_outdir_individual(["clustal"])
@@ -1412,7 +1445,7 @@ class CompareAntibodyDesignStrategies:
                     for decoy in decoys:
                         header = "v" + get_str(decoys[decoy].score) + "::" + os.path.basename(decoy)
                         decoy_header_dict[decoy] = header
-                    fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "Native",
+                    fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, self.native_path, "Native",
                                                            self.is_camelid.get())
                     clustal_runner.set_fasta_path(fasta_path)
                     clustal_runner.set_threads(processors)
@@ -1449,7 +1482,7 @@ class CompareAntibodyDesignStrategies:
                 clustal_dir = self._setup_outdir_combined(["clustal"])
                 clustal_name = basename + ".aln"
 
-                fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "Native",
+                fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, self.native_path, "Native",
                                                        self.is_camelid.get())
                 clustal_runner = ClustalRunner(fasta_path)
                 clustal_runner.set_threads(processors)
@@ -1465,7 +1498,7 @@ class CompareAntibodyDesignStrategies:
 
         print "Complete"
 
-    def run_clustal_omega_on_all_combined(self, processors, output_format, extra_options="", native_path=None):
+    def run_clustal_omega_on_all_combined(self, processors, output_format, extra_options=""):
 
         if not self.out_dir_name.get():
             print "No root name set!"
@@ -1501,7 +1534,7 @@ class CompareAntibodyDesignStrategies:
             header = header + ":" + os.path.basename(decoy)
             decoy_header_dict[decoy] = header
 
-        fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, native_path, "native",
+        fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, self.native_path, "native",
                                                self.is_camelid.get())
         clustal_runner = ClustalRunner(fasta_path)
         clustal_runner.set_threads(processors)
@@ -1512,14 +1545,13 @@ class CompareAntibodyDesignStrategies:
 
         print "Complete"
 
-    def output_len_or_clus_alignment(self, alignment_type, features_type='antibody',
-                                     native_path=None):
+    def output_len_or_clus_alignment(self, alignment_type, features_type='antibody'):
 
         is_camelid = self.is_camelid.get()
 
         top_n = self.top_n.get()
-        data_class = self._setup_cdr_types(alignment_type, self.is_camelid.get(), features_type, native_path)
-        len_class = self._setup_cdr_types("length", self.is_camelid.get(), features_type, native_path)
+        data_class = self._setup_cdr_types(alignment_type, self.is_camelid.get(), features_type)
+        len_class = self._setup_cdr_types("length", self.is_camelid.get(), features_type)
 
         def _output_alignment(self, outdir, top_decoys, score, type_data, strategy=None, extra_name="top"):
 
@@ -1536,7 +1568,7 @@ class CompareAntibodyDesignStrategies:
             cdr_names = [cdr for cdr in type_data.cdrs if cdr in self._setup_cdrs()]
 
             OUTFILE = open(outdir + "/" + outname, 'w')
-            if native_path:
+            if self.native_path:
                 header = "#score\t\tmatches"
             else:
                 header = "#score\t"
@@ -1549,7 +1581,7 @@ class CompareAntibodyDesignStrategies:
             all_data = score.get_concatonated_map()
             all_type_data = type_data.get_concatonated_map()
 
-            if native_path:
+            if self.native_path:
                 line = "..." + "\t\tNA"
 
                 if all_type_data.has_key((cdr, "native")):
@@ -1635,9 +1667,9 @@ class CompareAntibodyDesignStrategies:
 
         print "Complete"
 
-    def output_len_or_clus_recovery(self, alignment_type, features_type='antibody', native_path=None):
-        len_class = self._setup_cdr_types("length", self.is_camelid.get(), features_type, native_path)
-        if not native_path:
+    def output_len_or_clus_recovery(self, alignment_type, features_type='antibody'):
+        len_class = self._setup_cdr_types("length", self.is_camelid.get(), features_type)
+        if not self.native_path:
             print "Must pass select native path to calculate recoveries"
             return
 
@@ -1699,7 +1731,7 @@ class CompareAntibodyDesignStrategies:
 
         top_n = self.top_n.get()
 
-        data_class = self._setup_cdr_types(alignment_type, self.is_camelid.get(), features_type, native_path)
+        data_class = self._setup_cdr_types(alignment_type, self.is_camelid.get(), features_type)
         scores = self._setup_scores(features_type)
         if isinstance(data_class, CDRData): pass
 
@@ -1740,7 +1772,7 @@ class CompareAntibodyDesignStrategies:
             OUTFILE.close()
         print "Complete"
 
-    def output_len_or_clus_enrichment(self, alignment_type, features_type='antibody', native_path = None):
+    def output_len_or_clus_enrichment(self, alignment_type, features_type='antibody'):
 
 
         def _add_enrichments(self, label, decoys, type_data):
@@ -1768,7 +1800,7 @@ class CompareAntibodyDesignStrategies:
         ##Individual Enrichments
 
         top_n = self.top_n.get()
-        data_class = self._setup_cdr_types(alignment_type, self.is_camelid.get(), features_type, native_path)
+        data_class = self._setup_cdr_types(alignment_type, self.is_camelid.get(), features_type)
 
         scores = self._setup_scores(features_type)
 

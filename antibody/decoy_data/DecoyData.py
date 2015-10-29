@@ -2,6 +2,7 @@ from Tkinter import *
 from collections import defaultdict
 import math
 import pandas
+import os
 
 from tools.StatementCreator import *
 
@@ -42,23 +43,24 @@ class DecoyData:
         You can then order, or select specific ones using the data frame.
         :return: pandas.DataFrame
         """
-        columns = ["strategy", "struct_id", self.name]
 
-        df = pandas.DataFrame(columns=columns)
         temp_dict = defaultdict(list)
 
         for strategy in sorted(self.all_data):
             for decoy in self.all_data[strategy]:
-                for triple in self.all_data[strategy][decoy]:
-                    if isinstance(triple, DecoyDataTriple): pass
+                triple = self.all_data[strategy][decoy]
+                if isinstance(triple, DecoyDataTriple): pass
 
-                    temp_dict["strategy"].append(strategy)
-                    temp_dict["decoy"].append(decoy)
-                    temp_dict["struct_id"].append(triple.struct_id)
-                    temp_dict[self.name].append(float(triple.score))
+                temp_dict["strategy"].append(strategy)
+                temp_dict["decoy"].append(os.path.basename(decoy))
+                temp_dict["struct_id"].append(triple.struct_id)
+                temp_dict[self.name].append(float(triple.score))
 
-        df.from_dict(temp_dict)
+        columns = ["strategy", "decoy", "struct_id", self.name]
+
+        df = pandas.DataFrame(temp_dict, columns=columns)
         df.index = df["decoy"]
+        del df["decoy"]
         return df
 
 
