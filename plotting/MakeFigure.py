@@ -17,7 +17,7 @@ class MakeFigure:
     Probably should have just used ggplot now that I see its been released...oh well.
     You need to know the number of plots ahead of time by passing the grid.
         1x1 will make one plot.
-        2x2 will make a 4x4 grid of plots.
+        2x2 will make a grid of 4 plots.
         1x3 is 3 columns of grids horizontally
         3x1 is a list of figures.
 
