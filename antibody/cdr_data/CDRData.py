@@ -74,7 +74,9 @@ class CDRData(object):
 
 
         self.native_data = None
-        self._setup_native_data(native_path)
+        self.__setup_native_data(native_path)
+
+#Public
 
     def get_pandas_dataframe(self, cdrs=None, drop_dir_prefix = False):
         """
@@ -110,9 +112,68 @@ class CDRData(object):
         del df["decoy"]
         return df
 
+    def add_data(self, strategy, con):
+        """
+        Function to add data to the class.  Needs to be defined in subclass.
+        :param strategy: Strategy for which we are adding data
+        :param con: Sqlite3 Connection object
+
+        """
+        pass
+
+    def get_strategy_data(self, strategy):
+        """
+        Get data for each decoy
+        :param strategy: Strategy string
+        :rtype: list of CDRDataInfo
+        """
+        return self.all_data[strategy]
+
+    def get_strategy_data_for_decoy(self, strategy, decoy):
+        """
+        Get the data of the decoy
+        :param strategy: Strategy string
+        :param decoy: decoy including path and suffix
+        :rtype: CDRDataInfo
+        """
+        return self.all_data[strategy][decoy]
+
+    def get_native_data(self):
+        return self.native_data
+
+    def set_native_data_input_tag(self, con, input_tag):
+        self.__set_native_data_input_tag(con, input_tag, self.column_name)
+
+    def get_concatonated_map(self, cdr = None, decoy_list = None):
+        """
+        Returns a defaultDic:
+        Default:
+            decoy: CDRDataInfo
+          If CDR != None:
+             [value, cdr] = CDRDataTriple
+            #->CDR to get back cdr_value, decoy for sorting on cdr_value
+        :rtype: defaultdict
+        """
+
+        result_data = defaultdict()
+        for strategy in self.all_data:
+            for decoy in self.all_data[strategy]:
+                if decoy_list and decoy not in decoy_list:
+                    continue
+                triple = self.all_data[strategy][decoy]
+                if isinstance(triple, CDRDataInfo): pass
+
+                if cdr:
+                    result_data[(triple.get_value_for_cdr(cdr), decoy)] = triple
+                else:
+                    result_data[decoy] = triple
+
+        return result_data
 
 
-    def _get_stmt(self, column_name):
+#Private
+
+    def __get_stmt(self, column_name):
         if not self.is_camelid:
             stmt = "SELECT "+ \
                         "structures.input_tag as decoy,"+ \
@@ -170,39 +231,13 @@ class CDRData(object):
         #print stmt
         return stmt
 
-    def add_data(self, strategy, con):
-        """
-        Function to add data to the class.  Needs to be defined in subclass.
-        :param strategy: Strategy for which we are adding data
-        :param con: Sqlite3 Connection object
-
-        """
-        pass
-
-    def get_strategy_data(self, strategy):
-        """
-        Get data for each decoy
-        :param strategy: Strategy string
-        :rtype: list of CDRDataInfo
-        """
-        return self.all_data[strategy]
-
-    def get_strategy_data_for_decoy(self, strategy, decoy):
-        """
-        Get the data of the decoy
-        :param strategy: Strategy string
-        :param decoy: decoy including path and suffix
-        :rtype: CDRDataInfo
-        """
-        return self.all_data[strategy][decoy]
-
-    def _get_add_data(self, strategy, con, column_name):
+    def __get_add_data(self, strategy, con, column_name):
         self.column_name = column_name
 
         data = defaultdict()
         cur = con.cursor()
         print "Adding "+column_name+" data for "+strategy
-        for row in cur.execute(self._get_stmt(column_name)):
+        for row in cur.execute(self.__get_stmt(column_name)):
             #print repr(row)
             d = CDRDataInfo(self.name, strategy, row[0])
             d.set_value('H1', row[1])
@@ -217,9 +252,9 @@ class CDRData(object):
 
             #print repr(d)
 
-        self._add_data(strategy, data)
+        self.__add_data(strategy, data)
 
-    def _add_data(self, strategy, decoy_data_map):
+    def __add_data(self, strategy, decoy_data_map):
         """
         Add data in the form of a dict of decoy:DataTriple
         """
@@ -228,47 +263,14 @@ class CDRData(object):
         self.all_data[strategy] = decoy_data_map
         #print repr(decoy_data_map)
 
-    def get_native_data(self):
-        return self.native_data
-
-    def _setup_native_data(self, pdb_path):
+    def __setup_native_data(self, pdb_path):
         if not pdb_path: return None
 
-    def _set_native_data_from_rosetta(self, pdb_path):
+    def __set_native_data_from_rosetta(self, pdb_path):
         pass
 
-    def set_native_data_input_tag(self, con, input_tag):
-        self._set_native_data_input_tag(con, input_tag, self.column_name)
-
-    def _set_native_data(self, data):
+    def __set_native_data(self, data):
         self.native_data = data
 
-
-    def _set_native_data_input_tag(self, con, input_tag, column_name):
+    def __set_native_data_input_tag(self, con, input_tag, column_name):
         pass
-
-    def get_concatonated_map(self, cdr = None, decoy_list = None):
-        """
-        Returns a defaultDic:
-        Default:
-            decoy: CDRDataInfo
-          If CDR != None:
-             [value, cdr] = CDRDataTriple
-            #->CDR to get back cdr_value, decoy for sorting on cdr_value
-        :rtype: defaultdict
-        """
-
-        result_data = defaultdict()
-        for strategy in self.all_data:
-            for decoy in self.all_data[strategy]:
-                if decoy_list and decoy not in decoy_list:
-                    continue
-                triple = self.all_data[strategy][decoy]
-                if isinstance(triple, CDRDataInfo): pass
-
-                if cdr:
-                    result_data[(triple.get_value_for_cdr(cdr), decoy)] = triple
-                else:
-                    result_data[decoy] = triple
-
-        return result_data
