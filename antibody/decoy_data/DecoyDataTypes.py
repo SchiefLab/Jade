@@ -13,23 +13,6 @@ class TotalDecoyData(DecoyData):
 
     def add_data(self, strategy, con):
 
-        stmt = """
-                SELECT
-                    structures.input_tag as input_tag,
-                    structure_scores.score_value as total_score
-                FROM
-	                structure_scores,
-                    score_types,
-                    structures
-
-                WHERE
-	                score_types.score_type_name='total_score' AND
-                    structure_scores.score_type_id = score_types.score_type_id AND
-                    structures.struct_id = structure_scores.struct_id
-                ORDER BY score_value;
-                """
-
-
         stmt_creator = StatementCreator()
         stmt_creator.add_SELECT_string_or_strings([
             "structures.struct_id as struct_id",
@@ -56,19 +39,6 @@ class dGDecoyData(DecoyData):
 
     def add_data(self, strategy, con):
 
-        stmt = """
-                SELECT
-                    structures.input_tag as input_tag,
-                    interfaces.dG as dG
-                FROM
-                    interfaces,
-                    structures
-                WHERE
-                    structures.struct_id = interfaces.struct_id AND
-                    interfaces.interface = 'LH_A'
-                ORDER BY dG;
-                """
-
         stmt_creator = StatementCreator()
         stmt_creator.add_SELECT_string_or_strings([
             "structures.struct_id as struct_id",
@@ -86,28 +56,13 @@ class dGDecoyData(DecoyData):
         stmt_creator.add_ORDER_BY_string_or_strings([
             "dG"])
 
-
-
-
         self._get_add_data(strategy, stmt_creator, con)
 
 class dSASADecoyData(DecoyData):
     def __init__(self):
-        DecoyData.__init__(self, "dSASA", True, True)
+        DecoyData.__init__(self, "dSASA", reverse_top=True)
 
     def add_data(self, strategy, con):
-        stmt = """
-                SELECT
-                    structures.input_tag as input_tag,
-                    interfaces.dSASA as dSASA
-                FROM
-                    interfaces,
-                    structures
-                WHERE
-                    structures.struct_id = interfaces.struct_id AND
-                    interfaces.interface = 'LH_A'
-                ORDER BY dSASA DESC;
-                """
         stmt_creator = StatementCreator()
         stmt_creator.add_SELECT_string_or_strings([
             "structures.struct_id as struct_id",
@@ -127,6 +82,81 @@ class dSASADecoyData(DecoyData):
 
         self._get_add_data(strategy, stmt_creator, con)
 
+class SCValueDecoyData(DecoyData):
+    def __init__(self):
+        DecoyData.__init__(self, "sc_value", reverse_top=True)
+
+    def add_data(self, strategy, con):
+        stmt_creator = StatementCreator()
+        stmt_creator.add_SELECT_string_or_strings([
+            "structures.struct_id as struct_id",
+            "structures.input_tag as input_tag",
+            "interfaces.sc_value as sc_value"])
+
+        stmt_creator.add_FROM_string_or_strings([
+            "interfaces",
+            "structures"])
+
+        stmt_creator.add_WHERE_string_or_strings([
+            "structures.struct_id = interfaces.struct_id",
+            "interfaces.interface =  "+ repr(self.interface)])
+
+        stmt_creator.add_ORDER_BY_string_or_strings([
+            "sc_value DESC"])
+
+        self._get_add_data(strategy, stmt_creator, con)
+
+class DeltaUnsatsPerAreaDecoyData(DecoyData):
+    def __init__(self):
+        DecoyData.__init__(self, "delta_unsats_per_1000_dSASA")
+
+    def add_data(self, strategy, con):
+        stmt_creator = StatementCreator()
+        stmt_creator.add_SELECT_string_or_strings([
+            "structures.struct_id as struct_id",
+            "structures.input_tag as input_tag",
+            "interfaces.delta_unsatHbonds*1000/interfaces.dSASA as delta_unsats_per_1000_dSASA"])
+
+        stmt_creator.add_FROM_string_or_strings([
+            "interfaces",
+            "structures"])
+
+        stmt_creator.add_WHERE_string_or_strings([
+            "structures.struct_id = interfaces.struct_id",
+            "interfaces.interface =  "+ repr(self.interface)])
+
+        stmt_creator.add_ORDER_BY_string_or_strings([
+            "delta_unsats_per_1000_dSASA"])
+
+        self._get_add_data(strategy, stmt_creator, con)
+
+class IntHbondDecoyData(DecoyData):
+    """
+    New way for int hbonds - added directly from IAM.
+    """
+    def __init__(self):
+        DecoyData.__init__(self, "interface_hbonds", reverse_top=True)
+
+    def add_data(self, strategy, con):
+        stmt_creator = StatementCreator()
+        stmt_creator.add_SELECT_string_or_strings([
+            "structures.struct_id as struct_id",
+            "structures.input_tag as input_tag",
+            "interfaces.hbonds_int as hbonds_int"])
+
+        stmt_creator.add_FROM_string_or_strings([
+            "interfaces",
+            "structures"])
+
+        stmt_creator.add_WHERE_string_or_strings([
+            "structures.struct_id = interfaces.struct_id",
+            "interfaces.interface =  "+ repr(self.interface)])
+
+        stmt_creator.add_ORDER_BY_string_or_strings([
+            "hbonds_int DESC"])
+
+        self._get_add_data(strategy, stmt_creator, con)
+
 class dGTotalScoreSubset(DecoyData):
     """
     dG of the top x percent of total score (for each strategy)
@@ -141,19 +171,6 @@ class dGTotalScoreSubset(DecoyData):
 
         self.total_scores.add_data(strategy, con)
         total_cutoff = self.total_scores.get_top_x_percent_cutoff_value(strategy, self.top_total_percent)
-
-        stmt = """
-                SELECT
-                    structures.input_tag as input_tag,
-                    interfaces.dG as dG
-                FROM
-                    interfaces,
-                    structures
-                WHERE
-                    structures.struct_id = interfaces.struct_id AND
-                    interfaces.interface = 'LH_A'
-                ORDER BY dG;
-                """
 
         stmt_creator = StatementCreator()
         stmt_creator.add_SELECT_string_or_strings([
@@ -177,7 +194,6 @@ class dGTotalScoreSubset(DecoyData):
 
         stmt_creator.add_ORDER_BY_string_or_strings([
             "dG"])
-
 
         self._get_add_data(strategy, stmt_creator, con)
 

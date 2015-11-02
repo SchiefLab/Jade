@@ -9,7 +9,7 @@ from tools.StatementCreator import *
 ########################################################################################################################
 ###   DecoyData
 ########################################################################################################################
-class DecoyDataTriple:
+class DecoyDataTriple(object):
     """
     Struct for holding data instead of a tupple
     """
@@ -21,7 +21,7 @@ class DecoyDataTriple:
         self.score_type = out_name
         self.raw_name = raw_name
 
-class DecoyData:
+class DecoyData(object):
     def __init__(self, name, has_real_values = True, reverse_top = False):
 
 
@@ -37,7 +37,7 @@ class DecoyData:
         self.filters = None
         self.filter_name = None
 
-    def get_pandas_dataframe(self):
+    def get_pandas_dataframe(self, top_n = None, drop_dir_prfix = False):
         """
         Gets all data as a pandas dataframe.  Uses the set name as the score.
         You can then order, or select specific ones using the data frame.
@@ -45,18 +45,23 @@ class DecoyData:
         """
 
         temp_dict = defaultdict(list)
-
         for strategy in sorted(self.all_data):
-            for decoy in self.all_data[strategy]:
+
+            decoys = self.get_ordered_decoy_list(strategy, top_n)
+
+            for decoy in decoys:
                 triple = self.all_data[strategy][decoy]
                 if isinstance(triple, DecoyDataTriple): pass
 
                 temp_dict["strategy"].append(strategy)
-                temp_dict["decoy"].append(os.path.basename(decoy))
-                temp_dict["struct_id"].append(triple.struct_id)
+                if drop_dir_prfix:
+                    temp_dict["decoy"].append(os.path.basename(decoy))
+                else:
+                    temp_dict["decoy"].append(decoy)
+
                 temp_dict[self.name].append(float(triple.score))
 
-        columns = ["strategy", "decoy", "struct_id", self.name]
+        columns = ["strategy", "decoy", self.name]
 
         df = pandas.DataFrame(temp_dict, columns=columns)
         df.index = df["decoy"]
@@ -82,6 +87,12 @@ class DecoyData:
         return self._has_real_values
 
     def add_data(self, strategy, con):
+        """
+        Baseclass method - needs to be overridden in subclass
+        :param strategy: Strategy to which we are adding data.
+        :param con: Sqlite3 Connection object
+
+        """
         pass
 
     def _get_add_data(self, strategy, stmt_creator, con):
@@ -113,16 +124,13 @@ class DecoyData:
         self.all_data[strategy] = decoy_data_map
 
     def get_data_for_decoy(self, strategy, decoy):
+        """
+        Get the held data for the decoy
+        :param strategy: Strategy Name
+        :param decoy: Decoy name (with dir and suffix)
+        :rtype: DecoyDataTriple
+        """
         return self.all_data[ strategy ][ decoy ]
-
-    def get_score_for_decoy(self, strategy, decoy):
-        return self.all_data[ strategy ][ decoy ].score
-
-    def get_energy_for_decoy(self, strategy, decoy):
-        return self.all_data[ strategy ][ decoy ].score
-
-    def get_struct_id_for_decoy(self, strategy, decoy):
-        return self.all_data[ strategy ][ decoy ].struct_id
 
     def get_top_x_percent_cutoff_value(self, strategy, top_percent):
 
@@ -131,7 +139,7 @@ class DecoyData:
         decoys = self.get_ordered_decoy_list(strategy)
         last_entry = math.ceil(len(decoys)/float(top_percent))
         print "Using top "+repr(last_entry)+" entries as subset"
-        return self.get_energy_for_decoy(strategy, decoys[ int(last_entry) -1])
+        return self.get_data_for_decoy(strategy, decoys[ int(last_entry) -1]).score
 
 
     #############################################################################
@@ -205,6 +213,7 @@ class DecoyData:
     def get_ordered_decoy_list(self, strategy, top_n = None):
         """
         Get an ordered array of decoy names by energy for a particular strategy
+        :rtype: list of str
         """
         if self.reverse_top: reverse = True
         else: reverse = False
@@ -225,6 +234,7 @@ class DecoyData:
     def get_ordered_decoy_list_all(self, top_n = None):
         """
         Get an ordered array of decoy names by energy over all the strategies
+        :rtype: list of str
         """
         if self.reverse_top: reverse = True
         else: reverse = False

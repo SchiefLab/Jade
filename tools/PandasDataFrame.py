@@ -12,6 +12,10 @@ class GeneralPandasDataFrame(pandas.DataFrame):
         Drop Duplicate columns from the DataFrame in place
         :return:
         """
+
+        #I'm not sure how to do this inplace, without reassigning self.  If you know, please edit this.
+
+
         self = self.T.groupby(level=0).first().T
 
 

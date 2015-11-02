@@ -3,7 +3,7 @@ import os
 from collections import defaultdict
 
 
-class CDRDataInfo:
+class CDRDataInfo(object):
     """
     Simple class for holding and accessing Cluster and Length data for a particular Decoy.
     """
@@ -43,12 +43,6 @@ class CDRDataInfo:
     def set_value(self, cdr, value):
         self.data[cdr] = value
 
-    def get_data_tuple(self):
-        """
-        Return tuple with data at each position: [L1, L2, L3, H1, H2, H3]
-        If Camelid, will only return H data.
-        """
-
     def has_data(self, cdr):
         if self.data.has_key(cdr):
             return True
@@ -64,7 +58,7 @@ class CDRDataInfo:
         else:
             return False
 
-class CDRData:
+class CDRData(object):
     """
     Class holding cluster and length data from cluster or antibody features database.
     """
@@ -82,12 +76,15 @@ class CDRData:
         self.native_data = None
         self._setup_native_data(native_path)
 
-    def get_pandas_dataframe(self):
+    def get_pandas_dataframe(self, cdrs=None, drop_dir_prefix = False):
         """
         Gets all data as a pandas dataframe.  Uses the set name as the score.
         You can then order, or select specific ones using the data frame.
         :rtype: pandas.DataFrame
         """
+
+        if not cdrs:
+            cdrs = self.cdrs
 
 
         temp_dict = defaultdict(list)
@@ -98,9 +95,13 @@ class CDRData:
                 if isinstance(triple, CDRDataInfo): pass
 
                 temp_dict["strategy"].append(strategy)
-                temp_dict["decoy"].append(os.path.basename(decoy))
-                for cdr in self.cdrs:
-                    temp_dict["_".join([cdr, self.name])] = triple.get_value_for_cdr(cdr)
+
+                if drop_dir_prefix:
+                    temp_dict["decoy"].append(os.path.basename(decoy))
+                else:
+                    temp_dict["decoy"].append(decoy)
+                for cdr in cdrs:
+                    temp_dict["_".join([cdr, self.name])].append(triple.get_value_for_cdr(cdr))
 
         columns = ["strategy", "decoy"]
         columns = columns.extend(["_".join([cdr, self.name]) for cdr in self.cdrs])
@@ -170,12 +171,29 @@ class CDRData:
         return stmt
 
     def add_data(self, strategy, con):
+        """
+        Function to add data to the class.  Needs to be defined in subclass.
+        :param strategy: Strategy for which we are adding data
+        :param con: Sqlite3 Connection object
+
+        """
         pass
 
     def get_strategy_data(self, strategy):
+        """
+        Get data for each decoy
+        :param strategy: Strategy string
+        :rtype: list of CDRDataInfo
+        """
         return self.all_data[strategy]
 
     def get_strategy_data_for_decoy(self, strategy, decoy):
+        """
+        Get the data of the decoy
+        :param strategy: Strategy string
+        :param decoy: decoy including path and suffix
+        :rtype: CDRDataInfo
+        """
         return self.all_data[strategy][decoy]
 
     def _get_add_data(self, strategy, con, column_name):
@@ -234,8 +252,10 @@ class CDRData:
         Returns a defaultDic:
         Default:
             decoy: CDRDataInfo
-
-        CDR to get back cdr_value, decoy for sorting on cdr_value
+          If CDR != None:
+             [value, cdr] = CDRDataTriple
+            #->CDR to get back cdr_value, decoy for sorting on cdr_value
+        :rtype: defaultdict
         """
 
         result_data = defaultdict()

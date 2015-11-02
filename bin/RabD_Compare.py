@@ -24,11 +24,12 @@ import bin.RunRabD_Feat as analyze_strat
 from pymol.PyMolScriptWriter import *
 from antibody.cdr_data.CDRDataTypes import *
 from antibody.decoy_data.DecoyDataTypes import *
+from RAbD.window_modules.FilterSettingsWindow import *
+from sequence import fasta
 from tools.filters.DataFilters import *
 from tools.filters.FilterSettings import *
 from tools.Threader import *
-from RAbD.window_modules.FilterSettingsWindow import *
-from sequence import fasta
+from tools import PandasDataFrame
 
 # Rosetta Tools
 import create_features_json as json_creator
@@ -321,8 +322,8 @@ class CompareAntibodyDesignStrategies_GUI:
         self.per_model_menu.add_command(label="Output CDR Sequence Alignments",
                                         command=lambda: self.compare_designs.output_len_or_clus_alignment('aligned_sequence', 'antibody'))
         self.per_model_menu.add_separator()
-        self.per_model_menu.add_command(label="Output to CSV (Top)", command = lambda: self.compare_designs.get_concatonated_top_data_per_model_per_strategy())
-        self.per_model_menu.add_command(label="Output to CSV (ALL)")
+        self.per_model_menu.add_command(label="Output to CSV (Top)", command = lambda: self.compare_designs.output_concatonated_data_per_model_per_strategy(top = True))
+        self.per_model_menu.add_command(label="Output to CSV (ALL)", command = lambda: self.compare_designs.output_concatonated_data_per_model_per_strategy(top = False))
         self.per_model_menu.add_separator()
         self.per_model_menu.add_cascade(label="Clustal", menu = self.clustal_menu)
 
@@ -619,7 +620,7 @@ class CompareAntibodyDesignStrategies:
         self.reference_db = StringVar()
         self.clustal_soft_wrap = IntVar(value=100)
         self.reload_scores = IntVar(value=1)
-        self.top_n = IntVar(value=10)
+        self.top_n = IntVar(value=15)
         self.top_n_combined = IntVar(value=15)
 
         self.features_hbond_set = IntVar()
@@ -648,7 +649,12 @@ class CompareAntibodyDesignStrategies:
         dg_scores = dGDecoyData()
         dsasa_scores = dSASADecoyData()
         top10_by_10 = dGTotalScoreSubset()
-        self.scores = [total_scores, dg_scores, dsasa_scores, top10_by_10]
+
+        #hbonds_int = IntHbondDecoyData()
+        sc_value = SCValueDecoyData()
+        unsats = DeltaUnsatsPerAreaDecoyData()
+
+        self.scores = [total_scores, dg_scores, dsasa_scores, top10_by_10, sc_value, unsats]
 
     def _init_default_scores(self):
         #Setup the scores that are on
@@ -660,6 +666,7 @@ class CompareAntibodyDesignStrategies:
         self.scores_on["dG"].set(1)
         self.scores_on["dG_top_Ptotal"].set(1)
         self.scores_on["total"].set(1)
+        self.scores_on["delta_unsats_per_1000_dSASA"].set(1)
 
     def _init_cdrs(self):
         self.cdrs = defaultdict()
@@ -731,7 +738,7 @@ class CompareAntibodyDesignStrategies:
     def _setup_scores(self, features_type="antibody", use_all=False):
         """
         Setup the Score Classes.  If not use_all, will use only use those set.
-
+        :rtype: list of DecoyData
         """
 
         self._init_scores()
@@ -1001,35 +1008,96 @@ class CompareAntibodyDesignStrategies:
         print "Plots ignore any set filters.  To plot with filters, create new databases through query..."
         print "Complete..."
 
-    def get_concatonated_top_data_per_model_per_strategy(self):
+    def output_concatonated_data_per_model_per_strategy(self, top = False):
         """
         Get a pandas dataframe of all the data per model for all strategies
-
+        First pass with anything with pandas.  Probably quicker ways than what I have.
         """
 
         dfs = []
+        venn_dfs = [] #Best decoys/data seen in all score classes of the top n together.
+        output_names = ["strategy"] #Controls the order of the output names.
+
+        venn2_cat = ['dG', 'total']
+        venn2_dfs = [] #Venn on dG and Total score.
         for score in self._setup_scores(use_all=True):
             if score.name == "dG_top_Ptotal":continue
 
             if isinstance(score, DecoyData): pass
+
+
+            output_names.append(score.name)
+
+
+            venn_dfs.append(score.get_pandas_dataframe(top_n=self.top_n.get()))
             df = score.get_pandas_dataframe()
-            df.to_csv(open(self._setup_outdir_individual()+"/test_"+score.name+".csv", "w"))
-
+            print df.tail()
             dfs.append(df)
+            if score.name in venn2_cat:
+                venn2_dfs.append(df)
 
-
-        combined_scores = pandas.concat(dfs, axis=1, join="inner")
-        combined_scores.tail()
-        combined_scores.describe()
-
-        fixed = combined_scores.T.groupby(level=0).first().T
-        fixed.to_csv(open(self._setup_outdir_individual()+"/test_"+"combined.csv", "w"))
         cdr_types = ["length", "cluster", "sequence", "aligned_sequence"]
 
         for t in cdr_types:
             cdr_data = self._setup_cdr_types(t, self.is_camelid.get())
-            df = cdr_data.get_pandas_dataframe()
-            df.to_csv(open(self._setup_outdir_individual()+"/test_"+cdr_data.name+".csv", "w"))
+
+            cdr_names = [cdr for cdr in cdr_data.cdrs if cdr in self._setup_cdrs()]
+            for cdr in cdr_names:
+                output_names.append("_".join([cdr, cdr_data.name]))
+            df = cdr_data.get_pandas_dataframe(cdr_names)
+            #df.to_csv(self._setup_outdir_individual()+"/test_cdr_"+cdr_data.name+".csv")
+            dfs.append(df)
+            venn_dfs.append(df)
+            venn2_dfs.append(df)
+
+
+        combined_scores = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs, axis=1, join="outer")) #Drop Duplicates
+        combined_scores = combined_scores[output_names]
+
+        if top:
+            venn_df = PandasDataFrame.drop_duplicate_columns(pandas.concat(venn_dfs, axis=1, join="inner"))
+            venn_df = venn_df[output_names]
+            venn_df.sort(columns = ['strategy', 'dG'])
+            venn_df.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_ven_top_"+str(self.top_n.get())+".csv", "w"))
+
+            venn2_df = PandasDataFrame.drop_duplicate_columns(pandas.concat(venn_dfs, axis=1, join="inner"))
+            venn2_df = venn2_df[output_names]
+            venn2_df.sort(columns = ['strategy', 'dG'])
+            venn2_df.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_ven_dG_total_top_"+str(self.top_n.get())+".csv", "w"))
+
+            for score in self._setup_scores():
+                if score.name == "dG_top_Ptotal":continue
+
+                if self.individual_analysis.get():
+                    top_dfs = []
+                    for strategy in self.get_strategies():
+
+                        df = combined_scores[combined_scores['strategy'] == strategy].sort(score.name)[0:self.top_n.get()-1] #Best N
+
+                        top_dfs.append(df)
+                    top_df = pandas.concat(top_dfs)
+                    top_df = top_df[output_names]
+                    top_df.sort(columns = ['strategy', score.name])
+                    top_df.to_csv(self._setup_outdir_individual()+"/ind_per_model_top_by_"+score.name+".csv")
+
+                if self.combined_analysis.get():
+                    df = combined_scores.sort(score.name)[0:self.top_n.get()-1] #Best N
+                    df.to_csv(self._setup_outdir_combined()+"/com_per_model_top_by_"+score.name+".csv")
+
+
+        else:
+
+            if self.individual_analysis.get():
+                combined_scores.sort(columns = ['strategy', 'dG'])
+                combined_scores.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_all"+".csv", "w"))
+
+            if self.combined_analysis.get():
+                combined_scores.sort(columns = ['dG'])
+                combined_scores.to_csv(open(self._setup_outdir_combined()+"/com_per_model_all"+".csv", "w"))
+
+        #How to add Native Line?
+        #Maybe a 'print native info' function...
+
 
         print "Complete"
 
@@ -1168,6 +1236,7 @@ class CompareAntibodyDesignStrategies:
                         OUT.write(header + "\n")
 
                         for decoy in decoy_list:
+                            data = score.get_data_for_decoy(strategy, decoy)
 
                             if not score.name == "dG_top_Ptotal":
                                 line = os.path.basename(decoy) + "\t" + get_str(score.get_score_for_decoy(strategy, decoy))
@@ -1175,10 +1244,11 @@ class CompareAntibodyDesignStrategies:
                                 line = os.path.basename(decoy)
 
                             for a_score in all_scores:
+                                a_data = a_score.get_data_for_decoy(strategy, decoy)
                                 if a_score.name == "combined_str_score": continue
                                 if a_score.name == score.name: continue
 
-                                line = line + "\t" + get_str(a_score.get_score_for_decoy(strategy, decoy))
+                                line = line + "\t" + get_str(a_data.score)
                             OUT.write(line + "\n")
                         OUT.close()
 
@@ -1207,16 +1277,18 @@ class CompareAntibodyDesignStrategies:
                     OUT.write(header + "\n")
 
                     for decoy in all_decoys:
+                        data = score.get_data_for_decoy(strategy, decoy)
                         if not score.name == "dG_top_Ptotal":
 
-                            line = os.path.basename(decoy) + "\t" + get_str(score.get_score_for_decoy(strategy, decoy))
+                            line = os.path.basename(decoy) + "\t" + get_str(data.score)
                         else:
                             line = os.path.basename(decoy)
                         for a_score in all_scores:
+                            a_data = a_score.get_data_for_decoy(strategy, decoy)
                             if a_score.name == "combined_str_score": continue
                             if a_score.name == score.name: continue
 
-                            line = line + "\t" + get_str(a_score.get_score_for_decoy(strategy, decoy))
+                            line = line + "\t" + get_str(a_data.score)
                         OUT.write(line + "\n")
                     OUT.close()
 
