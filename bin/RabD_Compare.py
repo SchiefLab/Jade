@@ -817,6 +817,11 @@ class CompareAntibodyDesignStrategies:
         return score_subset
 
     def _get_score(self, score_name):
+        """
+        Get a particular score class.  May or may not be initialized.  See setup_scores.
+        :param score_name:
+        :rtype: DecoyData
+        """
         for score in self.scores:
             if score.name == score_name:
                 return score
@@ -1139,17 +1144,25 @@ class CompareAntibodyDesignStrategies:
             score_dfs=[]
             score_names = self._get_score_names_on()
             for score_name in score_names:
-                if score_name == "dG_top_Ptotal":continue
+                if score_name == "dG_top_Ptotal":
+                    sort_name = 'dG'
+                else:
+                    sort_name = score_name
+
                 strat_dfs=[]
                 for strategy in self.get_strategies():
-
-                    df = combined_scores[combined_scores['strategy'] == strategy].sort(score_name)[0:self.top_n.get()] #Best N
-
+                    if score_name == "dG_top_Ptotal":
+                        score = self._get_score(score_name)
+                        decoy_list = score.get_ordered_decoy_list(strategy, self.top_n.get())
+                        df = combined_scores[combined_scores.index.isin(decoy_list)]
+                        df.sort(columns=[sort_name]) #This sort is not working, have no idea why.
+                    else:
+                        df = combined_scores[combined_scores['strategy'] == strategy].sort(score_name)[0:self.top_n.get()] #Best N
+                        df.sort(columns=[sort_name])
                     strat_dfs.append(df)
                 top_df = pandas.concat(strat_dfs)
-                top_df.sort(columns = ['strategy', score_name])
-                top_df["by_score_group"] = score_name
 
+                top_df["by_score_group"] = score_name
                 score_dfs.append(top_df)
 
             top_df = PandasDataFrame.drop_duplicate_columns(pandas.concat(score_dfs))
@@ -1169,10 +1182,16 @@ class CompareAntibodyDesignStrategies:
             if self.combined_analysis.get():
                 dfs = []
                 for score_name in self._get_score_names_on():
-                    if score_name == "dG_top_Ptotal":continue
-                    df = combined_scores.sort(score_name)[0:self.top_n.get()-1] #Best N
+                    if score_name == "dG_top_Ptotal":
+                        score = self._get_score(score_name)
+                        decoy_list = score.get_ordered_decoy_list_all(self.top_n.get())
+                        df = combined_scores[combined_scores.index.isin(decoy_list)]
+                        df["by_score_group"] = score_name
+                    else:
+                        df = combined_scores.sort(score_name)[0:self.top_n.get()] #Best N
+                        df["by_score_group"] = score_name
                     dfs.append(df)
-                df = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs, keys=["by_"+name for name in self._get_score_names_on() ], names=["by_score"]))
+                df = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs))
                 name_order=["by_score_group"]
                 name_order.extend(output_names)
                 df = df[name_order]
