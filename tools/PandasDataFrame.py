@@ -18,6 +18,8 @@ class GeneralPandasDataFrame(pandas.DataFrame):
 
         self = self.T.groupby(level=0).first().T
 
+    def detect_numeric(self):
+        self = self.convert_objects(convert_numeric=True)
 
 def drop_duplicate_columns(df):
     """

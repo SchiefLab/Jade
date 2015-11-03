@@ -322,8 +322,8 @@ class CompareAntibodyDesignStrategies_GUI:
         self.per_model_menu.add_command(label="Output CDR Sequence Alignments",
                                         command=lambda: self.compare_designs.output_len_or_clus_alignment('aligned_sequence', 'antibody'))
         self.per_model_menu.add_separator()
-        self.per_model_menu.add_command(label="Output to CSV (Top)", command = lambda: self.compare_designs.output_concatonated_data_per_model_per_strategy(top = True))
-        self.per_model_menu.add_command(label="Output to CSV (ALL)", command = lambda: self.compare_designs.output_concatonated_data_per_model_per_strategy(top = False))
+        self.per_model_menu.add_command(label="Output to CSV (Top)", command = lambda: self.compare_designs.output_csv_data(top = True))
+        self.per_model_menu.add_command(label="Output to CSV (ALL)", command = lambda: self.compare_designs.output_csv_data(top = False))
         self.per_model_menu.add_separator()
         self.per_model_menu.add_cascade(label="Clustal", menu = self.clustal_menu)
 
@@ -345,7 +345,8 @@ class CompareAntibodyDesignStrategies_GUI:
         self.enrichment_menu.add_command(label="Output Cluster Enrichments",
                                          command = lambda: self.compare_designs.output_len_or_clus_enrichment("cluster"))
 
-        self.per_strategy_menu.add_command(label="Output Score Stats", command=lambda: self.compare_designs.output_stats())
+        self.per_strategy_menu.add_command(label="Output Score Summaries to CSV (Top)", command=lambda: self.compare_designs.output_csv_data(top=True, summary=True))
+        self.per_strategy_menu.add_command(label="Output Score Summaries to CSV (All)", command=lambda: self.compare_designs.output_csv_data(top=False, summary=True))
         self.per_strategy_menu.add_cascade(label = "Recovery", menu = self.recovery_menu)
         self.per_strategy_menu.add_cascade(label = "Enrichment", menu = self.enrichment_menu)
 
@@ -684,6 +685,13 @@ class CompareAntibodyDesignStrategies:
             names.append(score.name)
         return names
 
+    def _get_score_names_on(self):
+        names = []
+        for name in self._get_score_names():
+            if self.scores_on[name]:
+                names.append(name)
+        return names
+
     def _setup_outdir(self, subdirs=[], use_out_dir_name=True):
         """
         Sets up the main output dir in the main_analys_dir, and any subdirectories such as 'decoys' or decoys/combined_3
@@ -1008,10 +1016,71 @@ class CompareAntibodyDesignStrategies:
         print "Plots ignore any set filters.  To plot with filters, create new databases through query..."
         print "Complete..."
 
-    def output_concatonated_data_per_model_per_strategy(self, top = False):
+    def get_pandas_dataframe(self):
         """
-        Get a pandas dataframe of all the data per model for all strategies
-        First pass with anything with pandas.  Probably quicker ways than what I have.
+        Gets a pandas Dataframe for all
+        :rtype: pandas.DataFrame
+        """
+        dfs = []
+        output_names = ["strategy"] #Controls the order of the output names.
+
+        for score in self._setup_scores(use_all=True):
+            if score.name == "dG_top_Ptotal":continue
+
+            if isinstance(score, DecoyData): pass
+
+            output_names.append(score.name)
+
+            df = score.get_pandas_dataframe()
+            dfs.append(df)
+
+        cdr_types = ["length", "cluster", "sequence", "aligned_sequence"]
+
+        for t in cdr_types:
+            cdr_data = self._setup_cdr_types(t, self.is_camelid.get())
+
+            cdr_names = [cdr for cdr in cdr_data.cdrs if cdr in self._setup_cdrs()]
+            for cdr in cdr_names:
+                output_names.append("_".join([cdr, cdr_data.name]))
+            df = cdr_data.get_pandas_dataframe(cdr_names)
+            dfs.append(df)
+
+        df = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs, axis=1, join="outer"))
+        return df
+
+    def get_top_from_dataframe(self, score_name):
+        """
+        Gets a pandas Dataframe for top
+        :rtype: pandas.DataFrame
+        """
+        df = self.get_pandas_dataframe()
+        dfs = []
+        for strategy in self.get_strategies():
+            dfs.append(df["strategy" == strategy].sort(score_name)[0:self.top_n.get()-1])
+
+        df = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs))
+        return df
+
+    def get_top_dataframe_by_all_scores(self):
+        """
+        Get a pandas DataFrame for top, grouped by the type of score that is on.
+        :rtype: pandas.DataFrame
+        """
+        dfs = []
+        score_names = self._get_score_names_on()
+        for score_name in score_names:
+            if score_name == "dG_top_Ptotal":continue
+            df = self.get_top_from_dataframe(score_name)
+            df["by_score_group"] = score_name
+            dfs.append(df)
+        df = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs))
+        return df
+
+    def output_csv_data(self, top = False, summary = False):
+        """
+        Output data by converting everything to a pandas dataframe first.
+        For now, one function pretty much does everything.
+
         """
 
         dfs = []
@@ -1053,47 +1122,84 @@ class CompareAntibodyDesignStrategies:
 
         combined_scores = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs, axis=1, join="outer")) #Drop Duplicates
         combined_scores = combined_scores[output_names]
+        combined_scores = combined_scores.convert_objects(convert_numeric=True) #Not sure why this is not done automatically.
+        combined_scores.index.name = "decoy"
 
         if top:
             venn_df = PandasDataFrame.drop_duplicate_columns(pandas.concat(venn_dfs, axis=1, join="inner"))
             venn_df = venn_df[output_names]
             venn_df.sort(columns = ['strategy', 'dG'])
-            venn_df.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_ven_top_"+str(self.top_n.get())+".csv", "w"))
+            #venn_df.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_ven_top_"+str(self.top_n.get())+".csv", "w"))
 
             venn2_df = PandasDataFrame.drop_duplicate_columns(pandas.concat(venn_dfs, axis=1, join="inner"))
             venn2_df = venn2_df[output_names]
             venn2_df.sort(columns = ['strategy', 'dG'])
-            venn2_df.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_ven_dG_total_top_"+str(self.top_n.get())+".csv", "w"))
+            #venn2_df.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_ven_dG_total_top_"+str(self.top_n.get())+".csv", "w"))
 
-            for score in self._setup_scores():
-                if score.name == "dG_top_Ptotal":continue
+            score_dfs=[]
+            score_names = self._get_score_names_on()
+            for score_name in score_names:
+                if score_name == "dG_top_Ptotal":continue
+                strat_dfs=[]
+                for strategy in self.get_strategies():
 
-                if self.individual_analysis.get():
-                    top_dfs = []
-                    for strategy in self.get_strategies():
+                    df = combined_scores[combined_scores['strategy'] == strategy].sort(score_name)[0:self.top_n.get()] #Best N
 
-                        df = combined_scores[combined_scores['strategy'] == strategy].sort(score.name)[0:self.top_n.get()-1] #Best N
+                    strat_dfs.append(df)
+                top_df = pandas.concat(strat_dfs)
+                top_df.sort(columns = ['strategy', score_name])
+                top_df["by_score_group"] = score_name
 
-                        top_dfs.append(df)
-                    top_df = pandas.concat(top_dfs)
-                    top_df = top_df[output_names]
-                    top_df.sort(columns = ['strategy', score.name])
-                    top_df.to_csv(self._setup_outdir_individual()+"/ind_per_model_top_by_"+score.name+".csv")
+                score_dfs.append(top_df)
 
-                if self.combined_analysis.get():
-                    df = combined_scores.sort(score.name)[0:self.top_n.get()-1] #Best N
-                    df.to_csv(self._setup_outdir_combined()+"/com_per_model_top_by_"+score.name+".csv")
+            top_df = PandasDataFrame.drop_duplicate_columns(pandas.concat(score_dfs))
+            name_order=["by_score_group"]
+            name_order.extend(output_names)
+            top_df = top_df[name_order]
+
+            if self.individual_analysis.get():
+
+                if summary:
+                    top_df = top_df.convert_objects(convert_numeric=True)
+                    top_df.groupby(by=["strategy", "by_score_group"]).describe(exclude=['object']).to_csv(self._setup_outdir_individual()+"/per_strategy_summary_top.csv")
+                else:
+                    top_df.to_csv(self._setup_outdir_individual()+"/ind_per_model_top.csv")
+
+
+            if self.combined_analysis.get():
+                dfs = []
+                for score_name in self._get_score_names_on():
+                    if score_name == "dG_top_Ptotal":continue
+                    df = combined_scores.sort(score_name)[0:self.top_n.get()-1] #Best N
+                    dfs.append(df)
+                df = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs, keys=["by_"+name for name in self._get_score_names_on() ], names=["by_score"]))
+                name_order=["by_score_group"]
+                name_order.extend(output_names)
+                df = df[name_order]
+                if summary:
+                    #df.groupby(by="strategy").describe().to_csv(self._setup_outdir_combined()+"/com_summary_top_by_"+score.name+".csv")
+                    df = df.convert_objects(convert_numeric=True)
+                    df.groupby(by=["by_score_group"]).describe(exclude=['object']).to_csv(self._setup_outdir_combined()+"/com_summary_top.csv")
+                else:
+                    df.to_csv(self._setup_outdir_combined()+"/com_per_model_top.csv")
 
 
         else:
 
             if self.individual_analysis.get():
                 combined_scores.sort(columns = ['strategy', 'dG'])
-                combined_scores.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_all"+".csv", "w"))
+                if summary:
+                    combined_scores.groupby(by="strategy").describe(exclude=['object']).to_csv(self._setup_outdir_individual()+"/per_strategy_summary_all.csv")
+                else:
+                    combined_scores.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_all.csv", "w"))
 
             if self.combined_analysis.get():
                 combined_scores.sort(columns = ['dG'])
-                combined_scores.to_csv(open(self._setup_outdir_combined()+"/com_per_model_all"+".csv", "w"))
+                if summary:
+                    #combined_scores.groupby(by="strategy").describe().to_csv(self._setup_outdir_combined()+"/")
+                    combined_scores.describe(exclude=['object']).to_csv(self._setup_outdir_combined()+"/com_summary_all.csv")
+                else:
+                    combined_scores.to_csv(open(self._setup_outdir_combined()+"/com_per_model_all.csv", "w"))
 
         #How to add Native Line?
         #Maybe a 'print native info' function...
@@ -1239,7 +1345,7 @@ class CompareAntibodyDesignStrategies:
                             data = score.get_data_for_decoy(strategy, decoy)
 
                             if not score.name == "dG_top_Ptotal":
-                                line = os.path.basename(decoy) + "\t" + get_str(score.get_score_for_decoy(strategy, decoy))
+                                line = os.path.basename(decoy) + "\t" + get_str(data.score)
                             else:
                                 line = os.path.basename(decoy)
 
@@ -1452,7 +1558,7 @@ class CompareAntibodyDesignStrategies:
                 load_as.append("model_" + repr(i) + "_" + score.get_outname() + "_" + get_str(decoys[decoy].score))
                 os.system('cp ' + decoy + " " + out_dir + "/top_" + repr(i) + "_" + os.path.basename(decoy))
                 i += 1
-            session_dir = out_dir = self._setup_outdir_combined(["all_sessions"])
+            out_dir = self._setup_outdir_combined(["all_sessions"])
 
             if self.load_origin_pdbs:
                 if not self.origin_pdb_directory.get() or not os.path.exists(self.origin_pdb_directory.get()):

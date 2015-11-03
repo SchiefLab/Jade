@@ -21,14 +21,14 @@ class CDRLengthData(CDRData):
         CDRData.__init__(self, "length", native_path, is_camelid)
 
     def add_data(self, strategy, con):
-        self.__get_add_data(strategy, con, "length")
+        self._get_add_data(strategy, con, "length")
 
-    def __setup_native_data(self, pdb_path):
+    def _setup_native_data(self, pdb_path):
         if not pdb_path: return None
         else:
-            self.__set_native_data_from_rosetta(pdb_path)
+            self._set_native_data_from_rosetta(pdb_path)
 
-    def __set_native_data_from_rosetta(self, pdb_path):
+    def _set_native_data_from_rosetta(self, pdb_path):
         """
         p = pose_from_pdb(pdb_path)
         ab_info = AntibodyInfo(p)
@@ -45,7 +45,7 @@ class CDRLengthData(CDRData):
 
         data = defaultdict()
         for cdr in self.cdrs:
-            length = clusterer.get_length(cdr)
+            length = int(clusterer.get_length(cdr))
             native_data.set_value(cdr, length)
         self.native_data = native_data
 
@@ -54,14 +54,14 @@ class CDRClusterData(CDRData):
         CDRData.__init__(self, "cluster", native_path, is_camelid)
 
     def add_data(self, strategy, con):
-        self.__get_add_data(strategy, con, "fullcluster")
+        self._get_add_data(strategy, con, "fullcluster")
 
-    def __setup_native_data(self, pdb_path):
+    def _setup_native_data(self, pdb_path):
         if not pdb_path: return None
         else:
-            self.__set_native_data_from_rosetta(pdb_path)
+            self._set_native_data_from_rosetta(pdb_path)
 
-    def __set_native_data_from_rosetta(self, pdb_path):
+    def _set_native_data_from_rosetta(self, pdb_path):
         """
         p = pose_from_pdb(pdb_path)
         ab_info = AntibodyInfo(p)
@@ -75,9 +75,7 @@ class CDRClusterData(CDRData):
         native_data = CDRDataInfo(self.name, "native", pdb_path)
         pose = pose_from_pdb(pdb_path)
         clusterer = CDRClusterer(pose)
-        cdrs = ["L1", "L2", "L3", "H1", "H2", "H3"]
 
-        data = defaultdict()
         for cdr in self.cdrs:
             clusterer.dihedrals = []
             cluster = clusterer.get_fullcluster(cdr)[0]
@@ -90,14 +88,14 @@ class CDRSequenceData(CDRData):
         CDRData.__init__(self, "sequence", native_path, is_camelid)
 
     def add_data(self, strategy, con):
-        self.__get_add_data(strategy, con, "sequence")
+        self._get_add_data(strategy, con, "sequence")
 
-    def __setup_native_data(self, pdb_path):
+    def _setup_native_data(self, pdb_path):
         if not pdb_path: return None
         else:
-            self.__set_native_data_from_rosetta(pdb_path)
+            self._set_native_data_from_rosetta(pdb_path)
 
-    def __set_native_data_from_rosetta(self, pdb_path):
+    def _set_native_data_from_rosetta(self, pdb_path):
         native_data = CDRDataInfo(self.name, "native", pdb_path)
         pose = pose_from_pdb(pdb_path)
         #ab_info = rosetta.antibody.AntibodyInfo(pose, AHO_Scheme, North) Antibody namespace currently does not work in PyRosetta.
@@ -114,7 +112,7 @@ class CDRdSASAData(CDRData):
         CDRData.__init__(self, "dSASA", native_path, is_camelid)
 
     def add_data(self, strategy, con):
-        self.__get_add_data(strategy, con, "ab_ag_dSASA")
+        self._get_add_data(strategy, con, "ab_ag_dSASA")
 
 class CDRAlignedSequenceData(CDRSequenceData):
     """

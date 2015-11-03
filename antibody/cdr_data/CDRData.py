@@ -74,7 +74,7 @@ class CDRData(object):
 
 
         self.native_data = None
-        self.__setup_native_data(native_path)
+        self._setup_native_data(native_path)
 
 #Public
 
@@ -110,6 +110,8 @@ class CDRData(object):
         df = pandas.DataFrame(temp_dict, columns=columns)
         df.index = df["decoy"]
         del df["decoy"]
+        df = df.convert_objects(convert_numeric=True)
+
         return df
 
     def add_data(self, strategy, con):
@@ -142,7 +144,7 @@ class CDRData(object):
         return self.native_data
 
     def set_native_data_input_tag(self, con, input_tag):
-        self.__set_native_data_input_tag(con, input_tag, self.column_name)
+        self._set_native_data_input_tag(con, input_tag, self.column_name)
 
     def get_concatonated_map(self, cdr = None, decoy_list = None):
         """
@@ -173,7 +175,7 @@ class CDRData(object):
 
 #Private
 
-    def __get_stmt(self, column_name):
+    def _get_stmt(self, column_name):
         if not self.is_camelid:
             stmt = "SELECT "+ \
                         "structures.input_tag as decoy,"+ \
@@ -231,13 +233,13 @@ class CDRData(object):
         #print stmt
         return stmt
 
-    def __get_add_data(self, strategy, con, column_name):
+    def _get_add_data(self, strategy, con, column_name):
         self.column_name = column_name
 
         data = defaultdict()
         cur = con.cursor()
         print "Adding "+column_name+" data for "+strategy
-        for row in cur.execute(self.__get_stmt(column_name)):
+        for row in cur.execute(self._get_stmt(column_name)):
             #print repr(row)
             d = CDRDataInfo(self.name, strategy, row[0])
             d.set_value('H1', row[1])
@@ -249,12 +251,12 @@ class CDRData(object):
                 d.set_value('L2', row[5])
                 d.set_value('L3', row[6])
             data[row[0]] = d
-
+            #print self.name+" type: "+str(type(row[1]))
             #print repr(d)
 
-        self.__add_data(strategy, data)
+        self._add_data(strategy, data)
 
-    def __add_data(self, strategy, decoy_data_map):
+    def _add_data(self, strategy, decoy_data_map):
         """
         Add data in the form of a dict of decoy:DataTriple
         """
@@ -263,14 +265,14 @@ class CDRData(object):
         self.all_data[strategy] = decoy_data_map
         #print repr(decoy_data_map)
 
-    def __setup_native_data(self, pdb_path):
+    def _setup_native_data(self, pdb_path):
         if not pdb_path: return None
 
-    def __set_native_data_from_rosetta(self, pdb_path):
+    def _set_native_data_from_rosetta(self, pdb_path):
         pass
 
-    def __set_native_data(self, data):
+    def _set_native_data(self, data):
         self.native_data = data
 
-    def __set_native_data_input_tag(self, con, input_tag, column_name):
+    def _set_native_data_input_tag(self, con, input_tag, column_name):
         pass

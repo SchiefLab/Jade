@@ -66,6 +66,8 @@ class DecoyData(object):
         df = pandas.DataFrame(temp_dict, columns=columns)
         df.index = df["decoy"]
         del df["decoy"]
+        df = df.convert_objects(convert_numeric=True)
+
         return df
 
 
