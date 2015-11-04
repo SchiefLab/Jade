@@ -1,30 +1,17 @@
-#!/usr/bin/env python
-
-# Yes, the imports are all over.  Basically everything I've coded over the past few years.
 import sys
 import os
 import sqlite3
 import pandas
 
-from argparse import ArgumentParser
-from collections import defaultdict
-
-# TkInter
 from Tkinter import *
-from tkFont import *
-import tkFileDialog
-import tkSimpleDialog
-import tkMessageBox
 
-p = os.path.split(os.path.abspath(__file__))[0]
-sys.path.append(p);  # Allows all modules to use all other modules, without needing to update pythonpath
+from collections import defaultdict
 
 # PyIgD
 import bin.RunRabD_Feat as analyze_strat
 from pymol.PyMolScriptWriter import *
 from antibody.cdr_data.CDRDataTypes import *
 from antibody.decoy_data.DecoyDataTypes import *
-from RAbD.window_modules.FilterSettingsWindow import *
 from sequence import fasta
 from tools.filters.DataFilters import *
 from tools.filters.FilterSettings import *
@@ -32,559 +19,7 @@ from tools.Threader import *
 from tools import PandasDataFrame
 
 # Rosetta Tools
-import create_features_json as json_creator
-
-p = os.path.split(os.path.abspath(__file__))[0]
-sys.path.append(p);  # Allows all modules to use all other modules, without needing to update pythonpath
-
-from rosetta import *
-
-# Rosetta is only used for set_native_data_from_rosetta function for clusters. (CDRClusterer - which uses a pose to get dihedrals.  needs refactoring.)
-rosetta.init(" -ignore_unrecognized_res -ignore_zero_occupancy false -ex1 -ex2 -use_input_sc"
-             " -antibody:numbering_scheme AHO_Scheme "
-             " -antibody:cdr_definition North")
-
-
-# We assume that the names of each decoy is different.  How can we remove this dependency?
-#  This may be a problem if people do not use out:prefix or out:suffix to name their decoys...
-
-### Setup Enums ###
-# length = 1; cluster = 2; sequence = 3;
-
-
-
-def main():
-    parser = ArgumentParser()
-    parser.add_argument("--db_dir",
-                        help="Directory with databases to compare",
-                        default="databases")
-
-    parser.add_argument("--analysis_name",
-                        help="Main directory to complete analysis",
-                        default="prelim_analysis")
-
-    parser.add_argument("--native",
-                        help="Any native structure to compare to")
-
-    parser.add_argument("--root_dir",
-                        help="Root directory to run analysis from",
-                        default=os.getcwd())
-
-    parser.add_argument("--cdrs",
-                        help="A list of CDRs for the analysis (Not used for Features Reporters)",
-                        choices=["L1", "H1", "L1", "H2", "L3", "H3"],
-                        nargs='*',
-                        default=["L1", "L2", "L3", "H1", "H2", "H3"])
-
-    parser.add_argument("--cdr_dir",
-                        help = "Directory of CDR structures with overhangs from PyIgClassify for use in alignment during output of pymol structures.",
-                        default = "")
-
-    options = parser.parse_args()
-
-    if options.root_dir != os.getcwd():
-        print "Changing to root."
-        os.chdir(options.root_dir)
-
-    GUI = CompareAntibodyDesignStrategies_GUI(Tk(), options.db_dir, options.analysis_name)
-
-    # Set any values
-    if options.native:
-        GUI.compare_designs.native_path = options.native
-
-    GUI.compare_designs.set_cdrs_from_list(options.cdrs)
-    GUI.compare_designs.origin_pdb_directory.set(options.cdr_dir)
-
-    GUI.run()
-
-
-class Listbox(Listbox):
-    def autowidth(self, maxwidth, list=None):
-        f = Font(font=self.cget("font"))
-        pixels = 0
-        if not list:
-            for item in self.get(0, "end"):
-                pixels = max(pixels, f.measure(item))
-        else:
-            for item in list:
-                pixels = max(pixels, f.measure(item))
-
-        # bump listbox size until all entries fit
-        pixels = pixels + 10
-        width = int(self.cget("width"))
-        for w in range(0, maxwidth + 1, 5):
-            if self.winfo_reqwidth() >= pixels:
-                break
-            self.config(width=width + w)
-
-
-class CompareAntibodyDesignStrategies_GUI:
-    def __init__(self, main, db_dir="", analysis_dir="", strategies=[]):
-
-        self._tk_ = main
-        self._tk_.title("PyIgDesign Compare")
-        self.compare_designs = CompareAntibodyDesignStrategies(db_dir, analysis_dir, strategies)
-        if self.compare_designs.db_dir and not self.compare_designs.strategies:
-            self.compare_designs.set_strategies_from_databases()
-
-        self.current_dir = os.getcwd()
-
-        self.clustal_procs = IntVar(value=multiprocessing.cpu_count())
-        self.clustal_output_format = StringVar(value="clu")
-        self.clustal_output_formats = ['fasta', 'clustal', 'msf', 'phylip', 'selex', 'stockholm', 'vienna',
-                                       'a2m', 'fa', 'clu', 'phy', 'st', 'vie']
-        self.base_clustal_options = " -v --auto --force"
-
-        ###Sub Windows ####
-        self.filter_settings_window = FilterSettingsWindow(self.compare_designs.filter_settings)
-
-        ###Tracers###
-        self.compare_designs.is_camelid.trace_variable('w', self.camelid_tracer)
-        #atexit.register(self.exit)
-        self._tk_.protocol("WM_DELETE_WINDOW", self.exit)
-
-    def exit(self):
-        if threads.n_alive() > 1:
-            if tkMessageBox.askyesno(title = "Exit?", message = repr(threads.n_alive())+" Processes still running.  Exit?"):
-                threads.kill_all()
-                self._tk_.destroy()
-            else:
-                self._tk_.mainloop()
-        else:
-            self._tk_.destroy()
-
-
-    def run(self):
-        self.set_tk()
-        self.set_menu()
-        self.sho_tk()
-        self._tk_.mainloop()
-
-    def set_tk(self):
-        # self.db_dir_entry = Entry(self._tk_, textvariable = self.compare_designs.out_dir_name, justify = CENTER)
-        self.out_dir_entry = Entry(self._tk_, textvariable=self.compare_designs.out_dir_name, justify=CENTER)
-
-        # self.root_dir_label = Label(self._tk_, text = "Root Directory", justify = CENTER)
-        self.out_dir_label = Label(self._tk_, text="Analysis Name", justify=CENTER)
-
-        self.all_strategies_listbox = Listbox(self._tk_)
-        self.current_strategies_listbox = Listbox(self._tk_)
-
-        self.ab_features_button = Button(self._tk_, text="Run Antibody Features",
-                                         command=lambda: self.run_features_reporter("antibody"), justify=CENTER)
-        self.clus_features_button = Button(self._tk_, text="Run Cluster Features",
-                                           command=lambda: self.run_features_reporter("cluster"), justify=CENTER)
-
-        self.ab_features_options_label = Label(self._tk_, text="Antibody Features Options", justify=CENTER)
-
-        self.normal_hbond_radio = Radiobutton(self._tk_, text="All Hbond R Scripts",
-                                              variable=self.compare_designs.features_hbond_set, value=0)
-        self.min_hbond_radio = Radiobutton(self._tk_, text="Minimal Hbond R Scripts",
-                                           variable=self.compare_designs.features_hbond_set, value=1)
-        self.no_hbond_radio = Radiobutton(self._tk_, text="No Hbond R Scripts",
-                                          variable=self.compare_designs.features_hbond_set, value=2)
-
-        # Setup CDRs
-        self.L_chain_buttons = []
-        self.H_chain_buttons = []
-        for cdr_name in ["L1", "L2", "L3", "H1", "H2", "H3"]:
-            button = Checkbutton(self._tk_, text=cdr_name, variable=self.compare_designs.cdrs[cdr_name])
-            if re.search("L", cdr_name):
-                self.L_chain_buttons.append(button)
-            else:
-                self.H_chain_buttons.append(button)
-
-                # self.separator = Separator(self._tk_, orient = HORIZONTAL)
-
-        self.individual_analysis = Checkbutton(self._tk_, text = "Individual Analysis", variable=self.compare_designs.individual_analysis)
-        self.combined_analysis = Checkbutton(self._tk_, text = "Combined Analysis", variable = self.compare_designs.combined_analysis)
-
-    def sho_tk(self, r=0, c=0):
-
-        # self.root_dir_label.grid(row = r+0, column = c+0, columnspan = 2, sticky = W+E, pady = 7)
-        # self.db_dir_entry.grid( row = r+1, column = c+0, columnspan = 2, sticky = W+E, padx = 5)
-
-
-
-        self.all_strategies_listbox.grid(row=r + 1, column=c + 0, columnspan=3, padx=6, pady=10)
-        self.current_strategies_listbox.grid(row=r + 1, column=c + 3, columnspan=3, padx=6, pady=10)
-
-        position = 0
-
-        for cdr_button in self.L_chain_buttons:
-            cdr_button.grid(row=r + 2, column=c + position)
-            position += 1
-
-        for cdr_button in self.H_chain_buttons:
-            cdr_button.grid(row=r + 2, column=c + position)
-            position += 1
-
-        # self.separator.grid(row = r+3, column = c, columnspan = 2, sticky = W+E, pady = 15)
-
-        self.individual_analysis.grid(row = r+3, column = c+3, columnspan = 3, pady=5, sticky=W+E)
-        self.combined_analysis.grid(row = r+4, column = c+3, columnspan = 3, pady = 5, sticky= W+E)
-
-        self.out_dir_label.grid(row=r + 5, column=c + 0, columnspan=3, pady=5)
-        self.out_dir_entry.grid(row=r + 5, column=c + 3, columnspan=3, padx=5, pady=5)
-
-        self.all_strategies_listbox.bind("<Double-Button-1>",
-                                         lambda event: self.add_to_current(self.all_strategies_listbox,
-                                                                           self.current_strategies_listbox))
-        self.all_strategies_listbox.bind("<Button-2>", lambda event: self.show_strat_items())
-
-        self.ab_features_button.grid(row=r + 6, column=c + 0, columnspan=3, pady=3, sticky=W + E)
-        self.clus_features_button.grid(row=r + 6, column=c + 3, columnspan=3, pady=3, sticky=W + E)
-
-        # self.ab_features_options_label.grid(row = r+7, column = c+0, columnspan = 2, pady = 3, sticky = W+E)
-
-        self.normal_hbond_radio.grid(row=r + 8, column=c + 0, columnspan=3, pady=1, sticky=W)
-        self.min_hbond_radio.grid(row=r + 9, column=c + 0, columnspan=3, pady=1, sticky=W)
-        self.no_hbond_radio.grid(row=r + 10, column=c + 0, columnspan=3, pady=1, sticky=W)
-
-        self.current_strategies_listbox.bind("<Double-Button-1>",
-                                             lambda event: self.delete_current(self.current_strategies_listbox))
-
-        self.populate_all_strategies()
-
-    def set_menu(self):
-
-        self.main_menu = Menu(self._tk_)
-
-        ## File Menu ##
-        self.file_menu = Menu(self.main_menu, tearoff=0)
-
-        self.file_menu.add_checkbutton(label="Camelid Antibody", variable=self.compare_designs.is_camelid)
-        # self.dtypes_menu = Menu(self.main_menu, tearoff = 0)
-        # self.dtypes_menu.add_checkbutton(label = "Group by dG", variable = self.compare_designs.group_dG)
-
-        self.file_menu.add_command(label="Filter Models",
-                                   command=lambda: self.filter_settings_window.setup_sho_gui(Toplevel(self._tk_)))
-        self.file_menu.add_command(label="Read Strategies from DB DIR",
-                                   command=lambda: self.read_from_db_dir_set_strategies())
-        self.file_menu.add_command(label="Add Strategy", command=lambda: self.add_main_strategy())
-        self.file_menu.add_separator()
-        self.file_menu.add_command(label="Set Reference Native", command=lambda: self.set_native_path())
-        self.file_menu.add_command(label="Set Reference Database", command=lambda: self.set_reference_db())
-        # self.file_menu.add_command(label = "Set Scorefunction", command = lambda: self.set_scorefunction())
-        self.file_menu.add_command(label="Set top N", command=lambda: self.set_top_n())
-        self.file_menu.add_command(label="Set top N For Combined", command=lambda: self.set_top_n_combined())
-        self.file_menu.add_separator()
-        self.file_menu.add_command(label="Change Root Dir", command=lambda: self.change_root())
-        self.file_menu.add_command(label = "Print current threads", command = lambda: self.print_threads())
-        self.file_menu.add_separator()
-        self.file_menu.add_checkbutton(label="Reload Query Data", variable=self.compare_designs.reload_scores)
-        self.file_menu.add_checkbutton(label="Backround Features", variable=self.compare_designs.backround_features)
-
-        self.file_menu.add_separator()
-
-
-
-        for name in sorted(self.compare_designs.scores_on.keys()):
-            self.file_menu.add_checkbutton(label=name, variable=self.compare_designs.scores_on[name])
-
-        self.main_menu.add_cascade(label="File", menu=self.file_menu)
-
-
-        ## Score Menu ##
-
-        self.main_pymol_menu = Menu(self.main_menu, tearoff=0)
-        self.pymol_menu = Menu(self.main_menu, tearoff=0)
-        self.pymol_menu.add_command(label="Top Models",
-                                    command=lambda: self.compare_designs.copy_top())
-        self.pymol_menu.add_command(label="All Models",
-                                    command=lambda: self.compare_designs.copy_all_models())
-        self.main_pymol_menu.add_cascade(label="Create PyMol Sessions", menu=self.pymol_menu)
-        self.main_pymol_menu.add_separator()
-        self.main_pymol_menu.add_checkbutton(label="Align Origin CDRs", variable=self.compare_designs.load_origin_pdbs)
-        self.main_pymol_menu.add_command(label="Set CDR Directory", command = lambda: self.set_origin_pdb_dir)
-
-        self.main_menu.add_cascade(label="PyMol", menu=self.main_pymol_menu)
-
-        ## Clustal Menu ##
-        self.clustal_menu = Menu(self.main_menu, tearoff=0)
-        self.clustal_menu.add_command(label="Set Max Processors", command=lambda: self.set_max_clustal_procs())
-        self.clustal_menu.add_command(label="Set Output format", command=lambda: self.set_clustal_output_format())
-        self.clustal_menu.add_command(label="Set Soft Wrap", command=lambda: self.set_clustal_soft_wrap())
-        self.clustal_menu.add_separator()
-        self.clustal_menu.add_command(label="Run Clustal Omega on Top Decoys",
-                                      command=lambda: self.run_clustal_omega())
-        self.clustal_menu.add_command(label="Run Clustal Omega on ALL Combined Decoys",
-                                      command=lambda: self.run_clustal_on_all_combined())
-        #self.main_menu.add_cascade(label="Clustal", menu=self.clustal_menu)
-
-        ## Alignment ##
-        self.per_model_menu = Menu(self.main_menu, tearoff=0)
-
-        self.per_model_menu.add_command(label="Output Length Alignments",
-                                        command=lambda: self.compare_designs.output_len_or_clus_alignment('length', 'antibody'))
-        self.per_model_menu.add_command(label="Output Cluster Alignments",
-                                        command=lambda: self.compare_designs.output_len_or_clus_alignment('cluster', 'antibody'))
-        self.per_model_menu.add_command(label="Output CDR Sequence Alignments",
-                                        command=lambda: self.compare_designs.output_len_or_clus_alignment('aligned_sequence', 'antibody'))
-        self.per_model_menu.add_separator()
-        self.per_model_menu.add_command(label="Output to CSV (Top)", command = lambda: self.compare_designs.output_csv_data(top = True))
-        self.per_model_menu.add_command(label="Output to CSV (ALL)", command = lambda: self.compare_designs.output_csv_data(top = False))
-        self.per_model_menu.add_separator()
-        self.per_model_menu.add_cascade(label="Clustal", menu = self.clustal_menu)
-
-        self.main_menu.add_cascade(label="Model Data", menu=self.per_model_menu)
-
-
-        ## Recovery ##
-        self.per_strategy_menu = Menu(self.main_menu, tearoff = 0)
-        self.recovery_menu = Menu(self.main_menu, tearoff=0)
-        self.recovery_menu.add_command(label="Output Length Recovery",
-                                       command=lambda: self.compare_designs.output_len_or_clus_recovery('length', 'antibody'))
-        self.recovery_menu.add_command(label="Output Cluster Recovery",
-                                       command=lambda: self.compare_designs.output_len_or_clus_recovery('cluster', 'antibody'))
-
-        ## Enrichment ##
-        self.enrichment_menu = Menu(self.main_menu, tearoff=0)
-        self.enrichment_menu.add_command(label="Output Length Enrichments",
-                                         command = lambda: self.compare_designs.output_len_or_clus_enrichment("length"))
-        self.enrichment_menu.add_command(label="Output Cluster Enrichments",
-                                         command = lambda: self.compare_designs.output_len_or_clus_enrichment("cluster"))
-
-        self.per_strategy_menu.add_command(label="Output Score Summaries to CSV (Top)", command=lambda: self.compare_designs.output_csv_data(top=True, summary=True))
-        self.per_strategy_menu.add_command(label="Output Score Summaries to CSV (All)", command=lambda: self.compare_designs.output_csv_data(top=False, summary=True))
-        self.per_strategy_menu.add_cascade(label = "Recovery", menu = self.recovery_menu)
-        self.per_strategy_menu.add_cascade(label = "Enrichment", menu = self.enrichment_menu)
-
-        self.main_menu.add_cascade(label="Strategy Data", menu=self.per_strategy_menu)
-
-        self.subset_menu = Menu(self.main_menu, tearoff=0)
-
-        # Have to do this manually:
-        # for score_name in :
-        #    x = copy.deepcopy(score_name)
-        #    self.subset_menu.add_command(label = "Create DB of Top Subset: "+score_name, command = lambda: self.create_subset_databases(x))
-
-        score_names = self.compare_designs._get_score_names()
-        self.subset_menu.add_command(label="Create DB of Top Subset: " + score_names[0],
-                                     command=lambda: self.create_subset_databases(score_names[0]))
-        self.subset_menu.add_command(label="Create DB of Top Subset: " + score_names[1],
-                                     command=lambda: self.create_subset_databases(score_names[1]))
-        self.subset_menu.add_command(label="Create DB of Top Subset: " + score_names[2],
-                                     command=lambda: self.create_subset_databases(score_names[2]))
-        self.subset_menu.add_command(label="Create DB of Top Subset: " + "Top N dG of Top Total",
-                                     command=lambda: self.create_subset_databases(score_names[3]))
-
-        self.main_menu.add_cascade(label="Features Subsets", menu=self.subset_menu)
-
-        self._tk_.config(menu=self.main_menu)
-
-
-
-        ########### Callbacks ############
-
-    def print_threads(self):
-        print "Total running threads: "+repr(threads.n_alive())
-        for pid in range(0, len(threads)):
-            if threads.is_alive(pid):
-                print "Thread "+repr(pid)+" is alive."
-
-    def show_strat_items(self):
-        item = self.all_strategies_listbox.get(self.all_strategies_listbox.curselection())
-        items = glob.glob(self.compare_designs.db_dir.get() + "/*" + item + "*")
-        # for i in items:
-        # print i
-
-        if os.path.exists(self.compare_designs.db_dir.get() + "/databases"):
-            print "\n Databases:"
-            dbs = glob.glob(self.compare_designs.db_dir.get() + "/databases/*" + item + "*")
-            for db in dbs:
-                print db
-
-    def add_to_current(self, from_listbox, to_listbox):
-        item = from_listbox.get(from_listbox.curselection())
-        to_listbox.insert(END, item)
-        strategies = self.get_full_strategy_list()
-        self.compare_designs.set_strategies(strategies)
-
-    def delete_current(self, listbox):
-        listbox.delete(listbox.curselection())
-        strategies = self.get_full_strategy_list()
-        self.compare_designs.set_strategies(strategies)
-
-    def populate_all_strategies(self):
-        self.all_strategies_listbox.delete(0, END)
-        for strategy in self.compare_designs.strategies:
-            self.all_strategies_listbox.insert(END, strategy)
-
-        self.all_strategies_listbox.autowidth(100)
-        self.current_strategies_listbox.autowidth(100, self.compare_designs.strategies)
-
-        ######### Tracers ##############
-
-    def camelid_tracer(self, name, index, mode):
-        varValue = self.compare_designs.is_camelid.get()
-        if varValue == 1:
-            self.compare_designs.cdrs["L1"].set(0)
-            self.compare_designs.cdrs["L2"].set(0)
-            self.compare_designs.cdrs["L3"].set(0)
-
-        return
-
-
-        ######### Auxilliary Functions ###########
-
-    def add_main_strategy(self):
-        strategy_name = tkSimpleDialog.askstring(title="Strategy", prompt="Strategy Name")
-        if not strategy_name:
-            return
-
-        strategy_path = tkFileDialog.askdirectory(initialdir=self.current_dir, title="Strategy Path")
-        self.compare_designs.strategies.append(strategy_name)
-        self.compare_designs.db_paths[strategy_name] = strategy_path
-
-        self.all_strategies_listbox.insert(END, strategy_name)
-
-    def change_root(self):
-        root = tkFileDialog.askdirectory(initialdir=self.current_dir, title="Root Directory")
-        if not root:
-            return
-        self.current_dir = root
-        os.chdir(root)
-        print "Root directory changed to: " + root
-
-    def read_from_db_dir_set_strategies(self):
-        self.compare_designs.strategies = []
-
-        if not self.compare_designs.db_dir.get() or not os.path.exists(self.compare_designs.db_dir.get()):
-
-            db_dir = tkFileDialog.askdirectory(initialdir=self.current_dir, title="Database DIR")
-            if not db_dir:
-                return
-            self.current_dir = db_dir
-            self.compare_designs.db_dir.set(db_dir)
-        self.compare_designs.set_strategies_from_databases()
-        self.populate_all_strategies()
-
-        strategies = self.get_full_strategy_list()
-        self.compare_designs.set_strategies(strategies)
-
-    def get_full_strategy_list(self):
-        strategies = self.current_strategies_listbox.get(0, END)
-        return strategies
-
-    def set_reference_db(self):
-        d = tkFileDialog.askopenfilename(title="Reference DB", initialdir=self.compare_designs.db_dir.get())
-        if not d: return
-        self.current_dir = os.path.dirname(d)
-        self.compare_designs.reference_db.set(d)
-
-    def set_top_n(self):
-        top = tkSimpleDialog.askinteger(title="Top N", prompt="Number of top scoring",
-                                        initialvalue=self.compare_designs.top_n.get())
-        if not top: return
-        self.compare_designs.top_n.set(top)
-
-    def set_top_n_combined(self):
-        top = tkSimpleDialog.askinteger(title="Top N Combined", prompt="Number of top scoring Combined",
-                                        initialvalue=self.compare_designs.top_n_combined.get())
-        if not top: return
-        self.compare_designs.top_n_combined.set(top)
-
-    def set_max_clustal_procs(self):
-        max = tkSimpleDialog.askinteger(title="Max P", prompt="Max NP.  Clustal by default uses all.",
-                                        initialvalue=self.clustal_procs.get())
-        if not max: return
-        self.clustal_procs.set(max)
-
-    def set_clustal_output_format(self):
-        f = tkSimpleDialog.askstring(title="Clustal output format", initialvalue=self.clustal_output_format.get())
-        if not f:
-            return
-        if not f in self.clustal_output_formats:
-            print "Format " + f + " not recognized.  Available formats are: \n" + repr(self.clustal_output_formats)
-            return
-
-        self.clustal_output_format.set(f)
-
-    def set_clustal_soft_wrap(self):
-        wrap = tkSimpleDialog.askinteger(title="Wrap", prompt="Set Soft Wrap",
-                                         initialvalue=self.compare_designs.clustal_soft_wrap.get())
-        if not wrap:
-            return
-        self.compare_designs.clustal_soft_wrap.set(wrap)
-
-        # def set_scorefunction(self):
-        # score = tkSimpleDialog.askstring(title="Score", prompt = "Set Scorefunction", initialvalue = self.compare_designs.scorefunction.get())
-        # if not score:
-        # return
-        # self.compare_designs.scorefunction.set(score)
-
-    def set_native_path(self):
-        native_path = tkFileDialog.askopenfilename(title="Native path", initialdir=self.current_dir)
-        if not native_path:
-            return
-        else:
-            self.current_dir = os.path.dirname(native_path)
-            self.compare_designs.native_path = native_path
-
-    def set_origin_pdb_dir(self):
-        origin_path = tkFileDialog.askopenfilename(title = "CDR origin path (PyIgClassify)", inititaldir = self.current_dir)
-        if not origin_path:
-            return
-        else:
-            self.current_dir = os.path.dirname(origin_path)
-            self.compare_designs.origin_pdb_directory.set(origin_path)
-
-
-            ######## Main Analysis ############
-
-    def run_features_reporter(self, type):
-        strategies = self.get_full_strategy_list()
-        if len(strategies) == 0:
-            print "No strategies selected..."
-            return
-
-        self.compare_designs.set_strategies(strategies)
-        self.compare_designs.run_features(type)
-
-    def run_copy_all(self):
-        self.compare_designs.copy_all_models()
-
-
-    def run_clustal_on_all_combined(self):
-
-        extra_options = tkSimpleDialog.askstring(title="Extra Options", prompt="Clustal Extra Options",
-                                                 initialvalue=self.base_clustal_options)
-        if not extra_options:
-            return
-
-        self.compare_designs.run_clustal_omega_on_all_combined(self.clustal_procs.get(),
-                                                               self.clustal_output_format.get(),
-                                                               extra_options=extra_options)
-
-    def run_clustal_omega(self):
-
-        extra_options = tkSimpleDialog.askstring(title="Extra Options", prompt="Clustal Extra Options",
-                                                 initialvalue=self.base_clustal_options)
-        if not extra_options:
-            return
-
-        self.compare_designs.run_clustal_omega(self.clustal_procs.get(),
-                                                               self.clustal_output_format.get(),
-                                                               extra_options=extra_options)
-
-    def create_subset_databases(self, score_name):
-        rosetta_extension = tkSimpleDialog.askstring(title="Rosetta Extension",
-                                                     prompt="Please set the Rosetta Extension",
-                                                     initialvalue=self.compare_designs.rosetta_extension.get())
-        if not rosetta_extension:
-            return
-        self.compare_designs.rosetta_extension.set(rosetta_extension)
-
-        prefix = tkSimpleDialog.askstring(title="Prefix",
-                                          prompt="Please set the prefix that will be used for the new databases",
-                                          initialvalue=score_name)
-        if not prefix:
-            print "The prefix needs to be set"
-            return
-
-        self.compare_designs.create_score_subset_database(score_name, prefix)
-        # self.read_from_main_set_strategies()
+import bin.create_features_json as json_creator
 
 
 class CompareAntibodyDesignStrategies:
@@ -606,6 +41,7 @@ class CompareAntibodyDesignStrategies:
 
         #Init Components
         self._init_default_options()
+        self._init_paths()
         self._init_scores()
         self._init_default_scores()
         self._init_cdrs()
@@ -643,7 +79,16 @@ class CompareAntibodyDesignStrategies:
         self.combined_analysis = IntVar(value = 0)
 
         self.load_origin_pdbs = IntVar(value = 1)
-        self.origin_pdb_directory = StringVar()
+        self.pyigclassify_dir = StringVar()
+
+
+    def _init_paths(self):
+        self.cdr_rel_path = "DBOUT/cdr_pdbs_redun_by_cdr_overhang_3"
+        self.weblogo_rel_path = "DBOUT/weblogos"
+        self.ab_db_rel_path = "DBOUT/website"
+
+        self.redun_db_name = "antibody_database_redundant.db"
+        self.nr_db_name = "antibody_database_rosetta_design.db"
 
     def _init_scores(self):
         total_scores = TotalDecoyData()
@@ -1460,11 +905,11 @@ class CompareAntibodyDesignStrategies:
                         i += 1
 
                     if self.load_origin_pdbs:
-                        if not self.origin_pdb_directory.get() or not os.path.exists(self.origin_pdb_directory.get()):
+                        if not self.pyigclassify_dir.get() or not os.path.exists(self.pyigclassify_dir.get()):
                             print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
                             return
 
-                        make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.origin_pdb_directory.get(),
+                        make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.pyigclassify_dir.get(),
                                                                          top_num=top_n, native_path=self.native_path)
                     else:
                         make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
@@ -1504,11 +949,11 @@ class CompareAntibodyDesignStrategies:
                     i += 1
 
                 if self.load_origin_pdbs:
-                    if not self.origin_pdb_directory.get() or not os.path.exists(self.origin_pdb_directory.get()):
+                    if not self.pyigclassify_dir.get() or not os.path.exists(self.pyigclassify_dir.get()):
                         print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
                         return
 
-                    make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(), self.origin_pdb_directory.get(),
+                    make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(), self.pyigclassify_dir.get()+"/"+self.cdr_rel_path,
                                                                      top_num=top_n, native_path=self.native_path)
                 else:
                     make_pymol_session_on_top(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(),
@@ -1554,11 +999,11 @@ class CompareAntibodyDesignStrategies:
                     i += 1
 
                 if self.load_origin_pdbs:
-                    if not self.origin_pdb_directory.get() or not os.path.exists(self.origin_pdb_directory.get()):
+                    if not self.pyigclassify_dir.get() or not os.path.exists(self.pyigclassify_dir.get()):
                         print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
                         return
 
-                    make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.origin_pdb_directory.get(),
+                    make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.pyigclassify_dir.get()+"/"+self.cdr_rel_path,
                                                                      top_num=None, native_path=self.native_path)
                 else:
                     make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
@@ -1580,11 +1025,11 @@ class CompareAntibodyDesignStrategies:
             out_dir = self._setup_outdir_combined(["all_sessions"])
 
             if self.load_origin_pdbs:
-                if not self.origin_pdb_directory.get() or not os.path.exists(self.origin_pdb_directory.get()):
+                if not self.pyigclassify_dir.get() or not os.path.exists(self.pyigclassify_dir.get()):
                     print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
                     return
 
-                make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.origin_pdb_directory.get(),
+                make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.pyigclassify_dir.get()+"/"+self.cdr_rel_path,
                                                                  top_num=None, native_path=self.native_path)
             else:
                 make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
@@ -2069,7 +1514,6 @@ class CompareAntibodyDesignStrategies:
 
             os.remove(temp_name)
 
-
 class Perc:
     """
     Simple class for holding enrichment/recovery information
@@ -2193,11 +1637,3 @@ def get_star_if_native(decoy_data, native_data, cdr):
         return "*"
     else:
         return decoy_data.get_value_for_cdr(cdr)
-
-
-if __name__ == "__main__":
-    # 1) Main StrategyAnalysis DIR
-    # 2) Output DIR
-    # 3) Any Names of strategies to run.  Else will attempt load from Main StrategyAnalysisDIR
-
-    main()
