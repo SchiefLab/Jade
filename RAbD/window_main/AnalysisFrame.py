@@ -28,15 +28,20 @@ class AnalysisFrame(Frame):
         self.clusterOPT.set("Open Sequence Logo")
 
         self.decoyOPT = StringVar()
-        self.decoyOPT.set("Print Score Data")
+        self.decoyOPT.set("Copy To DIR")
 
         self.clusterFUNCTIONS = {
             "Open Sequence Logo":lambda:self.open_seq_logo(),
-            "Open MSA":lambda:self.open_msa()
+            "Open MSA":lambda:self.open_msa(),
+            "Print Enrichment":lambda:self.print_enrichments(),
+            "Print Recovery":lambda: self.print_recovery()
         }
 
         self.decoyFUNCTIONS = {
-            "Print Score Data":lambda:self.print_decoy_info()
+            "Print Score Data":lambda:self.print_decoy_info(),
+            "Copy Decoy(s) To DIR": lambda :self.copy_to_dir(),
+            "Copy Decoy(s) To DIR and Rename":lambda:self.copy_to_dir_and_rename(),
+            "Print FASTA":lambda: self.print_fasta()
         }
 
 
@@ -69,6 +74,13 @@ class AnalysisFrame(Frame):
         self.options_decoy.grid(row=2, column=1, sticky=W+E, padx=2, pady=2)
         self.button_decoy.grid(row=2, column=2, sticky=W+E, padx=2, pady=2)
 
+    def get_decoys(self):
+        """
+        Split the decoys by return type - so you can do multiple things to the decoys
+        :rtype: list of str
+        """
+        return self.decoy.get().split('\n')
+
     def open_seq_logo(self):
 
         self.check_set_pyigclassify()
@@ -85,6 +97,47 @@ class AnalysisFrame(Frame):
     def print_decoy_info(self):
         pass
 
+    def print_fasta(self):
+        pass
+
+    def print_enrichments(self):
+        pass
+
+    def print_recovery(self):
+        pass
+
+    def copy_to_dir(self):
+
+        dir_out = tkFileDialog.askdirectory(initialdir=self.main_gui.current_dir, title = "Copy to DIR")
+        if not dir_out: return
+        else:
+            self.main_gui.current_dir = os.path.dirname(dir_out)
+
+        for decoy in self.get_decoys():
+            if not os.path.exists(decoy):
+                print "Decoy not found.  Please provide full path to decoy"
+                return
+            else:
+                print "Copying Decoy: "+decoy
+                os.system("cp "+self.decoy.get()+" "+dir_out)
+
+    def copy_to_dir_and_rename(self):
+        dir_out = tkFileDialog.askdirectory(initialdir=self.main_gui.current_dir, title = "Copy to DIR")
+        if not dir_out: return
+        else:
+            self.main_gui.current_dir = os.path.dirname(dir_out)
+
+        for decoy in self.get_decoys():
+            if not os.path.exists(decoy):
+                print "Decoy not found.  Please provide full path to decoy"
+                return
+            else:
+                new_name = tkSimpleDialog.askstring(title="Decoy Name", prompt="Enter a new decoy name")
+                if not new_name:return
+                new_name = new_name+decoy.split('.')[-1] #Add extension
+                print "Copying Decoy: "+decoy
+                os.system("cp "+self.decoy.get()+" "+dir_out+"/"+new_name)
+
     def check_set_pyigclassify(self):
         if not os.path.exists(self.compare_designs.pyigclassify_dir.get()):
             print "PyIgClassify Dir does not exist"
@@ -93,3 +146,4 @@ class AnalysisFrame(Frame):
             else:
                 self.main_gui.current_dir = os.path.dirname(pyigclassify_dir)
                 self.compare_designs.pyigclassify_dir.set(pyigclassify_dir)
+

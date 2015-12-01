@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from rosetta_general.RunRosetta import *
+from rosetta_gen.RunRosetta import *
 
 
 ##Main to RunRosetta.

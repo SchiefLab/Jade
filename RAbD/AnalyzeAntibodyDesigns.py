@@ -9,7 +9,7 @@ from collections import defaultdict
 
 # PyIgD
 import bin.RunRabD_Feat as analyze_strat
-from pymol.PyMolScriptWriter import *
+from pymol_gen.PyMolScriptWriter import *
 from antibody.cdr_data.CDRDataTypes import *
 from antibody.decoy_data.DecoyDataTypes import *
 from sequence import fasta
@@ -596,6 +596,8 @@ class CompareAntibodyDesignStrategies:
 
                 strat_dfs=[]
                 for strategy in self.get_strategies():
+
+                    """
                     if score_name == "dG_top_Ptotal":
                         score = self._get_score(score_name)
                         decoy_list = score.get_ordered_decoy_list(strategy, self.top_n.get())
@@ -604,6 +606,13 @@ class CompareAntibodyDesignStrategies:
                     else:
                         df = combined_scores[combined_scores['strategy'] == strategy].sort(score_name)[0:self.top_n.get()] #Best N
                         df.sort(columns=[sort_name])
+                    """
+                    #Generally, will use order to get top scores.
+                    score = self._get_score(score_name)
+                    decoy_list = score.get_ordered_decoy_list(strategy, self.top_n.get())
+                    df = combined_scores[combined_scores.index.isin(decoy_list)]
+                    df.sort(columns=[sort_name]) #Not working !!
+
                     strat_dfs.append(df)
                 top_df = pandas.concat(strat_dfs)
 
@@ -627,14 +636,12 @@ class CompareAntibodyDesignStrategies:
             if self.combined_analysis.get():
                 dfs = []
                 for score_name in self._get_score_names_on():
-                    if score_name == "dG_top_Ptotal":
-                        score = self._get_score(score_name)
-                        decoy_list = score.get_ordered_decoy_list_all(self.top_n.get())
-                        df = combined_scores[combined_scores.index.isin(decoy_list)]
-                        df["by_score_group"] = score_name
-                    else:
-                        df = combined_scores.sort(score_name)[0:self.top_n.get()] #Best N
-                        df["by_score_group"] = score_name
+
+                    score = self._get_score(score_name)
+                    decoy_list = score.get_ordered_decoy_list_all(self.top_n.get())
+                    df = combined_scores[combined_scores.index.isin(decoy_list)]
+                    df["by_score_group"] = score_name
+
                     dfs.append(df)
                 df = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs))
                 name_order=["by_score_group"]
@@ -909,7 +916,8 @@ class CompareAntibodyDesignStrategies:
                             print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
                             return
 
-                        make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.pyigclassify_dir.get(),
+                        make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
+                                                                         self.pyigclassify_dir.get()+"/"+self.cdr_rel_path,
                                                                          top_num=top_n, native_path=self.native_path)
                     else:
                         make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
@@ -953,7 +961,8 @@ class CompareAntibodyDesignStrategies:
                         print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
                         return
 
-                    make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(), self.pyigclassify_dir.get()+"/"+self.cdr_rel_path,
+                    make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions,
+                                                                     score.get_outname(), self.pyigclassify_dir.get()+"/"+self.cdr_rel_path,
                                                                      top_num=top_n, native_path=self.native_path)
                 else:
                     make_pymol_session_on_top(decoy_list, load_as, outdir_top_pdbs, outdir_top_sessions, score.get_outname(),
@@ -1003,7 +1012,8 @@ class CompareAntibodyDesignStrategies:
                         print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
                         return
 
-                    make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.pyigclassify_dir.get()+"/"+self.cdr_rel_path,
+                    make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
+                                                                     self.pyigclassify_dir.get()+"/"+self.cdr_rel_path,
                                                                      top_num=None, native_path=self.native_path)
                 else:
                     make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
@@ -1029,7 +1039,8 @@ class CompareAntibodyDesignStrategies:
                     print "Origin PDB not set or does not exist. Disable this feature or set a correct directory."
                     return
 
-                make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(), self.pyigclassify_dir.get()+"/"+self.cdr_rel_path,
+                make_pymol_session_on_top_ab_include_native_cdrs(decoy_list, load_as, out_dir, out_dir, score.get_outname(),
+                                                                 self.pyigclassify_dir.get()+"/"+self.cdr_rel_path,
                                                                  top_num=None, native_path=self.native_path)
             else:
                 make_pymol_session_on_top(decoy_list, load_as, out_dir, out_dir, score.get_outname(),

@@ -12,7 +12,7 @@ import argparse
 from tools.general import get_platform
 from tools.path import *
 
-from rosetta_general.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
+from rosetta_gen.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
 import copy
 
 def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts = ""):
@@ -125,7 +125,7 @@ class RunRosetta(object):
                                default="slurm",
                                help="Job Manager to launch job. "
                                     "Default = 'slurm ' ",
-                               choices = ["slurm","qsub","local"] )
+                               choices = ["slurm","qsub","local","local_test"] )
 
 
         job_setup.add_argument("--job_manager_opts",
@@ -498,7 +498,8 @@ class RunRosetta(object):
             s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir(*args, **kwargs)+"/rosetta_mpi_run"
 
         #For these benchmarks, there are only a single root directory.
-        s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options.get_root())
+        if self.options.json_run:
+            s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options.get_root())
 
         #DB Mode
         if self.options.db_in:
@@ -606,7 +607,15 @@ class RunRosetta(object):
         elif self.options.job_manager == "local":
             print cmd + "\n"
             os.system(cmd)
+        elif self.options.job_manager == "local_test":
+            self.options.np = 2
+            self.options.nstruct = 1
+            self.options.one_file_mpi = True
 
+            cmd = self.get_full_cmd()
+            print cmd +"\n"
+            os.system(cmd)
+            
         elif self.options.job_manager == "qsub":
             run_on_qsub(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.get_job_manager_opts())
 

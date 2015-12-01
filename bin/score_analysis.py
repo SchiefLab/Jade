@@ -11,8 +11,8 @@
 # @author Jared Adolf-Bryfogle - Forking.
 
 from argparse import ArgumentParser
-from pymol.PyMolScriptWriter import *
-from rosetta_general.ScoreFiles import ScoreFiles
+from pymol_gen.PyMolScriptWriter import *
+from rosetta_gen.ScoreFiles import ScoreFiles
 
 ########################################################################
 

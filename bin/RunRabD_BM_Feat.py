@@ -19,7 +19,7 @@ import datetime
 from RAbD_BM.BenchmarkInfo import *
 from tools.general import *
 from tools.path import *
-from rosetta_general.RunRosetta import *
+from rosetta_gen.RunRosetta import *
 
 import RAbD_BM.PoolData as pool
 import RAbD_BM.tools as tools

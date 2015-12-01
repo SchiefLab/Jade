@@ -10,10 +10,10 @@ from argparse import ArgumentParser
 
 #Module DB Imports
 
-from rosetta_general.features import *
-from rosetta_general.RunRosetta import RunRosetta
+from rosetta_gen.features import *
+from rosetta_gen.RunRosetta import RunRosetta
 
-from pymol.PyMolScriptWriter import *
+from pymol_gen.PyMolScriptWriter import *
 from tools.general import *
 
 def main():
