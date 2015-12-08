@@ -2,8 +2,10 @@
 
 #from sequence import fasta
 from tools import biopython_util
+from tools import path
 
 from collections import defaultdict
+import re
 import os
 import sys
 import argparse
@@ -28,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument("--format", "-f",
                         help = "The output format requried.",
                         default = "fasta",
-                        choices = ["basic", "fasta"])
+                        choices = ["basic", "fasta", "ab_order"])
 
     parser.add_argument("--outpath", "-o",
                         help = "Output path.  If none is specified it will write to screen.")
@@ -49,6 +51,7 @@ if __name__ == "__main__":
 
 
     sequences = defaultdict()
+    ordered_ids = []
 
     pdbs = []
     if options.pdb:
@@ -58,34 +61,48 @@ if __name__ == "__main__":
         INFILE = open(options.pdblist, 'r')
         for line in INFILE:
             line = line.strip()
+            if not line or re.search("PDBLIST", line) or line[0]=='#':
+                continue
+
             if options.pdblist_input_dir:
                 pdb_path = options.pdblist_input_dir+"/"+line
             else:
                 pdb_path = line
             pdbs.append(pdb_path)
+        INFILE.close()
 
     for pdb in pdbs:
-        print "Reading "+pdb
+        #print "#Reading "+pdb
         biostructure = biopython_util.get_biopython_structure(pdb)
         if options.chain:
             seq = biopython_util.get_seq_from_biostructure(biostructure, options.chain)
-            sequences[options.chain] = seq
+            sequences[path.get_decoy_name(pdb)+"_"+options.chain] = seq
+            ordered_ids.append(path.get_decoy_name(pdb)+"_"+options.chain)
         else:
             for biochain in biostructure[0]:
                 if biopython_util.get_chain_length(biochain) == 0:
                     continue
                 seq = biopython_util.get_seq_from_biochain(biochain)
-                b = os.path.basename(pdb).replace('.pdb.gz', '')
-                sequences[biochain.id+" "+b] = seq
+                #b = os.path.basename(pdb).replace('.pdb.gz', '')
+                sequences[path.get_decoy_name(pdb)+"_"+biochain.id] = seq
+                ordered_ids.append(path.get_decoy_name(pdb)+"_"+biochain.id)
 
     outlines = []
-    for chain in sequences:
-        if options.format == "basic":
-            outlines.append( options.prefix+chain+" : "+sequences[chain]+"\n")
-        elif options.format == "fasta":
-            outlines.append("> "+options.prefix+chain)
-            outlines.append(sequences[chain]+"\n")
+    i = 1
 
+
+    for name_chain in ordered_ids:
+
+        if options.format == "basic":
+            outlines.append( options.prefix+name_chain+" : "+sequences[name_chain]+"\n")
+        elif options.format == "fasta":
+            outlines.append("> "+options.prefix+name_chain)
+            outlines.append(sequences[name_chain]+"\n")
+        elif options.format == "ab_order":
+            name = "IgG_"+name_chain+"_pFUSE"
+            outlines.append(str(i)+". "+name+ " "+sequences[name_chain]+"\n")
+
+        i+=1
 
     if options.outpath:
         OUT = open(options.outpath, "w")

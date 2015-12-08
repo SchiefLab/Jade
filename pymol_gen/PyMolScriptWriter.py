@@ -224,6 +224,11 @@ class PyMolScriptWriter:
         """
         self.add_line("super "+sele1+", "+sele2)
 
+    def add_superimpose_all_to(self, model, sele1 , sele2):
+        for name in self.final_names:
+            if name !=model:
+                self.add_superimpose(name+" and "+sele1, model+" and "+sele2)
+
     def add_load_pdbs(self, pdb_paths, load_as = ""):
         """
         Add lines to load the list of PDB paths into PyMol
@@ -477,7 +482,9 @@ def make_pymol_session_on_top_ab_include_native_cdrs(pdb_path_list, load_as_list
     scripter.write_script("load_align_top.pml")
     run_pymol_script(script_dir+"/"+"load_align_top.pml")
 
-def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, out_name, top_num = None, native_path = None, antibody=True, parellel = True):
+def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, out_name, top_num = None, native_path = None, antibody=True,
+                                     parellel = True,
+                                     super = ""):
     """
     Make a pymol session on a set of decoys with a tuple of [[score, pdb], ... ]
 
@@ -519,7 +526,11 @@ def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, o
         scripter.add_load_pdb(decoy, "model_"+repr(i)+"_"+score_pdb[1].split("_")[-1]+"_%.2f"%(score_pdb[0]))
         i+=1
 
-    scripter.add_align_all_to(scripter.get_final_names()[0])
+    if super:
+        scripter.add_superimpose_all_to(scripter.get_final_names()[0], super, super)
+    else:
+        scripter.add_align_all_to(scripter.get_final_names()[0])
+
     scripter.add_show("cartoon")
     scripter.add_line("center")
     scripter.add_line("hide lines")

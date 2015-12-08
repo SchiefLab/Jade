@@ -173,6 +173,8 @@ def main(argv):
                           action="store_true",
                           help = "Specify if the module is a renumbered antibody structure.  Will run pymol script for ab-specific selection")
 
+  pymol_opts.add_argument("--super",
+                          help = "Super this selection instead of align all to.")
 
   global options
   options = parser.parse_args()
@@ -312,14 +314,14 @@ def main(argv):
           if len(top_by_n_decoys) == 0:
             print "No pdbs found. Skipping"
           make_pymol_session_on_top_scored(top_by_n_decoys, options.top_dir, outdir, pymol_name, int(options.top_n), options.native,
-                                           antibody=options.ab_structure, parellel=False)
+                                           antibody=options.ab_structure, parellel=False, super = options.super)
 
         else:
           ordered = sf.getOrdered(scoreterm, top_n=int(options.top_n), decoy_names=decoy_names)
           print repr(ordered)
           top_decoys = [[o[0], options.top_dir+"/"+o[1] ] for o in ordered]
           make_pymol_session_on_top_scored(top_decoys, options.top_dir, outdir, pymol_name, int(options.top_n), options.native,
-                                           antibody=options.ab_structure, parellel=False)
+                                           antibody=options.ab_structure, parellel=False, super = options.super)
 
 ########################################################################
 

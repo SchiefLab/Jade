@@ -615,7 +615,7 @@ class RunRosetta(object):
             cmd = self.get_full_cmd()
             print cmd +"\n"
             os.system(cmd)
-            
+
         elif self.options.job_manager == "qsub":
             run_on_qsub(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.get_job_manager_opts())
 

@@ -24,6 +24,22 @@ def get_feat_input_path():
 def get_pdb_path(decoy, alternate_paths = None):
     return get_decoy_path(decoy, alternate_paths)
 
+def get_decoy_name(decoy):
+    """
+    Get the decoy name from path or name, whether .pdb, .pdb.gz or no extension.
+    :param decoy:
+    :rtype:str
+    """
+
+    name = os.path.basename(decoy)
+
+    if re.search(".pdb.gz", name):
+        return '.'.join(name.split(".")[0:-2])
+    elif re.search(".pdb", name):
+        return '.'.join(name.split('.')[0:-1])
+    else:
+        return name
+
 def get_decoy_path(decoy, alternate_paths = None):
     """
     Search no extensions or with .pdb or .pdb.gz.
@@ -32,7 +48,7 @@ def get_decoy_path(decoy, alternate_paths = None):
 
     :param decoy:
     :param alternate_paths:
-    :return:
+    :rtype:str
     """
 
     #This is a hack due to wierd issues with the score file vs pdb file and an extra '_'
@@ -59,6 +75,7 @@ def get_decoy_path(decoy, alternate_paths = None):
             return decoy+".pdb.gz"
         else:
             return None
+
 def get_xml_scripts_path():
     p  = os.path.split(os.path.abspath(__file__))[0]+"/../rosetta_gen/xml_scripts"
     return p
@@ -73,7 +90,7 @@ def get_make_get_dirs(root, dirs):
     Recursively make dirs and return the final path
     :param root:
     :param dirs:
-    :return:
+    :rtype: str
     """
     make_dir_if_not_exists(root)
 
