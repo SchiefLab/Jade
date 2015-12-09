@@ -9,7 +9,7 @@
     "-loops:ramp_fa_rep",
     "-loops:ramp_rama",
     "-in:file:fullatom",
-    "-loops:kic_cen_weights",
+    "-loops:cen_weights cen_std_smooth",
     "-shapovalov_lib_fixes_enable"
   ]
 }
