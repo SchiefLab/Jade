@@ -79,7 +79,7 @@ class PythonPDB2:
         for dat in self.pdb_map:
             if dat["chain"] == chain:
                 chain_data.append(dat)
-        return dat
+        return chain_data
 
     def get_waters(self):
         """
@@ -511,31 +511,31 @@ class PythonPDB2:
 
                 elif self.pdb_map[key]["three_letter_code"]=="ILE ":
                     atom_pairs = {"  CD ":"  CD1"}
-                    self.pdb_map = self.pdb_atom_alias(self.pdb_map, key, atom_pairs)
+                    self.pdb_map = self.pdb_atom_alias(key, atom_pairs)
 
                 elif self.pdb_map[key]["three_letter_code"]=="LEU ":
                     atom_pairs = {"  OT1":"  O  ", "  OT2":"  OXT"}
-                    self.pdb_map = self.pdb_atom_alias(self.pdb_map, key, atom_pairs)
+                    self.pdb_map = self.pdb_atom_alias(key, atom_pairs)
 
                 elif self.pdb_map[key]["three_letter_code"]=="VAL ":
                     atom_pairs = {"  OT1":"  O  ", "  OT2":"  OXT"}
-                    self.pdb_map = self.pdb_atom_alias(self.pdb_map, key, atom_pairs)
+                    self.pdb_map = self.pdb_atom_alias(key, atom_pairs)
 
                 elif self.pdb_map[key]["three_letter_code"]=="LYS ":
                     atom_pairs = {"  HZ1":"  1HZ", "  HZ2":"  2HZ", "  HZ3":"  3HZ"}
-                    self.pdb_map = self.pdb_atom_alias(self.pdb_map, key, atom_pairs)
+                    self.pdb_map = self.pdb_atom_alias(key, atom_pairs)
 
                 elif self.pdb_map[key]["three_letter_code"]=="ARG ":
                     atom_pairs = {" HH11":" 1HH1", " HH12":" 2HH1", " HH21":" 1HH2", " HH22":" 2HH2"}
-                    self.pdb_map = self.pdb_atom_alias(self.pdb_map, key, atom_pairs)
+                    self.pdb_map = self.pdb_atom_alias(key, atom_pairs)
 
                 elif self.pdb_map[key]["three_letter_code"]=="ASN ":
                     atom_pairs = {"HD21":"1HD2", "HD22":"2HD2"}
-                    self.pdb_map = self.pdb_atom_alias(self.pdb_map, key, atom_pairs)
+                    self.pdb_map = self.pdb_atom_alias(key, atom_pairs)
 
                 elif self.pdb_map[key]["three_letter_code"]=="PRO ":
                     atom_pairs = {"  OT1":"  O  ", "  OT2":"  OXT", "  HD1":"  1HD", "  HD2":"  2HD", "  HB1":"  1HB", "  HG1":"  1HG", "  HG2":"  2HG"}
-                    self.pdb_map = self.pdb_atom_alias(self.pdb_map, key, atom_pairs)
+                    self.pdb_map = self.pdb_atom_alias(key, atom_pairs)
 
 
             #Unnessessary, but organized.
