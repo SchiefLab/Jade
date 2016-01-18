@@ -461,7 +461,6 @@ class RunRosetta(object):
         s = self.base_options.get_root()+"/"+self.options.outdir
         if not os.path.exists(s):
             os.mkdir(s)
-
         #s = s + "/"+self.get_out_prefix(*args, **kwargs)
         if not os.path.exists(s):
             os.mkdir(s)

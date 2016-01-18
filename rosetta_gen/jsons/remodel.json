@@ -2,6 +2,6 @@
   "flags": [
     "-out:prefix rem_",
     "-find_neighbors",
-    "-mintype dfpmin_armijo_nonmonotone"
+    "-run:min_type dfpmin_armijo_nonmonotone"
   ]
 }
