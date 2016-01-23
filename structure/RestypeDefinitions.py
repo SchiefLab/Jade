@@ -4,6 +4,12 @@
 #This object holds data used to define certain things.  CDR's, SASA, Residue types and names, etc.
 
 
+codons = ["AAA", "AAG"]
+
+
+
+
+
 class RestypeDefinitions():
     def __init__(self):
         self.restypes = ("All", "Charged", "Positive", "Negative", "Non-Polar", "Polar-Uncharged", "Polar", "Aromatic", "Hydroxyl", "Conserved", "etc")

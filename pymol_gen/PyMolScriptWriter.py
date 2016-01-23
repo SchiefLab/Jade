@@ -9,6 +9,11 @@ from tools.path import *
 from tools.Threader import Threader
 from structure import Structure
 from antibody import util as ab_util
+from structure.RestypeDefinitions import *
+
+
+
+
 
 class PyMolScriptWriter:
     """
@@ -46,6 +51,7 @@ class PyMolScriptWriter:
 
         self.pdbs = []
         self.final_names = []
+        self.grouped_pdbs = defaultdict()
 
     def _read_colors(self, path):
         """
@@ -69,6 +75,12 @@ class PyMolScriptWriter:
         INFILE.close()
         print "Done reading PyMol color types"
 
+    def __str__(self):
+        return "\n".join(self.script_lines)
+
+    def __repr__(self):
+        return "\n".join(self.script_lines)
+
     def set_outdir(self, outdir):
         if outdir:
             self.output_dir = outdir
@@ -77,14 +89,18 @@ class PyMolScriptWriter:
         else:
             self.output_dir = os.getcwd()
 
-    def write_script(self, fname):
+    def write_script(self, fname=None):
+        if not fname:
+            fname = "pml_script.pml"
+
         OUTFILE = open(self.output_dir+"/"+fname, 'w')
         for line in self.script_lines:
             OUTFILE.write(line+"\n")
         OUTFILE.close()
+        return self.output_dir+"/"+fname
 
-    def save_script(self, fname):
-        self.write_script(fname)
+    def save_script(self, fname = None):
+        return self.write_script(fname)
 
     def reset_script(self):
         self.script_lines = []
@@ -94,6 +110,8 @@ class PyMolScriptWriter:
         self.pdbs = []
         self.final_names = []
 
+    def print_script(self):
+        print str(self)
 
     ####################################################################################################
     ## Helpful Functions
@@ -155,6 +173,7 @@ class PyMolScriptWriter:
         """
         self.script_lines.append(line)
 
+
     def add_save_session(self, session_path):
         """
         Add a line to save the session to a FULL path
@@ -164,43 +183,20 @@ class PyMolScriptWriter:
 
         self.script_lines.append("cmd.save('"+session_path+"')")
 
-    def add_show(self, vis_type, sele=""):
-        """
-        Show a representation.  Optionally with a particular selection
-        """
-        if not vis_type in self.vis_options:
-            print("Type "+vis_type+" not a known vis_option.  Options are: \n"+repr(self.vis_options))
 
-        if not sele:
-            self.script_lines.append("show "+vis_type)
-        else:
-            self.script_lines.append("show "+vis_type+", "+sele)
 
-    def add_center(self, sele = None):
-        if sele:
-            self.add_line("center "+sele)
-        else:
-            self.add_line("center")
+      ####################################################################################################
+      ## Load PDBs and Groups:
+      ###################################################################################################
 
-    def add_hide(self, vis_type, sele=""):
-        """
-        Hide a representation.  Optionally with a particular selection.
-        """
-        if not type in self.vis_options:
-            print("Type "+vis_type+" not a known vis_option.  Options are: \n"+repr(self.vis_options))
 
-        if not sele:
-            self.script_lines.append("show "+vis_type)
-        else:
-            self.script_lines.append("show "+vis_type+", "+sele)
-
-    def add_load_pdb(self, pdb_path, load_as):
+    def add_load_pdb(self, pdb_path, load_as = None, group = None):
         """
         Add line to load a PDB Path into PyMol
         Optionally load them as a particular name
         Will then set the final names PyMol uses to the object.
         """
-        print "PDB"+repr(pdb_path)
+        #print "PDB"+repr(pdb_path)
         self.pdbs.append(pdb_path)
         name = os.path.basename(pdb_path)
         name = "".join(name.split(".")[0:-1])
@@ -218,6 +214,48 @@ class PyMolScriptWriter:
             self.final_names.append(load_as)
             self.script_lines.append("load "+pdb_path+", "+load_as)
 
+        if group:
+            self.add_group_object(self.final_names[-1], group)
+
+    def add_load_pdbs(self, pdb_paths, load_as = None, group = None):
+        """
+        Add lines to load the list of PDB paths into PyMol
+        Optionally load them as a particular name
+        Will then set the final names PyMol uses to the object.
+        """
+        i = 0
+        for path in pdb_paths:
+            print path
+            if load_as:
+                self.add_load_pdb(path, load_as = load_as[i], group = group)
+            else:
+                self.add_load_pdb(path, group = group)
+            i+=1
+
+    def add_group_object(self, name, new_group_name):
+        """
+        Group a single object to another.  Useful for meta-groups.
+        """
+        self.script_lines.append("group "+new_group_name+", "+name)
+
+    def add_group_objects(self, names, new_group_name):
+        """
+        Group a set of pre-loaded names to the new group.
+        """
+        names_str = " ".join(names)
+
+        self.script_lines.append("group "+new_group_name+", "+names_str)
+
+    def add_select(self, name, sele, group = None):
+        self.script_lines.append("select "+name+","+sele)
+        if group:
+            self.add_group_object(name, group)
+
+      ####################################################################################################
+      ## Alignment :
+      ###################################################################################################
+
+
     def add_superimpose(self, sele1, sele2):
         """
         Super impose two selections using the super command
@@ -229,20 +267,6 @@ class PyMolScriptWriter:
             if name !=model:
                 self.add_superimpose(name+" and "+sele1, model+" and "+sele2)
 
-    def add_load_pdbs(self, pdb_paths, load_as = ""):
-        """
-        Add lines to load the list of PDB paths into PyMol
-        Optionally load them as a particular name
-        Will then set the final names PyMol uses to the object.
-        """
-        i = 0
-        for path in pdb_paths:
-            print path
-            if load_as:
-                self.add_load_pdb(path, load_as[i])
-            else:
-                self.add_load_pdb(path)
-            i+=1
 
     def add_align_all(self, sele1 = "", sele2="", limit_to_bb=True, pair_fit = False):
         """
@@ -280,20 +304,55 @@ class PyMolScriptWriter:
         else:
             self.script_lines.append(align+model1+" & "+sele1+bb+", "+model2+" &"+sele2+bb)
 
-    def add_group_objects(self, names, new_group_name):
-        """
-        Group a set of pre-loaded names to the new group.
-        """
-        names_str = " ".join(names)
 
-        self.script_lines.append("group "+new_group_name+", "+names_str)
+      ####################################################################################################
+      ## Misc. :
+      ###################################################################################################
 
-    def add_color(self, name, color):
+    def add_show(self, vis_type, sele=""):
+        """
+        Show a representation.  Optionally with a particular selection
+        """
+        if not vis_type in self.vis_options:
+            print("Type "+vis_type+" not a known vis_option.  Options are: \n"+repr(self.vis_options))
+
+        if not sele:
+            self.script_lines.append("show "+vis_type)
+        else:
+            self.script_lines.append("show "+vis_type+", "+sele)
+
+    def add_center(self, sele = None):
+        if sele:
+            self.add_line("center "+sele)
+        else:
+            self.add_line("center")
+
+    def add_hide(self, vis_type, sele=""):
+        """
+        Hide a representation.  Optionally with a particular selection.
+        """
+        if not type in self.vis_options:
+            print("Type "+vis_type+" not a known vis_option.  Options are: \n"+repr(self.vis_options))
+
+        if not sele:
+            self.script_lines.append("show "+vis_type)
+        else:
+            self.script_lines.append("show "+vis_type+", "+sele)
+
+    def add_color(self, sele, color):
+        """
+        Add color to a selection.
+        sele: PyMol Selection
+        color: Particular color.
+
+        See Also self.colors
+
+        """
         if not color in self.colors:
 
             sys.exit("Color not understood by PyMol: "+color+" See simple_pymol_colors for list of acceptable colors")
 
-        self.script_lines.append("color "+color+", "+name)
+        self.script_lines.append("color "+color+", "+sele)
 
 
 
@@ -482,26 +541,32 @@ def make_pymol_session_on_top_ab_include_native_cdrs(pdb_path_list, load_as_list
     scripter.write_script("load_align_top.pml")
     run_pymol_script(script_dir+"/"+"load_align_top.pml")
 
-def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, out_name, top_num = None, native_path = None, antibody=True,
+def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, out_name, top_num = -1, native_path = None, antibody=True,
                                      parellel = True,
-                                     super = ""):
+                                     super = "",
+                                     run_pymol = True):
     """
     Make a pymol session on a set of decoys with a tuple of [[score, pdb], ... ]
 
-    Pymol names will be: model_n_RosettaModelNumber_score
+    if run_pymol is False, will not run pymol.
 
-    :param top_dir:
+    Pymol names will be: model_n_RosettaModelNumber_score
+    Score will be truncated to two decimal places.
+
+    Returns configured PyMol Scripter for extra use.
+
+    :param top_dir: DIR with decoys
     :param pdb_path_list: List of PDB Paths
     :param load_as_list: Scores of the PDBs.
-    :param outdir:
+    :param outdir: Outdir of PyMol Session
     :param out_name: Output name.  NO extension
-    :param top_num:
+    :param top_num: Numer of top decoys to output.
     :param native_path:
-    :return:
+    :rtype: PyMolScriptWriter
     """
 
     out_name = out_name.replace(".pse", "")
-    if top_num and top_num != -1:
+    if top_num != -1:
         pse_path = session_dir+"/"+out_name+"_top_"+str(top_num)+".pse"
     else:
         pse_path = session_dir+"/"+out_name+"_all"+".pse"
@@ -541,4 +606,8 @@ def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, o
 
     scripter.add_save_session(pse_path)
     scripter.write_script("load_align_top.pml")
-    run_pymol_script(script_dir+"/"+"load_align_top.pml", parellel_process=parellel)
+
+    if run_pymol:
+        run_pymol_script(script_dir+"/"+"load_align_top.pml", parellel_process=parellel)
+
+    return scripter

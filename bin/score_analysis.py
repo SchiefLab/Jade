@@ -12,76 +12,9 @@
 
 from argparse import ArgumentParser
 from pymol_gen.PyMolScriptWriter import *
-from rosetta_gen.ScoreFiles import ScoreFiles
+from rosetta_gen.ScoreFiles import ScoreFile
 
 ########################################################################
-
-def output_legacy(out, prefix):
-  # Format floats
-  for i in range(0, len(out)):
-    for j in range(0, len(out[i])):
-      t = out[i][j]
-      value = t[1]
-      if type(value) == float:
-        value = "%.03f" % value
-        out[i][j] = (t[0], value)
-
-  # Compute column widths
-  widths = {}
-  for decoy_terms in out:
-    for decoy_term in decoy_terms:
-      name, value = decoy_term
-      if not widths.has_key(name):
-        widths[name] = len(name)
-      l = len(str(value))
-      if widths[name] < l:
-        widths[name] = l
-
-  if widths.has_key('decoy'):
-    widths['decoy'] = -widths['decoy']
-
-  # Header
-  sys.stdout.write(prefix)
-  for decoy_term in out[0]:
-    name, value = decoy_term
-    sys.stdout.write("%*s " % (widths[name], name))
-  sys.stdout.write("\n")
-
-  # Scores
-  for decoy_terms in out:
-    sys.stdout.write(prefix)
-    for decoy_term in decoy_terms:
-      name, value = decoy_term
-      sys.stdout.write("%*s " % (widths[name], value))
-    sys.stdout.write("\n")
-
-
-def output_tab(out, prefix):
-  # Header
-  names = [decoy_term[0] for decoy_term in out[0]]
-  sys.stdout.write(prefix + "\t".join(names) + "\n")
-
-  # Scores
-  for decoy_terms in out:
-    values = [str(decoy_term[1]) for decoy_term in decoy_terms]
-    sys.stdout.write(prefix + "\t".join(values) + "\n")
-
-
-def output_CSV(out, prefix):
-  # Header
-  names = [decoy_term[0] for decoy_term in out[0]]
-  sys.stdout.write(prefix + ",".join(names) + "\n")
-
-  # Scores
-  for decoy_terms in out:
-    values = []
-    for decoy_term in decoy_terms:
-      value = decoy_term[1]
-      if type(value) in [str, unicode] and "," in value:
-        value = '"%s"' % value
-      values.append(str(value))
-    sys.stdout.write(prefix + ",".join(values) + "\n")
-
 
 def printVerbose(s):
   print >> sys.stderr, s
@@ -123,23 +56,30 @@ def main(argv):
   parser.add_argument("-S", "--summary",
                       action="store_true",
                       default=False,
-                      help="Compute stats summarizing data", )
+                      help="Compute stats summarizing data" )
+
+  parser.add_argument("-c", "--csv",
+                      action="store_true",
+                      default=False,
+                      help="Output selected columns, top, and decoys as CSV.")
 
   parser.add_argument("--list_scoretypes",
                       action="store_true",
                       default=False,
-                      help="List score term names", )
+                      help="List score term names" )
 
-  parser.add_argument("--make_pdblist",
+  pdblist_opts = parser.add_argument_group("PDBLISTs", "Options for pdblist output")
+
+  pdblist_opts.add_argument("--make_pdblist",
                       default = False,
                       action = "store_true",
                       help = "Output PDBlist file(s)")
 
-  parser.add_argument("--pdblist_prefix",
+  pdblist_opts.add_argument("--pdblist_prefix",
                       default = "",
                       help = "Prefix to use for PDBLIST outputs")
 
-  parser.add_argument("--pdblist_outdir",
+  pdblist_opts.add_argument("--pdblist_outdir",
                       default = "pdblists",
                       help = "Output dir for pdblist files")
 
@@ -187,6 +127,7 @@ def main(argv):
 
   s = 0
   for filename in options.scorefiles:
+    scorefile_name = ".".join(os.path.basename(filename).split('.')[0:-1])
     s +=1
     if filename != "":
       printVerbose("    Scorefile: %s" % filename)
@@ -195,7 +136,7 @@ def main(argv):
       print >> sys.stderr, "File not found:", filename
       continue
 
-    sf = ScoreFiles(filename)
+    sf = ScoreFile(filename)
 
     printVerbose("  File Decoys: %d" % sf.getDecoyCount())
     printVerbose("  Score terms: %s" % ", ".join(sf.getScoreTermNames()))
@@ -281,6 +222,8 @@ def main(argv):
       for o in top_by_n_decoys:
         print "%.2f\t" % o[0] + o[1] + "%.2f" % sf.getScore(o[1], "total_score")
 
+
+
     if options.pymol_session:
       for scoreterm in options.scoretypes:
 
@@ -292,8 +235,9 @@ def main(argv):
           print "Top N by ten scoreterm not in scoreterms.  Please change the option"
 
 
-        pymol_name  = options.session_prefix+""+repr(s)+"_"+scoreterm
+        pymol_name  = options.session_prefix+""+scorefile_name+"_"+scoreterm
         print "Creating: "+pymol_name
+
 
         outdir = options.session_outdir
         if not os.path.exists(outdir):

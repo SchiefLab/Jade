@@ -1,6 +1,5 @@
 { "program": "loopmodel",
   "flags": [
-    "-out:prefix ngk_smooth_",
     "-loops:remodel perturb_kic",
     "-loops:refine refine_kic",
     "-loops:kic_rama2b",

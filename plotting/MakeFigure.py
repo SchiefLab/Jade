@@ -10,10 +10,61 @@ from matplotlib.dates import YearLocator, MonthLocator, DateFormatter, WeekdayLo
 
 # Jared Adolf-Bryfogle
 
+def pad_single_title(ax, x=.5, y=1.05):
+    """
+    Move the Title up in reference to the plot, essentially adding padding.
+    SINGLE AXES
+    :param ax:Axes
+    :param x:
+    :param y:
+    :return:
+    """
+    ttl = ax.title
+    ttl.set_position([.5, 1.05])
+
+def set_common_title(fig, title, size=16, x=.5, y=1.05):
+    """
+    for FACETED plots, add a common title.
+
+    :param fig: Figure
+    :param title: str
+    :param x: int
+    :param y: int
+    :return:
+    """
+
+    fig.suptitle(title, size=size, x = x, y= y)
+
+def set_common_x_y_label(fig, x_text, y_text):
+    """
+    For FACETED plots, add a common X or Y.
+
+    :param fig: Figure
+    :param x_text: str
+    :param y_text: str
+    :return:
+    """
+    for ax in fig.axes:
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+
+    fig.text(0.5, -.04, x_text, ha='center', fontsize=18)
+    fig.text(-.04, 0.5, y_text, va='center', rotation='vertical', fontsize=18)
+
+
+
+
 
 class MakeFigure:
     """
+    Deprecated.
+    NOW - GO Checkout SEABORN instead of this class!
+    Essentially, this is an interface to a facet grid.  Seaborn does this awesomely.
+
     My take on a plotting interface.  Because I think matplotlib's interface sucks.
+
+    I wrote this before I knew of pandas.
+
     Probably should have just used ggplot now that I see its been released...oh well.
     You need to know the number of plots ahead of time by passing the grid.
         1x1 will make one plot.
@@ -193,3 +244,4 @@ class MakeFigure:
             self.p.savefig(outpath, dpi=300, bbox_inches='tight')
         else:
             self.p.savefig(outpath, dpi=300, bbox_inches='tight')
+

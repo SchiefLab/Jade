@@ -8,6 +8,9 @@ import sys
 
 #Need to do more with thread safety
 class Threads:
+  """
+  Class for managing threads, killing them on program exit.
+  """
   def __init__(self):
     self.thread_classes = []
     self.total_allowed_threads = multiprocessing.cpu_count() - 1

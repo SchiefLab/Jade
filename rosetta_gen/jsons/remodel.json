@@ -1,6 +1,5 @@
 { "program": "remodel",
   "flags": [
-    "-out:prefix rem_",
     "-find_neighbors",
     "-run:min_type dfpmin_armijo_nonmonotone"
   ]
