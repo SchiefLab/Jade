@@ -7,11 +7,11 @@ Nothing fancy yet.
 
 1) Add the root path to your PYTHONPATH environment variable in your shell. 
 
-<code>export PYTHONPATH=$PYTHONPATH:/path/to/module_c</code>
+<code>export PYTHONPATH=$PYTHONPATH:/path/to/Jade/src</code>
 
-2) Add the path to module_c/bin to your PATH environment variable to use scripts and programs as executables 
+2) Add the path to Jade/apps to your PATH environment variable to use scripts and programs as executables 
 
-<code>export PATH=$PATH:/path/to/module_c/bin</code>
+<code>export PATH=$PATH:/path/to/Jade/apps</code>
 
 # Notable Scripts and Programs
 
@@ -35,9 +35,8 @@ See below for the current full help of the program:
 
 
 ```
-usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  
-Relative paths are accepted.
-       [-h] [--job_manager {slurm,qsub,local}]
+usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  Relative paths are accepted.
+       [-h] [--job_manager {slurm,qsub,local,local_test}]
        [--job_manager_opts [JOB_MANAGER_OPTS [JOB_MANAGER_OPTS ...]]]
        [--np NP] [--nodes NODES] [--ppn PPN] [--nstruct NSTRUCT]
        [--compiler {gcc,clang}] [--machine_file MACHINE_FILE]
@@ -51,12 +50,12 @@ optional arguments:
   -h, --help            show this help message and exit
 
 Job Setup:
-  --job_manager {slurm,qsub,local}
+  --job_manager {slurm,qsub,local,local_test}
                         Job Manager to launch job. Default = 'slurm '
   --job_manager_opts [JOB_MANAGER_OPTS [JOB_MANAGER_OPTS ...]]
                         Extra options for the job manager, such as queue or
-                        processor requestsRemove double dashes. Specify like:
-                        -p imperial exlusive.
+                        processor requestsRemove double dashes. Exclusive is
+                        on by default. Specify like: -p imperial exclusive.
   --np NP               Number of processors to use for MPI. Default = 101
   --nodes NODES         Number of nodes to ask for. Optional.
   --ppn PPN             Processors per node for qsub. NTasks is np for slurm
@@ -105,12 +104,11 @@ Relational Databases:
   --db_batch DB_BATCH   Batch of structures.
   --db_in               Use an input database
   --db_out              Use an output database
-
 ```
 
 ## score_analysis
 
-Analyze Rosetta decoys that were scored with an output json file.  Get top models, score summaries, top_n_by_10, and (soon) output pymol sessions.
+Analyze Rosetta decoys that were scored with an output json file.  Get top models, score summaries, top_n_by_10, and output pymol sessions.
 
 Use <code>-scorefile_format json</code> during your Rosetta runs.  This is a fork of the scorefile.py script that is located in rosetta source dir.   
 
@@ -120,8 +118,12 @@ I copy the current help text below.
 usage: This utility parses and extracts data from score files in JSON format
        [-h] [-s [SCORETYPES [SCORETYPES ...]]] [-n TOP_N]
        [--top_n_by_10 TOP_N_BY_10]
-       [--top_n_by_10_scoretype TOP_N_BY_10_SCORETYPE] [--decoy_names] [-S]
-       [--list_scoretypes]
+       [--top_n_by_10_scoretype TOP_N_BY_10_SCORETYPE]
+       [--decoy_names [DECOY_NAMES [DECOY_NAMES ...]]] [-S] [-c]
+       [--list_scoretypes] [--make_pdblist] [--pdblist_prefix PDBLIST_PREFIX]
+       [--pdblist_outdir PDBLIST_OUTDIR] [--pymol_session]
+       [--session_prefix SESSION_PREFIX] [--session_outdir SESSION_OUTDIR]
+       [--native NATIVE] [--top_dir TOP_DIR] [--ab_structure] [--super SUPER]
        [scorefiles [scorefiles ...]]
 
 positional arguments:
@@ -130,18 +132,45 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   -s [SCORETYPES [SCORETYPES ...]], --scoretypes [SCORETYPES [SCORETYPES ...]]
-                        list of score terms to extract
+                        List of score terms to extract
   -n TOP_N, --top_n TOP_N
-                        Only list Top N when doing top scoring decoysDefault
-                        is to print all of them.
+                        Only list Top N when doing top scoring decoys or
+                        making pymol sessionsDefault is to print all of them.
   --top_n_by_10 TOP_N_BY_10
                         Top N by 10 percent total score to print out.
   --top_n_by_10_scoretype TOP_N_BY_10_SCORETYPE
                         Scoretype to use for any top N by 10 printing. If
                         scoretype not present, won't do anything.
-  --decoy_names         List decoy names
+  --decoy_names [DECOY_NAMES [DECOY_NAMES ...]]
+                        Decoy names to use
   -S, --summary         Compute stats summarizing data
+  -c, --csv             Output selected columns, top, and decoys as CSV.
   --list_scoretypes     List score term names
+
+PDBLISTs:
+  Options for pdblist output
+
+  --make_pdblist        Output PDBlist file(s)
+  --pdblist_prefix PDBLIST_PREFIX
+                        Prefix to use for PDBLIST outputs
+  --pdblist_outdir PDBLIST_OUTDIR
+                        Output dir for pdblist files
+
+PyMol:
+  Options for pymol session output
+
+  --pymol_session       Make pymol session(s) of the scoretypes specified
+  --session_prefix SESSION_PREFIX
+                        Prefix used for output pymol session
+  --session_outdir SESSION_OUTDIR
+                        Output dir for pymol sessions.
+  --native NATIVE       Native structure to use for pymol sessions.
+  --top_dir TOP_DIR     Top directory for PDBs if different than the directory
+                        of the scorefile
+  --ab_structure        Specify if the module is a renumbered antibody
+                        structure. Will run pymol script for ab-specific
+                        selection
+  --super SUPER         Super this selection instead of align all to.
   
 ```
 
@@ -150,7 +179,7 @@ optional arguments:
 Works on individual scorefiles, with no -best-of-all- or combined output.
 
 
-## PyRAbD_Compare
+## RAbD_Jade
 
 GUI for antibody design analysis.  Inputs are Antibody Features Reporter databases.  I will probably change the name soon. Each design strategy should have its own database.  Example: <code>PyRAbD_Compare.py path/to/directory/of/sqlite3/databases</code>
 
@@ -160,38 +189,64 @@ Note that it currently only supports sqlite3 databases and each decoy used in th
 
 
 # Code Organization
+ - <code>Jade/apps</code
+ - <code>Jade/database</code>
+ - <code>Jade/testing<code>
+ - <code>Jade/src<code>
 
-## _antibody_
+## <code>Jade/apps</code>
+ - Applications, and scripts
 
-A small collection of general antibody scripts and modules from PyIgClassify.  http://dunbrack2.fccc.edu/PyIgClassify/.  The meat of PyIgClassify should be publically released soon.
+## <code>Jade/database</code>
+ - Collection of files used by Jade applications and modules.
 
+## <code>Jade/testing</code>
+ - Testing code and inputs.  Not yet developed fully.
 
-## _pymol_
+## <code>Jade/src</code>
+ - Jade Source Code
+ - 
+### _basic_
 
-Python PyMol modules and pymol scripts
+ - Useful general classes and collections of functions (Threading, BioPose, PandasDataFrame, path, etc)
 
-
-## _rosetta_jadeeral_
-
-Rosetta (www.rosettacommons.org) modules and flags files for analyzing results, benchmarking, etc.  PyRosetta (www.pyrosetta.org) modules and scripts from various projects
-
-
-## _sequence_
-
-Modules for dealing with protein sequence
-
-
-## _structure_
-
-Modules for reading PDBs and storing structure information.  Yes, my own general PDB reader.  Because everyone has one, right?
-
-
-## _database_
-
-Text files, jsons, etc. for import into scripts and modules.
+### _utility_
+ - Functions and simple classes go in <code>__init__.py</code> 
+ - vector1 is a list indexed at 1
+ - Use: <code>from utility import vector1</code>
 
 
-## _tcl_
+
+
+### _antibody_
+
+ - A small collection of general antibody scripts and modules from PyIgClassify.  http://dunbrack2.fccc.edu/PyIgClassify/.  The meat of PyIgClassify should be publically released soon.
+
+### _plotting_
+ - Collection of plotting classes and functions for matplotlib, seaborn
+ - 
+### _pymol_jade_
+
+ - Python PyMol modules and pymol scripts
+
+
+### _rosetta_jade_
+
+ - Rosetta (www.rosettacommons.org) modules and flags files for analyzing results, benchmarking, etc.  PyRosetta (www.pyrosetta.org) modules and scripts from various projects
+
+
+### _sequence_
+
+ - Modules for dealing with protein sequence
+
+
+### _structure_
+
+ - Modules for reading PDBs and storing structure information.  Yes, my own general PDB reader.  Because everyone has one, right?
+
+
+
+### _tcl_
 
 TCL modules for molecular dynamic simulations.
 
