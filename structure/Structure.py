@@ -27,6 +27,10 @@ class PDBResInfo(object):
         self.info_map = defaultdict()
         self.extra_data = defaultdict()
 
+    def clear(self):
+        self.info_map = defaultdict()
+        self.extra_data = defaultdict()
+
     def set_residue(self, i, residue):
         if not isinstance(residue, Residue):
             sys.exit("Residue class must be passed for residue!")

@@ -7,6 +7,10 @@ import gzip
 from structure.RestypeDefinitions import RestypeDefinitions
 
 
+### NOTE: All Utility function have been replaced by a Bio Structure wrapper: BioPose.
+### Please see this new class for future developments!
+
+
 ########  Biopython Utility Functions ########
 
 def has_id(model, id):
