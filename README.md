@@ -1,5 +1,5 @@
 
-A collection of mainly python modules and scripts written over the years for various purposes.
+A repository for modules and applications to aid in the design and analysis of Biological molecules. 
 
 # Setup
 
@@ -12,6 +12,7 @@ Nothing fancy yet.
 2) Add the path to Jade/apps to your PATH environment variable to use scripts and programs as executables 
 
 <code>export PATH=$PATH:/path/to/Jade/apps</code>
+
 
 # Code Organization
 
