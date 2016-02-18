@@ -1,7 +1,0 @@
-{ "program": "relax",
-  "flags": [
-    "-dualspace",
-    "-nonideal",
-    "-out:prefix ds_"
-  ]
-}

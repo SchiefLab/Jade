@@ -1,5 +1,0 @@
-{ "program": "relax",
-  "flags": [
-    "-out:prefix rel_"
-  ]
-}

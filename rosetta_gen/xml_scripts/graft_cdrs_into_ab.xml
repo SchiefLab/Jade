@@ -1,8 +1,0 @@
-<ROSETTASCRIPTS>
-	<MOVERS>
-		<AntibodyCDRGrafter name=grafter cdrs=%%cdrs%% cdr_definition=North numbering_scheme=AHO_Scheme donor_structure_from_pdb=%%donor_ab%% use_secondary_graft_mover=1 optimize_cdrs=1 optimize_cdr4_if_neighbor=1/>
-	</MOVERS>
-	<PROTOCOLS>
-		<Add mover_name=grafter/>
-	</PROTOCOLS>
-</ROSETTASCRIPTS>

@@ -1,6 +1,0 @@
-{ "program": "InterfaceAnalyzer",
-  "flags": [
-    "-out:file:score_only",
-    "-scorefile interface_data.sc"
-  ]
-}

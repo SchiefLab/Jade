@@ -19,7 +19,7 @@ Nothing fancy yet.
 
 Run MPI-built Rosetta locally, or an a cluster using slurm or qsub as the job manager.  Run from your root project directory or set the root dir as an option in the program.  Will cd into the root, or set the job manager script to cd into root before the MPI run.
 
-It uses JSON files to setup the base flags (<code>--json_base</code>) and then specific flags for different rosetta runs (<code>--json_run</code>).  The [default baseline json](https://github.com/SchiefLab/module_c/blob/master/rosetta_general/jsons/common_flags.json) should be good for most runs.  See [this dir](https://github.com/SchiefLab/module_c/tree/master/rosetta_general/jsons) for a list of currently implemented jsons.  Feel free to implement your own.  I typically add that json path as an alias to easily run scripts.  The class is easily extendable for benchmarking experiments, [like I have done for antibody design](https://github.com/SchiefLab/module_c/blob/master/bin/BenchmarkRAbD.py).
+It uses JSON files to setup the base flags (<code>--json_base</code>) and then specific flags for different rosetta runs (<code>--json_run</code>).  The [default baseline json](https://github.com/SchiefLab/module_c/blob/master/rosetta_jadeeral/jsons/common_flags.json) should be good for most runs.  See [this dir](https://github.com/SchiefLab/module_c/tree/master/rosetta_jadeeral/jsons) for a list of currently implemented jsons.  Feel free to implement your own.  I typically add that json path as an alias to easily run scripts.  The class is easily extendable for benchmarking experiments, [like I have done for antibody design](https://github.com/SchiefLab/module_c/blob/master/bin/BenchmarkRAbD.py).
 
 Use <code>--print_only</code> to print instead of run to double check everything.  Paths can (and should) be relative.  Will setup any directories mentioned.  You can feed additional flags files or options (or overwrite any set in the json files) using :     <code>--extra_options @rel/path/to/flags rosetta_opt=setting another_opt=setting a_boolean_opt</code>
 
@@ -171,7 +171,7 @@ A small collection of general antibody scripts and modules from PyIgClassify.  h
 Python PyMol modules and pymol scripts
 
 
-## _rosetta_general_
+## _rosetta_jadeeral_
 
 Rosetta (www.rosettacommons.org) modules and flags files for analyzing results, benchmarking, etc.  PyRosetta (www.pyrosetta.org) modules and scripts from various projects
 
