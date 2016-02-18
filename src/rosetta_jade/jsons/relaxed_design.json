@@ -1,0 +1,6 @@
+{ "program": "relax",
+  "flags": [
+    "-respect_resfile",
+    "-out:prefix rel_"
+  ]
+}
