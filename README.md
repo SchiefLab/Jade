@@ -13,6 +13,60 @@ Nothing fancy yet.
 
 <code>export PATH=$PATH:/path/to/Jade/apps</code>
 
+# Code Organization
+
+<code>Jade/apps</code>
+ - Applications, and scripts
+  
+<code>Jade/database</code>
+ - Collection of files used by Jade applications and modules.
+ 
+<code>Jade/src</code>
+ - Jade Source Code
+ 
+<code>Jade/testing</code>
+ - Testing code and inputs.  Not yet developed fully.
+
+
+
+
+
+# Jade SRC Code
+
+## _basic_
+Useful general classes and collections of functions (Threading, BioPose, PandasDataFrame, path, etc)
+
+## _utility_
+Functions and simple classes go in <code>__init__.py</code> 
+vector1 is a list indexed at 1
+
+ - Use: <code>from utility import vector1</code>
+
+## _antibody_
+A small collection of general antibody scripts and modules from PyIgClassify.  http://dunbrack2.fccc.edu/PyIgClassify/.  The meat of PyIgClassify should be publically released soon.
+
+## _plotting_
+Collection of plotting classes and functions for matplotlib, seaborn
+
+## _pymol_jade_
+Python PyMol modules and pymol scripts
+
+
+## _rosetta_jade_
+Rosetta (www.rosettacommons.org) modules and flags files for analyzing results, benchmarking, etc.  PyRosetta (www.pyrosetta.org) modules and scripts from various projects
+
+
+## _sequence_
+Modules for dealing with protein sequence
+
+
+## _structure_
+Modules for reading PDBs and storing structure information.  Yes, my own general PDB reader.  Because everyone has one, right?
+
+## _tcl_
+TCL modules for molecular dynamic simulations.
+
+
 # Notable Scripts and Programs
 
 ## RunRosettaMPI
@@ -186,68 +240,5 @@ GUI for antibody design analysis.  Inputs are Antibody Features Reporter databas
 ### Current Limitations
 
 Note that it currently only supports sqlite3 databases and each decoy used in the comparison must have a unique name.  
-
-
-# Code Organization
- - <code>Jade/apps</code
- - <code>Jade/database</code>
- - <code>Jade/testing<code>
- - <code>Jade/src<code>
-
-## <code>Jade/apps</code>
- - Applications, and scripts
-
-## <code>Jade/database</code>
- - Collection of files used by Jade applications and modules.
-
-## <code>Jade/testing</code>
- - Testing code and inputs.  Not yet developed fully.
-
-## <code>Jade/src</code>
- - Jade Source Code
- - 
-### _basic_
-
- - Useful general classes and collections of functions (Threading, BioPose, PandasDataFrame, path, etc)
-
-### _utility_
- - Functions and simple classes go in <code>__init__.py</code> 
- - vector1 is a list indexed at 1
- - Use: <code>from utility import vector1</code>
-
-
-
-
-### _antibody_
-
- - A small collection of general antibody scripts and modules from PyIgClassify.  http://dunbrack2.fccc.edu/PyIgClassify/.  The meat of PyIgClassify should be publically released soon.
-
-### _plotting_
- - Collection of plotting classes and functions for matplotlib, seaborn
- - 
-### _pymol_jade_
-
- - Python PyMol modules and pymol scripts
-
-
-### _rosetta_jade_
-
- - Rosetta (www.rosettacommons.org) modules and flags files for analyzing results, benchmarking, etc.  PyRosetta (www.pyrosetta.org) modules and scripts from various projects
-
-
-### _sequence_
-
- - Modules for dealing with protein sequence
-
-
-### _structure_
-
- - Modules for reading PDBs and storing structure information.  Yes, my own general PDB reader.  Because everyone has one, right?
-
-
-
-### _tcl_
-
-TCL modules for molecular dynamic simulations.
 
 
