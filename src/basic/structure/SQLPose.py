@@ -23,7 +23,7 @@ except ImportError:
 
 
 
-class SQLPDB:
+class SQLPose:
     def __init__(self, pdbID, modelID, structID, memory=False, path=False):
         """
         modelID is basically a label

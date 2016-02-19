@@ -1,10 +1,10 @@
-from Bio.PDB.PDBParser import PDBParser
-from Bio.PDB import PDBIO
 import sys
 import os
 import gzip
 
-from structure.RestypeDefinitions import RestypeDefinitions
+from Bio.PDB.PDBParser import PDBParser
+
+from basic.RestypeDefinitions import RestypeDefinitions
 
 
 ### NOTE: All Utility function have been replaced by a Bio Structure wrapper: BioPose.

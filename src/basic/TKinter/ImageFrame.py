@@ -1,4 +1,4 @@
-from Tkinter import *
+from basic.TKinter import *
 
 class ImageFrame(Frame):
     def __init__(self, _tk_, file_path, **options):

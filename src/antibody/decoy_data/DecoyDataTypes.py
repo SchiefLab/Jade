@@ -1,9 +1,7 @@
-import os
 import numpy
 
-from collections import defaultdict
 from antibody.decoy_data.DecoyData import *
-from basic.StatementCreator import *
+from basic.sql.StatementCreator import *
 
 
 

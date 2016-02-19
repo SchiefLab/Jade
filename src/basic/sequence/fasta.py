@@ -1,23 +1,14 @@
 #Author Jared Adolf-Bryfogle
 
-from Bio.PDB.PDBParser import PDBParser
-from Bio.PDB import PDBIO
+from collections import defaultdict
+import random
 
-from rosetta import *
 from rosetta.core.pose import get_chain_from_chain_id
-from structure.RestypeDefinitions import RestypeDefinitions
-from sequence.ClustalRunner import ClustalRunner
-
 from weblogolib import *
 
-import os
-from collections import defaultdict
+from basic.sequence.ClustalRunner import ClustalRunner
 from basic.biopython_util import *
 
-import re
-import sys
-import random
-import gzip
 
 ########  Fasta Input  ######
 

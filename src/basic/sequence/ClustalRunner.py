@@ -1,7 +1,6 @@
 import os
 import sys
 import multiprocessing
-from basic.Threader import Threader
 
 
 class ClustalRunner:

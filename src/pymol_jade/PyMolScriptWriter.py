@@ -1,18 +1,14 @@
 #!/usr/bin/python
 #Author: Jared Adolf-Bryfogle
 
-import os
 import sys
-import re
 from collections import defaultdict
+
 from basic.path import *
-from basic.Threader import Threader
-from structure import Structure
+from basic.threading.Threader import Threader
+from basic.structure import Structure
+from basic.path import *
 from antibody import util as ab_util
-from structure.RestypeDefinitions import *
-
-
-
 
 
 class PyMolScriptWriter:
@@ -47,7 +43,7 @@ class PyMolScriptWriter:
         self.color_types = defaultdict()
 
         self.vis_options = ["cartoon", "spheres", "lines", "dots", "sticks", "surface", "mesh", "nonbonded"]
-        self._read_colors(self.base_dir+"/"+"simple_pymol_colors.txt")
+        self._read_colors(get_database_path()+"/pymol/"+"simple_pymol_colors.txt")
 
         self.pdbs = []
         self.final_names = []

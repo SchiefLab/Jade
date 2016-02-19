@@ -1,4 +1,4 @@
-from Tkinter import *
+from basic.TKinter import *
 from tkFont import *
 class AutoListbox(Listbox):
     def autowidth(self, maxwidth, list=None):

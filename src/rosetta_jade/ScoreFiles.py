@@ -1,14 +1,13 @@
-import sys
 import json
-import re
-import os
-import pandas
-import glob
+
 from collections import OrderedDict
-from plotting.MakeFigure import *
+
+import pandas
+
 from pymol_jade.PyMolScriptWriter import *
-from basic.PandasDataFrame import *
+from basic.pandas.PandasDataFrame import *
 from basic.path import *
+
 
 ##Original Author: Luki Goldschmidt <lugo@uw.edu>
 class ScoreFile:

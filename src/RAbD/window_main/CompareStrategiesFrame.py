@@ -1,10 +1,7 @@
-import os
-from Tkinter import *
 import tkFileDialog
 import tkSimpleDialog
 
-from basic.Listbox import AutoListbox
-
+from basic.TKinter.Listbox import AutoListbox
 from RAbD.AnalyzeAntibodyDesigns import *
 
 

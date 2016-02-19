@@ -2,22 +2,18 @@
 
 #Jared Adolf-Bryfogle (jadolfbr@gmail.com)
 
-import Bio as bio
-from Bio.PDB import PDBParser
-from Bio.PDB import MMCIFParser
-from Bio.PDB.Vector import calc_dihedral, calc_angle
-
-import sys
 import os
 import gzip
 import re
 
-from structure.RestypeDefinitions import RestypeDefinitions
-from structure.Structure import PDBResInfo as PDBInfo
-from structure.Structure import Residue as res_struct
+from Bio.PDB import PDBParser
 
+from Bio.PDB import MMCIFParser
+
+from basic.RestypeDefinitions import RestypeDefinitions
+from basic.structure.Structure import PDBResInfo as PDBInfo
+from basic.structure.Structure import Residue as res_struct
 from utility import vector1
-
 
 
 class BioPose(object):

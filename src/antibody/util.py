@@ -1,5 +1,7 @@
 import sys
-from structure import Structure
+
+from basic.structure import Structure
+
 
 def get_overhang_sele(pymol_writer, cdr, overhang =3):
     """

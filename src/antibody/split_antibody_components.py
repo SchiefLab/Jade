@@ -2,16 +2,14 @@
 #Quick script for separating out the Fv from the FAB after all Antibodies have been renumbered.  Should really be a class.
 
 
-from structure.PythonPDB2 import PythonPDB2
 from collections import defaultdict
-
-from antibody import ab_db
-
 import sys
 import os
 import glob
 import copy
-import re
+
+from basic.structure.BasicPose import BasicPose
+from antibody import ab_db
 
 
 def run_main(ab_dir, output_dir, only_dimer=True):
@@ -86,7 +84,7 @@ def run_split_proto_CDR4_by_gene(db, ab_dir, output_dir, overhang = 0, skip_pres
 
 def separate_proto_CDR4(pdb_path, output_dir, chain, overhang = 0, skip_present = True):
     pdb_name = pdb_path.split("/")[-1]
-    parent_PDB = PythonPDB2(pdb_path)
+    parent_PDB = BasicPose(pdb_path)
 
     if skip_present and os.path.exists(output_dir+"/"+pdb_name):
         return
@@ -104,7 +102,7 @@ def separate_pdb(pdb_path, output_dir, only_dimer = True):
     Determine if we have Fv or FAB.  If FAB, split into parts: Fc, Fv, linker.
     """
     pdb_name = pdb_path.split("/")[-1]
-    parent_PDB = PythonPDB2(pdb_path)
+    parent_PDB = BasicPose(pdb_path)
     if not (has_chain(parent_PDB.get_pdb_map(), "L") and has_chain(parent_PDB.get_pdb_map(), "H")):
 
 

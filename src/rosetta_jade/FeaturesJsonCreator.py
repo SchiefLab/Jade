@@ -6,15 +6,12 @@
 #I am just really sick of doing this by hand.
 #Example Cmd-line:  python create_features_json.py --database databases/baseline_comparison.txt --scripts cluster
 
-import subprocess
-from argparse import ArgumentParser
-import os
-import sys
 import json
 import shutil
 from collections import defaultdict
+
 from basic.path import *
-from basic.Threader import *
+from basic.threading.Threader import *
 
 
 def setup_baseline_scripts_and_formats(json_dict, type):

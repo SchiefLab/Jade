@@ -3,14 +3,13 @@
 #Jared Adolf-Bryfogle
 #Reorders PDBFiles in a dirctory according to LH_A in order for Rosetta Antibody Design benchmarking. Removes HetAtm!!!
 
-import os
 import sys
 
-from structure.PythonPDB2 import *
+from basic.structure.BasicPose import *
 
 def reorder_and_save_chains(in_path, out_path, remove_het = False):
-    blank_pdb = PythonPDB2()
-    full_pdb = PythonPDB2(in_path)
+    blank_pdb = BasicPose()
+    full_pdb = BasicPose(in_path)
 
     blank_pdb.copy_chain_into_pdb_map(full_pdb, "A")
     blank_pdb.copy_chain_into_pdb_map(full_pdb, "L")

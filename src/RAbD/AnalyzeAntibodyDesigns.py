@@ -1,21 +1,17 @@
-import sys
-import os
 import sqlite3
+
 import pandas
 
-from Tkinter import *
-
-from collections import defaultdict
 
 # PyIgD
 from pymol_jade.PyMolScriptWriter import *
 from antibody.cdr_data.CDRDataTypes import *
 from antibody.decoy_data.DecoyDataTypes import *
-from sequence import fasta
+from basic.sequence import fasta
 from basic.filters.DataFilters import *
 from basic.filters.FilterSettings import *
-from basic.Threader import *
-from basic import PandasDataFrame
+from basic.threading.Threader import *
+from basic.pandas import PandasDataFrame
 
 # Rosetta Tools
 import rosetta_jade.FeaturesJsonCreator as json_creator

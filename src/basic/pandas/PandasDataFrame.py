@@ -1,11 +1,11 @@
-import pandas
+import basic.pandas
 
 
 
 
-class GeneralPandasDataFrame(pandas.DataFrame):
+class GeneralPandasDataFrame(basic.pandas.DataFrame):
     def __init__(self, data=None, index=None, columns=None, dtype=None,copy=False):
-        pandas.DataFrame.__init__(data=data, index=index, columns=columns, dtype=dtype,copy=copy)
+        basic.pandas.DataFrame.__init__(data=data, index=index, columns=columns, dtype=dtype,copy=copy)
 
     def drop_duplicate_columns(self):
         """

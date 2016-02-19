@@ -1,7 +1,9 @@
 #Author: Jared Adolf-Bryfogle
 
 import sys
-from structure.RestypeDefinitions import RestypeDefinitions
+
+from basic.RestypeDefinitions import RestypeDefinitions
+
 
 class SequenceStats:
     """

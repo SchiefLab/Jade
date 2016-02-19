@@ -1,10 +1,10 @@
-from Tkinter import *
-from collections import defaultdict
 import math
-import pandas
 import os
 
-from basic.StatementCreator import *
+import pandas
+
+from basic.sql.StatementCreator import *
+
 
 ########################################################################################################################
 ###   DecoyData

@@ -15,7 +15,7 @@ import tkFileDialog
 #import global_variables
 
 
-class PythonPDB2:
+class BasicPose:
     def __init__(self, pdb_file_path = ""):
         """
         
