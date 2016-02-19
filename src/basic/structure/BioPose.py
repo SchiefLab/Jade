@@ -11,8 +11,8 @@ from Bio.PDB import PDBParser
 from Bio.PDB import MMCIFParser
 
 from basic.RestypeDefinitions import RestypeDefinitions
-from basic.structure.Structure import PDBResInfo as PDBInfo
-from basic.structure.Structure import Residue as res_struct
+from basic.structure.Structure import PDBInfo as PDBInfo
+from basic.structure.Structure import ResidueRecord as res_struct
 from utility import vector1
 
 

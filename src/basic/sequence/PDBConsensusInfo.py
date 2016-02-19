@@ -1,17 +1,17 @@
 import sys
 from collections import defaultdict
 
-from basic.structure.Structure import Residue
+from basic.structure.Structure import ResidueRecord
 from basic.structure.Structure import ResidueRegion
-from basic.structure.Structure import PDBResInfo
+from basic.structure.Structure import PDBInfo
 from basic.RestypeDefinitions import RestypeDefinitions
 import fasta
 
 
 class PDBConsensusInfo():
     """
-    Class to compute frequency and probability from an array of PDBResInfo classes.
-    The sequences within PDBResInfo do not necessarily need to be the same length.
+    Class to compute frequency and probability from an array of PDBInfo classes.
+    The sequences within PDBInfo do not necessarily need to be the same length.
     A given sequence position is identified and stored in the data maps by its [pdb_num, chain, and icode]
     -> Use get_position_from_residue(residue) to get this position from a Residue instance.
     """
@@ -38,7 +38,7 @@ class PDBConsensusInfo():
         totals = 0
         for pdb_info in self.pdb_info_list:
             if pdb_info.total_residue() == 0:
-                print "Skipping PDBResInfo for stats.  Has no residues"
+                print "Skipping PDBInfo for stats.  Has no residues"
                 continue;
             for residue in pdb_info.get_all_residues():
                 entry_position = self.get_position_from_residue(residue)
@@ -59,22 +59,22 @@ class PDBConsensusInfo():
 
         sequences = []
         for pdb_res_info in self.pdb_info_list:
-            assert isinstance(pdb_res_info, PDBResInfo)
+            assert isinstance(pdb_res_info, PDBInfo)
             if pdb_res_info.total_residue() == 0:
-                #print "PDBResInfo has no residues to get sequence!"
+                #print "PDBInfo has no residues to get sequence!"
                 continue;
             sequences.append(pdb_res_info.get_sequence())
 
         fasta.output_weblogo_for_sequences(sequences, outdir, outname)
 
     def output_seqlogo_bt_residues(self, outdir, outname, res1, res2, chain):
-        if not isinstance(res1, Residue): sys.exit()
-        if not isinstance(res2, Residue): sys.exit()
+        if not isinstance(res1, ResidueRecord): sys.exit()
+        if not isinstance(res2, ResidueRecord): sys.exit()
         sequences = []
         for pdb_res_info in self.pdb_info_list:
-            assert isinstance(pdb_res_info, PDBResInfo)
+            assert isinstance(pdb_res_info, PDBInfo)
             if pdb_res_info.total_residue() == 0:
-                #print "PDBResInfo has no residues to get sequence!"
+                #print "PDBInfo has no residues to get sequence!"
                 continue;
 
             seq = pdb_res_info.get_sequence_bt_residues(res1, res2, chain)
@@ -90,9 +90,9 @@ class PDBConsensusInfo():
         sequences = []
         for pdb_res_info in self.pdb_info_list:
             print pdb_res_info.get_sequence()
-            assert isinstance(pdb_res_info, PDBResInfo)
+            assert isinstance(pdb_res_info, PDBInfo)
             if pdb_res_info.total_residue() == 0:
-                #print "PDBResInfo has no residues to get sequence!"
+                #print "PDBInfo has no residues to get sequence!"
                 continue
 
             seq = ""
@@ -196,14 +196,14 @@ class PDBConsensusInfo():
         #print "Total Unique CDR Sequences: "+repr(len(self.sequence_list))
 
         for pdb_info in self.pdb_info_list:
-            if not isinstance(pdb_info, PDBResInfo): sys.exit()
+            if not isinstance(pdb_info, PDBInfo): sys.exit()
             if pdb_info.total_residue() == 0:
-                print "PDBResInfo has no residues.  Popping"
+                print "PDBInfo has no residues.  Popping"
                 self.pdb_info_list.remove(pdb_info)
                 continue
 
             for residue in pdb_info.get_all_residues():
-                if not isinstance(residue, Residue): sys.exit()
+                if not isinstance(residue, ResidueRecord): sys.exit()
                 position = self.get_position_from_residue(residue)
 
                 if residue.aa not in self.aas:
@@ -218,9 +218,9 @@ class PDBConsensusInfo():
 
         #If we have removed sequences with unknown residues or missing residues:
         for pdb_info in self.pdb_info_list:
-            if not isinstance(pdb_info, PDBResInfo): sys.exit()
+            if not isinstance(pdb_info, PDBInfo): sys.exit()
             for residue in pdb_info.get_all_residues():
-                if not isinstance(residue, Residue): sys.exit()
+                if not isinstance(residue, ResidueRecord): sys.exit()
                 position = self.get_position_from_residue(residue)
 
                 if residue.aa not in self.aas:
@@ -246,9 +246,9 @@ class PDBConsensusInfo():
         self.stats = defaultdict()
         self.freq = defaultdict()
         for pdb_info in self.pdb_info_list:
-            if not isinstance(pdb_info, PDBResInfo): sys.exit()
+            if not isinstance(pdb_info, PDBInfo): sys.exit()
             for residue in pdb_info.get_all_residues():
-                if not isinstance(residue, Residue): sys.exit()
+                if not isinstance(residue, ResidueRecord): sys.exit()
 
                 resnum_triple = self.get_position_from_residue(residue)
                 if self.stats.has_key(resnum_triple):
@@ -271,7 +271,7 @@ class PDBConsensusInfo():
         return totals
 
     def get_position_from_residue(self, residue):
-        if not isinstance(residue, Residue): sys.exit()
+        if not isinstance(residue, ResidueRecord): sys.exit()
         triple = (residue.get_pdb_num(), residue.get_chain(), residue.get_icode())
         return triple
 

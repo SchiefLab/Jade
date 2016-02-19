@@ -17,7 +17,7 @@ from collections import defaultdict
 
 
 
-class PDBResInfo(object):
+class PDBInfo(object):
     """
     Analogous to Rosetta PDBInfo Class
     I should start at 1
@@ -32,13 +32,13 @@ class PDBResInfo(object):
         self.extra_data = defaultdict()
 
     def set_residue(self, i, residue):
-        if not isinstance(residue, Residue):
+        if not isinstance(residue, ResidueRecord):
             sys.exit("Residue class must be passed for residue!")
         self.info_map[i] = residue
 
 
     def add_residue(self, residue):
-        if not isinstance(residue, Residue):
+        if not isinstance(residue, ResidueRecord):
             sys.exit("Residue class must be passed for residue!")
         self.info_map[len(self.info_map)+1] = residue
 
@@ -133,7 +133,7 @@ class PDBResInfo(object):
         return len(self.info_map)
 
 
-class Residue(object):
+class ResidueRecord(object):
     """
     Basic class to PDBInfo
     """
@@ -198,14 +198,14 @@ class Residue(object):
         for key in array_of_keys:
             self.extra_info[key] = value
 
-class AntibodyResidue(Residue):
+class AntibodyResidueRecord(ResidueRecord):
     """
     Extension of Residue used to hold and access extra data used for renumbering/printing renumbering info
     I could backport python Enums, which would be incredibly useful here, but I don't want to require the additional step.
      - used in Python3.4
     """
     def __init__(self, aa, pdb_res_num, chain, icode=" "):
-        Residue.__init__(self, aa, pdb_res_num, chain, icode)
+        ResidueRecord.__init__(self, aa, pdb_res_num, chain, icode)
         extra_infos = ["cdr_type",
                        "old_resnum",
                        "old_chain",
@@ -302,8 +302,8 @@ class AntibodyResidue(Residue):
 
 class ResidueRegion:
     def __init__(self, res1, res2, name = None):
-        assert isinstance(res1, Residue)
-        assert isinstance(res2, Residue)
+        assert isinstance(res1, ResidueRecord)
+        assert isinstance(res2, ResidueRecord)
 
         self.res1 = res1
         self.res2 = res2
@@ -388,8 +388,8 @@ class FrameworkRegions:
 
     def get_residue_region(self, region_name):
 
-        res1 = Residue("-", self.get_start(region_name), self.chain)
-        res2 = Residue("-", self.get_stop(region_name), self.chain)
+        res1 = ResidueRecord("-", self.get_start(region_name), self.chain)
+        res2 = ResidueRecord("-", self.get_stop(region_name), self.chain)
 
         region_class = ResidueRegion(res1, res2, region_name)
         return region_class
@@ -458,7 +458,7 @@ class CDR:
         self.gene = gene
         
     def add_residue(self, name, num):
-        self.residues[num]=Residue(name, num)
+        self.residues[num]=ResidueRecord(name, num)
         
 
 ############################################################FUTURE1#############################################################
