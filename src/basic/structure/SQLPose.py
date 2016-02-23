@@ -24,7 +24,7 @@ except ImportError:
 
 
 class SQLPose:
-    def __init__(self, pdbID, modelID, structID, memory=False, path=False):
+    def __init__(self, pdbID, modelID, structID, memory=False, path=""):
         """
         modelID is basically a label
         Path specifies the db to load.
@@ -213,14 +213,14 @@ class PDB_database:
         """
         Updates modelID to specify L1 through H3 and framework for possible future statistical analysis.
         """
-        from modules.Structure import Antibody_Structure
+        from basic.structure.Structure import Antibody_Structure
         AB = Antibody_Structure()
         self.cur.execute("UPDATE pdb SET modelID='FRAMEWORK'")
         for cdr in AB.CDRS:   
             self.cur.execute("UPDATE pdb SET modelID=? WHERE chain=? AND resnum BETWEEN ? AND ?", (cdr.name, cdr.chain, cdr.Nter, cdr.Cter))
             
         self.db.commit()
-        self._reset_cursor(); #Nessessary as after update, resultant cursor is NULL.
+        self._reset_cursor() #Nessessary as after update, resultant cursor is NULL.
         
 ################Save PDB database as PDB or database!#########################################################################  
     

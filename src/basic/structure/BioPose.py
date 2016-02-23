@@ -7,12 +7,14 @@ import gzip
 import re
 
 from Bio.PDB import PDBParser
-
+from Bio.PDB import PPBuilder
 from Bio.PDB import MMCIFParser
+from Bio.PDB import calc_dihedral
+from Bio.PDB import Vector
 
 from basic.RestypeDefinitions import RestypeDefinitions
 from basic.structure.Structure import PDBInfo as PDBInfo
-from basic.structure.Structure import ResidueRecord as res_struct
+from basic.structure.Structure import ResidueRecord
 from utility import vector1
 
 
@@ -159,6 +161,98 @@ class BioPose(object):
 
 
     ############ Helper Funtions ################
+    def phi(self, i):
+        """
+        Get the Phi Angle of i
+
+        :param i: int
+        :rtype: float
+        """
+        if i == 1:
+            return 0.0
+
+        res = self.all_residues[i]
+
+        try:
+            n = res['N'].get_vector()
+            ca = res['CA'].get_vector()
+            c = res['C'].get_vector()
+
+            res_minus_one = self.all_residues[i -1]
+            cp = res_minus_one['C'].get_vector()
+            phi = calc_dihedral(cp, n, ca, c)
+            return phi
+        except Exception:
+            print "Could not get phi for "+repr(i)
+            raise LookupError
+
+
+
+    def psi(self, i):
+        """
+        Get the Psi Angle of i
+
+        :param i: int
+        :rtype: float
+        """
+        res = self.all_residues[i]
+
+        if i < (len(self.all_residues) - 1):
+            try:
+                n = res['N'].get_vector()
+                ca = res['CA'].get_vector()
+                c = res['C'].get_vector()
+                res_plus_one = self.all_residues[i + 1]
+
+                nn = res_plus_one['N'].get_vector()
+                psi = calc_dihedral(n, ca, c, nn)
+                return psi
+            except Exception:
+                print "Could not get psi for "+repr(i)
+                raise LookupError
+        else:
+            return 0.0
+
+    def omega(self, i, rosetta_definitions = True):
+        """
+        Get the Omega Angle of i.
+        Omega is defined as the dihedral angle between the peptide bond of i and i + 1, as in Rosetta.
+        If rosetta_definitions are False, omega is then treated as being between i and i -1
+
+        :param i: int
+        :param reverse_rosetta_definitions: bool
+        :rtype: float
+        """
+        res = self.all_residues[i]
+        if i < len(self.all_residues) -1:
+            try:
+                n = res['N'].get_vector()
+                ca = res['CA'].get_vector()
+                c = res['C'].get_vector()
+
+
+
+                if rosetta_definitions:
+                    res_plus_one = self.all_residues[i + 1]
+                    next_n = res_plus_one['N'].get_vector()
+                    next_ca = res_plus_one['CA'].get_vector()
+                    omega = calc_dihedral(ca, c, next_n, next_ca)
+                    return omega
+
+                else:
+                    res_minus_one = self.all_residues[i - 1]
+                    pre_c = res_minus_one['C'].get_vector()
+                    pre_ca = res_minus_one['CA'].get_vector()
+                    omega = calc_dihedral(pre_ca, pre_c, n, ca)
+                    return omega
+
+            except Exception:
+                print "Could not get omega for "+repr(i)
+                raise LookupError
+
+        else:
+            return 0.0
+
     def get_sequence(self, chain_id, model_num = 0):
         """
         Get a sequence of a chain - Not including alternate res locations
@@ -201,7 +295,6 @@ class BioPose(object):
             ids.append(chain.id)
         return ids
 
-
     ###### Private Members #######
 
     def _setup_all_residues(self, model_num=0):
@@ -227,10 +320,11 @@ class BioPose(object):
         pdb_info = PDBInfo()
         i = 1
         for res in self.all_residues:
-            s = res_struct(self.res_definitions.get_one_letter_from_three(res.resname), res.id[1], res.id[2])
-            pdb_info.add_residue(s)
+            s = ResidueRecord(self.res_definitions.get_one_letter_from_three(res.resname), res.id[1], res.id[2])
+            pdb_info.add_residue_record(s)
 
         return pdb_info
+
 
 
 if __name__ == "__main__":

@@ -24,40 +24,51 @@ class PDBInfo(object):
     """
 
     def __init__(self):
-        self.info_map = defaultdict()
+        self.pose_to_record_map = defaultdict()
+        self.pdb_to_pose_map = defaultdict()
         self.extra_data = defaultdict()
 
     def clear(self):
-        self.info_map = defaultdict()
+        self.pose_to_record_map = defaultdict()
         self.extra_data = defaultdict()
 
-    def set_residue(self, i, residue):
-        if not isinstance(residue, ResidueRecord):
-            sys.exit("Residue class must be passed for residue!")
-        self.info_map[i] = residue
+    def set_residue_record(self, i, residue_record):
+        if not isinstance(residue_record, ResidueRecord):
+            sys.exit("Residue class must be passed for residue_record!")
+        self.pose_to_record_map[i] = residue_record
+        self.pdb_to_pose_map[ (residue_record.tuple())] = i
 
 
-    def add_residue(self, residue):
-        if not isinstance(residue, ResidueRecord):
-            sys.exit("Residue class must be passed for residue!")
-        self.info_map[len(self.info_map)+1] = residue
+    def add_residue_record(self, residue_record):
+        if not isinstance(residue_record, ResidueRecord):
+            sys.exit("Residue class must be passed for residue_record!")
+        self.pose_to_record_map[len(self.pose_to_record_map)+1] = residue_record
+        self.pdb_to_pose_map[ (residue_record.tuple() )] = len(self.pose_to_record_map)
 
     def set_pdb_num(self, i, pdb_num, icode =" "):
-        self.info_map[i].set_pdb_num(pdb_num)
-        self.info_map[i].set_icode(icode)
+
+        self.pdb_to_pose_map.pop(self.pose_to_record_map[i].get_tuple())
+
+        self.pose_to_record_map[i].set_pdb_num(pdb_num)
+        self.pose_to_record_map[i].set_icode(icode)
+
+        self.pdb_to_pose_map[ self.pose_to_record_map[i].get_tuple() ] = i
 
     def set_icode(self, i, icode):
-        self.info_map[i].set_icode(icode)
+        self.pdb_to_pose_map.pop(self.pose_to_record_map[i].get_tuple())
+        self.pose_to_record_map[i].set_icode(icode)
+        self.pdb_to_pose_map[ self.pose_to_record_map[i].get_tuple() ] = i
 
-    def get_all_residues(self):
-        """
-        return all residues held as an array in order.
-        """
-        residues = []
-        for i in range(1, self.total_residue()+1):
-            residues.append(self.get_residue(i))
 
-        return residues
+    def get_all_residue_records(self):
+        """
+        return all residue_records held as an array in order.
+        """
+        residue_records = []
+        for i in range(1, self.total_residue_record()+1):
+            residue_records.append(self.get_residue_record(i))
+
+        return residue_records
 
     def set_extra_data(self, key, value):
         self.extra_data[key] = value
@@ -65,72 +76,87 @@ class PDBInfo(object):
     def get_extra_data(self, key):
         return self.extra_data[key]
 
+
     #########################
-    def delete_residue(self):
+    def pose2pdb(self, i):
+        rec = self.get_residue_record(i)
+        return [str(rec.pdb_num), rec.chain, rec.icode]
+
+    def pdb2pose(self, resnum, chain_id, icode=' '):
+        return self.pdb_to_pose_map[(resnum, chain_id, icode)]
+
+
+    #########################
+    def delete_residue_record(self):
         """
-        Delete the residue and renumber starting from 1
+        Delete the residue_record and renumber starting from 1
         """
 
         pass
 
-    def get_residue(self, i):
-        return self.info_map[i]
+    def get_residue_record(self, i):
+        """
+        Get the residue record class for this particular index.
+        :param i:
+        :rtype: ResidueRecord
+        """
+        return self.pose_to_record_map[i]
 
     def res(self, i):
-        return self.info_map[i]
+        return self.pose_to_record_map[i]
 
     def get_resnum(self, pdb_num, chain, icode = ' '):
         """
         Get the matching 'resnum' (i) or None if not found.
         """
-        for i in range(1, self.total_residue()+1):
+        for i in range(1, self.total_residue_record()+1):
             #print repr(i)
-            res = self.info_map[ i ]
+            res = self.pose_to_record_map[ i ]
             if res.get_pdb_num() == pdb_num and res.get_chain == chain() and res.get_icdoe() == icode:
                 return i
 
         return None
 
-    def get_residue_of_pdb_num(self, pdb_num, icode):
-        for residue in self.info_map:
-            if residue.pdb_num == pdb_num and residue.icode == icode:
-                return residue
+    def get_residue_record_of_pdb_num(self, pdb_num, chain_id, icode =' '):
+        for residue_record in self.pose_to_record_map:
+            if residue_record.pdb_num == pdb_num and residue_record.icode == icode:
+                return residue_record
 
 
     def get_sequence(self):
         seq = ""
-        for i in range(1, self.total_residue() +1):
-            seq = seq + self.info_map[ i ].get_aa()
+        for i in range(1, self.total_residue_record() +1):
+            seq = seq + self.pose_to_record_map[ i ].get_aa()
         return seq
 
     def get_sequence_bt_resnums(self, start, stop):
         seq = ""
         for i in range(start, stop +1):
-            seq = seq + self.info_map[ i ].get_aa()
+            seq = seq + self.pose_to_record_map[ i ].get_aa()
 
         print seq
         return seq
 
 
-    def get_sequence_bt_residues(self, res1, res2, chain):
+    def get_sequence_bt_residue_records(self, res1, res2, chain):
         #print repr(res1)
         #print repr(res2)
 
         seq = ""
-        for i in range(1, self.total_residues()+1):
+        for i in range(1, self.total_residue_records()+1):
             #print repr(i)
-            res = self.info_map[ i ]
+            res = self.pose_to_record_map[ i ]
             if res.get_pdb_num() >= res1.get_pdb_num() and res.get_pdb_num() <= res2.get_pdb_num() and res.get_chain() == chain:
                 seq = seq+res.get_aa()
 
         print seq
         return seq
 
-    def total_residues(self):
-        return len(self.info_map)
+    def total_residue_records(self):
+        return len(self.pose_to_record_map)
 
-    def total_residue(self):
-        return len(self.info_map)
+    def total_residue_record(self):
+        return len(self.pose_to_record_map)
 
 
 class ResidueRecord(object):
@@ -150,6 +176,9 @@ class ResidueRecord(object):
 
     def __repr__(self):
         return self.__str__()
+
+    def tuple(self):
+        return self.pdb_num, self.chain, self.icode
 
     def set_pdb_num(self, pdb_num):
         self.pdb_num = pdb_num
@@ -386,7 +415,7 @@ class FrameworkRegions:
         regions.append(self.F3())
         return regions
 
-    def get_residue_region(self, region_name):
+    def get_residue_record_region(self, region_name):
 
         res1 = ResidueRecord("-", self.get_start(region_name), self.chain)
         res2 = ResidueRecord("-", self.get_stop(region_name), self.chain)
@@ -394,11 +423,11 @@ class FrameworkRegions:
         region_class = ResidueRegion(res1, res2, region_name)
         return region_class
 
-    def get_residue_regions(self):
+    def get_residue_record_regions(self):
 
         res_regions = []
         for name in self.region_names:
-            res_region = self.get_residue_region(name)
+            res_region = self.get_residue_record_region(name)
             #print repr(res_region)
             res_regions.append(res_region)
 
@@ -440,7 +469,7 @@ class CDR:
         self.chain = self.region[0]
         self.Nter = self.region[1]
         self.Cter = self.region[2]
-        self.residues = dict()
+        self.residue_records = dict()
     
     def __str__(self):
         return str(self.regions[self.name])
@@ -457,8 +486,8 @@ class CDR:
     def set_gene(self, gene):
         self.gene = gene
         
-    def add_residue(self, name, num):
-        self.residues[num]=ResidueRecord(name, num)
+    def add_residue_record(self, name, num):
+        self.residue_records[num]=ResidueRecord(name, num)
         
 
 ############################################################FUTURE1#############################################################
