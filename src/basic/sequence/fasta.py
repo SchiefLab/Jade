@@ -1,13 +1,13 @@
 #Author Jared Adolf-Bryfogle
 
-from collections import defaultdict
 import random
+from collections import defaultdict
 
 from rosetta.core.pose import get_chain_from_chain_id
 from weblogolib import *
 
 from basic.sequence.ClustalRunner import ClustalRunner
-from basic.biopython_util import *
+from basic.structure.util import *
 
 
 ########  Fasta Input  ######

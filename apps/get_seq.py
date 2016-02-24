@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
 #from sequence import fasta
-from basic import biopython_util
-from basic import path
-
-from collections import defaultdict
-import re
-import os
-import sys
 import argparse
+import re
+from collections import defaultdict
+
+from basic import path
+from basic.structure import util
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Uses Biopython to print sequence information.  Example:\n"
@@ -73,16 +71,16 @@ if __name__ == "__main__":
 
     for pdb in pdbs:
         #print "#Reading "+pdb
-        biostructure = biopython_util.get_biopython_structure(pdb)
+        biostructure = util.get_biopython_structure(pdb)
         if options.chain:
-            seq = biopython_util.get_seq_from_biostructure(biostructure, options.chain)
+            seq = util.get_seq_from_biostructure(biostructure, options.chain)
             sequences[path.get_decoy_name(pdb)+"_"+options.chain] = seq
             ordered_ids.append(path.get_decoy_name(pdb)+"_"+options.chain)
         else:
             for biochain in biostructure[0]:
-                if biopython_util.get_chain_length(biochain) == 0:
+                if util.get_chain_length(biochain) == 0:
                     continue
-                seq = biopython_util.get_seq_from_biochain(biochain)
+                seq = util.get_seq_from_biochain(biochain)
                 #b = os.path.basename(pdb).replace('.pdb.gz', '')
                 sequences[path.get_decoy_name(pdb)+"_"+biochain.id] = seq
                 ordered_ids.append(path.get_decoy_name(pdb)+"_"+biochain.id)

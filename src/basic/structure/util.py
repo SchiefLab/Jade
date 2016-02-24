@@ -2,16 +2,42 @@ import sys
 import os
 import gzip
 
+import Bio
 from Bio.PDB.PDBParser import PDBParser
-
+from Bio.PDB.Residue import Residue
 from basic.RestypeDefinitions import RestypeDefinitions
-
+from basic.numeric import *
 
 ### NOTE: All Utility function have been replaced by a Bio Structure wrapper: BioPose.
 ### Please see this new class for future developments!
 
+########  NEW Biopython utility functions ##########
 
-########  Biopython Utility Functions ########
+def peptide_bond_distance(res1, res2):
+    """
+    Return the bond distance between two residues using Numpy array math.
+    :param res1: Bio.PDB.Residue.Residue
+    :param res2: Bio.PDB.Residue.Residue
+    :rtype: float
+    """
+    return atomic_distance(res1, res2, 'C', 'N')
+
+def atomic_distance(res1, res2, res1_atom_name, res2_atom_name):
+    """
+    Return the atomic distance between two arbitrary Bio residues and two arbitrary atom names.
+    :param res1: Bio.PDB.Residue.Residue
+    :param res2: Bio.PDB.Residue.Residue
+    :param res1_atom_name: str
+    :param res2_atom_name: str
+    :rtype: float
+    """
+    try:
+        return distance_numpy(res1[res1_atom_name].get_vector().get_array(), res2[res2_atom_name].get_vector().get_array())
+    except Exception:
+        print "Residue does not have the atom name or there is a problem in the vector.  Returning 0"
+        raise IndexError
+
+########  OLD Biopython Utility Functions replaced by BIOPose ########
 
 def has_id(model, id):
     """

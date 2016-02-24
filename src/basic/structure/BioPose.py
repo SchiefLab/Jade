@@ -6,6 +6,7 @@ import os
 import gzip
 import re
 import math
+from collections import defaultdict
 
 from Bio.PDB import PDBParser
 from Bio.PDB import PPBuilder
@@ -16,7 +17,9 @@ from Bio.PDB import Vector
 from basic.RestypeDefinitions import RestypeDefinitions
 from basic.structure.Structure import PDBInfo as PDBInfo
 from basic.structure.Structure import ResidueRecord
+from basic.structure.util import peptide_bond_distance
 from basic.path import *
+from basic.numeric import *
 from utility import vector1
 
 
@@ -30,17 +33,11 @@ class BioPose(object):
     Right now, you need a path as I don't know how we would use this from sequence, etc as you do in Rosetta.
     :path: Is a path to an RCSB file.  PDB (.pdb), mmCIF(.cif), and gzipped (.gz) versions.
     """
-    def __init__(self, path):
+    def __init__(self, path, model_num=0):
 
         self.res_definitions = RestypeDefinitions()
-
-
         self.struct, self.header = self.load_from_file(path) #Bio struct, Header dictionary
-
-        self.all_residues = self._setup_all_residues(model_num=0) #vector1 of Bio Residues
-        self.pdb_info = self._setup_pdb_info(model_num=0) #PDBInfo to map the vector1
-
-
+        self._setup_self(model_num)
 
     ############ IO ###################
     def load_from_file(self, path):
@@ -67,8 +64,25 @@ class BioPose(object):
 
         return structure, header
 
-    def reload_from_file(self, path):
+    def reload_from_file(self, path, model_num=0):
+        """
+        Reload a BioPose from a file path.
+        :param path: str
+        :param model_num: int
+        :return:
+        """
         self.struct, self.header = self.load_from_file(path)
+        self._setup_self(model_num)
+
+    def _setup_self(self, model_num =0):
+        """
+        Setup all info for bio pose after loading from file.
+        :param model_num: int
+        :return:
+        """
+        self.all_residues = self._setup_all_residues(model_num) #vector1 of Bio Residues
+        self.pdb_info = self._setup_pdb_info() #PDBInfo to map the vector1
+        self.peptide_bond_distances = self._setup_peptide_bond_distances() #map of bond distances to next residue in pose.
 
     ############ Getting Components #############
     def structure(self):
@@ -182,7 +196,7 @@ class BioPose(object):
         :param i: int
         :rtype: float
         """
-        if i == 1:
+        if i == 1 or not self.connected_to_previous(i):
             return 0.0
 
         res = self.all_residues[i]
@@ -211,21 +225,22 @@ class BioPose(object):
         """
         res = self.all_residues[i]
 
-        if i < (len(self.all_residues) - 1):
-            try:
-                n = res['N'].get_vector()
-                ca = res['CA'].get_vector()
-                c = res['C'].get_vector()
-                res_plus_one = self.all_residues[i + 1]
-
-                nn = res_plus_one['N'].get_vector()
-                psi = calc_dihedral(n, ca, c, nn)
-                return psi
-            except Exception:
-                print "Could not get psi for "+repr(i)
-                raise LookupError
-        else:
+        if i == len(self.all_residues) or not self.connected_to_next(i):
             return 0.0
+
+        try:
+            n = res['N'].get_vector()
+            ca = res['CA'].get_vector()
+            c = res['C'].get_vector()
+            res_plus_one = self.all_residues[i + 1]
+
+            nn = res_plus_one['N'].get_vector()
+            psi = calc_dihedral(n, ca, c, nn)
+            return psi
+        except Exception:
+            print "Could not get psi for "+repr(i)
+            raise LookupError
+
 
     def omega(self, i, rosetta_definitions = True):
         """
@@ -246,14 +261,14 @@ class BioPose(object):
 
 
 
-            if rosetta_definitions and i < len(self.all_residues) -1:
+            if rosetta_definitions and i < len(self.all_residues) -1 and self.connected_to_next(i):
                 res_plus_one = self.all_residues[i + 1]
                 next_n = res_plus_one['N'].get_vector()
                 next_ca = res_plus_one['CA'].get_vector()
                 omega = calc_dihedral(ca, c, next_n, next_ca)
                 return omega
 
-            elif not rosetta_definitions and i > 1:
+            elif not rosetta_definitions and i > 1 and self.connected_to_previous(i):
                 res_minus_one = self.all_residues[i - 1]
                 pre_c = res_minus_one['C'].get_vector()
                 pre_ca = res_minus_one['CA'].get_vector()
@@ -262,11 +277,32 @@ class BioPose(object):
             else:
                 return 0.0
 
-        except Exception:
+        except BaseException:
             print "Could not get omega for "+repr(i)
             raise LookupError
 
 
+    def res_bond_distance(self, resi):
+        """
+        Get the stored bond distances between residue and residue+1
+        :param res: int
+        :rtype: float
+        """
+        return self.peptide_bond_distances[resi]
+
+    def connected_to_next(self, resi, peptide_bond_distance_cutoff=1.8):
+        if self.res_bond_distance(resi) <= peptide_bond_distance_cutoff:
+            return True
+        else:
+            return False
+
+    def connected_to_previous(self, resi, peptide_bond_distance_cutoff=1.8):
+        if resi == 0:
+            return False
+        elif self.res_bond_distance(resi-1) <= peptide_bond_distance_cutoff:
+            return True
+        else:
+            return False
 
     def get_sequence(self, chain_id, model_num = 0):
         """
@@ -327,7 +363,7 @@ class BioPose(object):
 
         return all_residues
 
-    def _setup_pdb_info(self, model_num=0):
+    def _setup_pdb_info(self):
         """
         Setup the PDBInfo mapping from residues to pdb iformation.
         :param model_num: int
@@ -341,6 +377,21 @@ class BioPose(object):
 
         return pdb_info
 
+    def _setup_peptide_bond_distances(self):
+        bond_distances = defaultdict()
+        for i in range(1, len(self.all_residues)+1):
+            res = self.all_residues[i]
+            if i == len(self.all_residues):
+                bond_distances[i] = 0
+            else:
+                try:
+                    bond_distances[i] = peptide_bond_distance(self.all_residues[i], self.all_residues[i+1])
+                except Exception:
+                    bond_distances[i] = None
+
+        return bond_distances
+
+########## Testing Functions #############
 def test_dihedrals(pose):
     """
     Simple Test for Dihedral output
@@ -371,6 +422,8 @@ def test_pdbinfo(pose):
         print pose.all_residues[i].id
         print pose.pdb_info.pose2pdb(i)
 
+
+######## Testing Main ############
 if __name__ == "__main__":
     v = vector1([1, 2, 3])
     for i in v:
@@ -382,7 +435,7 @@ if __name__ == "__main__":
 
     test_pdb = os.path.join(get_testing_inputs_path(),"2j88.pdb")
     pose = BioPose(test_pdb)
-    test_pdbinfo(pose)
+    test_dihedrals(pose)
 
 
 
