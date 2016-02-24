@@ -97,7 +97,8 @@ class BioPose(object):
 
     def residue(self, resnum, chain_id, icode=' ', alt=' ', model_num = 0):
         """
-        Get a Bio Residue of the stored structure
+        Get a Bio Residue of the stored structure.
+        Adds a chain_id attribute.
 
         :param resnum: int
         :param chain_id: str
@@ -106,7 +107,9 @@ class BioPose(object):
         :param model_num: int
         :rtype: bio.PDB.Residue.Residue
         """
-        return self.struct[model_num][chain_id][(alt, resnum, icode)]
+        res = self.struct[model_num][chain_id][(alt, resnum, icode)]
+        res.chain_id = chain_id
+        return res
 
 
     def atom(self, atom_name, resnum, chain_id, icode=' ', alt=' ', model_num=0):
@@ -316,6 +319,7 @@ class BioPose(object):
         all_residues = vector1()
 
         for chain_id in self.get_chain_ids(model_num):
+            print "ChainID: "+chain_id
             residues = self.residues(chain_id, model_num)
             all_residues.extend(residues)
 
@@ -330,12 +334,40 @@ class BioPose(object):
         pdb_info = PDBInfo()
         i = 1
         for res in self.all_residues:
-            s = ResidueRecord(self.res_definitions.get_one_letter_from_three(res.resname), res.id[1], res.id[2])
+            s = ResidueRecord(self.res_definitions.get_one_letter_from_three(res.resname), res.id[1], res.chain_id, res.id[2])
             pdb_info.add_residue_record(s)
 
         return pdb_info
 
+def test_dihedrals(pose):
+    """
+    Simple Test for Dihedral output
 
+    :param pose: BioPose
+    :rtype: bool
+    """
+    for i in range(1, pose.total_residue()+1):
+
+        print "\n"+str(pose.pdb_info.pose2pdb(i))
+        try:
+            print "Phi: "+repr(math.degrees(pose.phi(i)))
+            print "Psi: "+repr(math.degrees(pose.psi(i)))
+            print "Omega:"+repr(math.degrees(pose.omega(i)))
+        except Exception:
+            "Print could not get dihedral for resnum "+repr(i)
+
+    return True
+
+def test_pdbinfo(pose):
+    """
+    Simple Test for pdbinfo output.
+    :param pose: BioPose
+    :rtype: bool
+    """
+    for i in range(1, pose.total_residue() +1):
+        print repr(i)
+        print pose.all_residues[i].id
+        print pose.pdb_info.pose2pdb(i)
 
 if __name__ == "__main__":
     v = vector1([1, 2, 3])
@@ -348,17 +380,7 @@ if __name__ == "__main__":
 
     test_pdb = os.path.join(get_testing_inputs_path(),"2j88.pdb")
     pose = BioPose(test_pdb)
-
-    for i in range(1, pose.total_residue()+1):
-
-        print "\n"+str(pose.pdb_info.pose2pdb(i))
-        try:
-            print "Phi: "+repr(math.degrees(pose.phi(i)))
-            print "Psi: "+repr(math.degrees(pose.psi(i)))
-            print "Omega:"+repr(math.degrees(pose.omega(i)))
-        except Exception:
-            "Print could not get dihedral for resnum "+repr(i)
-
+    test_pdbinfo(pose)
 
 
 
