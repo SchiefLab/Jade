@@ -112,7 +112,7 @@ class PDBInfo(object):
         for i in range(1, self.total_residue_record()+1):
             #print repr(i)
             res = self.pose_to_record_map[ i ]
-            if res.get_pdb_num() == pdb_num and res.get_chain == chain() and res.get_icdoe() == icode:
+            if res.get_pdb_num() == pdb_num and res.get_chain() == chain() and res.get_icdoe() == icode:
                 return i
 
         return None

@@ -1,5 +1,5 @@
 #Jared Adolf-Bryfogle
-#Quick script for separating out the Fv from the FAB after all Antibodies have been renumbered.  Should really be a class.
+#Functions for splitting antibody structures.
 
 
 from collections import defaultdict
@@ -245,14 +245,6 @@ def split_linker_H(parent_PDB):
         if resnum < 149 or resnum > 152:
             del pdb_map_cp[i]
     return pdb_map_cp
-
-if __name__ == '__main__':
-
-    only_dimer = True
-    ab_dir = sys.argv[1]
-    output_dir = sys.argv[2]
-
-    run_main(ab_dir, output_dir, only_dimer)
 
 
 

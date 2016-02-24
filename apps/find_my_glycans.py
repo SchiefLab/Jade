@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 from rosetta import *
-rosetta.init("-include_sugars -read_pdb_link_records -write_pdb_link_records")
+
 import sys
 import os
 
 #This code finds rosetta numbering of a glycan structure.
 #Useful while we figure out this PDBInfo problem...
 
+rosetta.init("-include_sugars -read_pdb_link_records -write_pdb_link_records")
 if len(sys.argv) == 1:
     sys.exit("Please specify a PDB on the command line as the only argument")
 

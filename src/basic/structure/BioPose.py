@@ -5,6 +5,7 @@
 import os
 import gzip
 import re
+import math
 
 from Bio.PDB import PDBParser
 from Bio.PDB import PPBuilder
@@ -15,6 +16,7 @@ from Bio.PDB import Vector
 from basic.RestypeDefinitions import RestypeDefinitions
 from basic.structure.Structure import PDBInfo as PDBInfo
 from basic.structure.Structure import ResidueRecord
+from basic.path import *
 from utility import vector1
 
 
@@ -26,15 +28,19 @@ class BioPose(object):
     The other way is to sublclass each Biopython class structure, which I'm not ready to do.
 
     Right now, you need a path as I don't know how we would use this from sequence, etc as you do in Rosetta.
+    :path: Is a path to an RCSB file.  PDB (.pdb), mmCIF(.cif), and gzipped (.gz) versions.
     """
     def __init__(self, path):
+
+        self.res_definitions = RestypeDefinitions()
+
 
         self.struct, self.header = self.load_from_file(path) #Bio struct, Header dictionary
 
         self.all_residues = self._setup_all_residues(model_num=0) #vector1 of Bio Residues
         self.pdb_info = self._setup_pdb_info(model_num=0) #PDBInfo to map the vector1
 
-        self.res_definitions = RestypeDefinitions()
+
 
     ############ IO ###################
     def load_from_file(self, path):
@@ -161,9 +167,12 @@ class BioPose(object):
 
 
     ############ Helper Funtions ################
+    def total_residue(self):
+        return len(self.all_residues)
+
     def phi(self, i):
         """
-        Get the Phi Angle of i
+        Get the Phi Angle of i in radians
 
         :param i: int
         :rtype: float
@@ -190,7 +199,7 @@ class BioPose(object):
 
     def psi(self, i):
         """
-        Get the Psi Angle of i
+        Get the Psi Angle of i in radians
 
         :param i: int
         :rtype: float
@@ -215,7 +224,7 @@ class BioPose(object):
 
     def omega(self, i, rosetta_definitions = True):
         """
-        Get the Omega Angle of i.
+        Get the Omega Angle of i in radians
         Omega is defined as the dihedral angle between the peptide bond of i and i + 1, as in Rosetta.
         If rosetta_definitions are False, omega is then treated as being between i and i -1
 
@@ -224,34 +233,35 @@ class BioPose(object):
         :rtype: float
         """
         res = self.all_residues[i]
-        if i < len(self.all_residues) -1:
-            try:
-                n = res['N'].get_vector()
-                ca = res['CA'].get_vector()
-                c = res['C'].get_vector()
+
+        try:
+            n = res['N'].get_vector()
+            ca = res['CA'].get_vector()
+            c = res['C'].get_vector()
 
 
 
-                if rosetta_definitions:
-                    res_plus_one = self.all_residues[i + 1]
-                    next_n = res_plus_one['N'].get_vector()
-                    next_ca = res_plus_one['CA'].get_vector()
-                    omega = calc_dihedral(ca, c, next_n, next_ca)
-                    return omega
+            if rosetta_definitions and i < len(self.all_residues) -1:
+                res_plus_one = self.all_residues[i + 1]
+                next_n = res_plus_one['N'].get_vector()
+                next_ca = res_plus_one['CA'].get_vector()
+                omega = calc_dihedral(ca, c, next_n, next_ca)
+                return omega
 
-                else:
-                    res_minus_one = self.all_residues[i - 1]
-                    pre_c = res_minus_one['C'].get_vector()
-                    pre_ca = res_minus_one['CA'].get_vector()
-                    omega = calc_dihedral(pre_ca, pre_c, n, ca)
-                    return omega
+            elif not rosetta_definitions and i > 1:
+                res_minus_one = self.all_residues[i - 1]
+                pre_c = res_minus_one['C'].get_vector()
+                pre_ca = res_minus_one['CA'].get_vector()
+                omega = calc_dihedral(pre_ca, pre_c, n, ca)
+                return omega
+            else:
+                return 0.0
 
-            except Exception:
-                print "Could not get omega for "+repr(i)
-                raise LookupError
+        except Exception:
+            print "Could not get omega for "+repr(i)
+            raise LookupError
 
-        else:
-            return 0.0
+
 
     def get_sequence(self, chain_id, model_num = 0):
         """
@@ -335,6 +345,20 @@ if __name__ == "__main__":
     print len(v)
 
     print repr(v[3])
+
+    test_pdb = os.path.join(get_testing_inputs_path(),"2j88.pdb")
+    pose = BioPose(test_pdb)
+
+    for i in range(1, pose.total_residue()+1):
+
+        print "\n"+str(pose.pdb_info.pose2pdb(i))
+        try:
+            print "Phi: "+repr(math.degrees(pose.phi(i)))
+            print "Psi: "+repr(math.degrees(pose.psi(i)))
+            print "Omega:"+repr(math.degrees(pose.omega(i)))
+        except Exception:
+            "Print could not get dihedral for resnum "+repr(i)
+
 
 
 

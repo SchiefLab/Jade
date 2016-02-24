@@ -5,21 +5,60 @@ import glob
 
 #A Collection of pathing/file/dir functions
 
+def get_Jade_root():
+    """
+    Get the root path of Jade directory.  Not
+    :rtype: str
+    """
+    return os.path.split(os.path.abspath(__file__))[0]+"/../.."
 
 def get_database_path():
-    p = os.path.split(os.path.abspath(__file__))[0]+"/../database"
-
-    return p
+    """
+    Get the path to the Jade Database
+    :rtype: str
+    """
+    return get_Jade_root()+"/database"
 
 def get_bin_path():
-    return os.path.split(os.path.abspath(__file__))[0]+"/../bin"
+    """
+    Get the path to the Jade apps directory
+    :rtype: str
+    """
+    return get_Jade_root()+"/apps"
+
+def get_testing_path():
+    """
+    Get the path to the Jade testing directory
+    :rtype: str
+    """
+    return get_Jade_root()+"/testing"
+
+def get_testing_inputs_path():
+    """
+    Get the path to testing inputs (PDBs,fasta,etc.)
+    :rtype:str
+    """
+    return get_testing_path()+"/inputs"
+
 
 def get_rosetta_features_root():
+    """
+    Get the path to Rosetta features directory through set ROSETTA3_DB env variable.
+    :rtype: str
+    """
     return os.getenv('ROSETTA3_DB')+"/../tests/features"
 
-def get_feat_input_path():
-    p  = os.path.split(os.path.abspath(__file__))[0]+"/../rosetta_gen/features_input"
-    return p
+def get_xml_scripts_path():
+    """
+    Get the path to the Rosetta xml script directory.  Useful for variable substitutions.
+    :rtype: str
+    """
+    return get_bin_path()+"/xml_scripts"
+
+
+
+###########################################################################
+
 
 def get_pdb_path(decoy, alternate_paths = None):
     return get_decoy_path(decoy, alternate_paths)
@@ -75,10 +114,6 @@ def get_decoy_path(decoy, alternate_paths = None):
             return decoy+".pdb.gz"
         else:
             return None
-
-def get_xml_scripts_path():
-    p  = os.path.split(os.path.abspath(__file__))[0]+"/../../apps/xml_scripts"
-    return p
 
 
 def make_dir_if_not_exists(dir):

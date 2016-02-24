@@ -3,7 +3,7 @@
 
 
 #Author: Jared Adolf-Bryfogle
-#Purpose: Get change in energy for point mutations of a structure after mutation and FastRelax.
+#Purpose: Old script to get change in energy for point mutations of a structure after mutation and FastRelax.
 
 
 #Instructions: Look at the input options.  Set at least --pdb and --region. (python get_mutation_energy.py --pdb mypdbfile.pdb --region 1:10:B)
@@ -16,16 +16,11 @@ import time
 
 from basic.RestypeDefinitions import *
 
-rosetta.init()
 
-opts = [ 'app' , '-database' , os.path.abspath( os.environ['PYROSETTA_DATABASE'] ) , '-ex1' , '-ex2' , '-constant_seed', \
-         '-ignore_unrecognized_res', '-use_input_sc']
 
-# '-relax:constrain_relax_to_start_coords'
-args = rosetta.utility.vector1_string()
-args.extend( opts ) 
-rosetta.core.init( args )
+opts = [ '-ex1' , '-ex2', '-ignore_unrecognized_res', '-use_input_sc']
 
+rosetta.init(" ".join(opts))
 
 ##Setup Options and Script Inputs:
 
@@ -76,8 +71,8 @@ if not options.region:
     print "\nNo region selected.  Using whole structure\n"
 else:
     regions = options.region.split(":")
-    start_position = int(regions[0]);
-    end_position = int(regions[1]);
+    start_position = int(regions[0])
+    end_position = int(regions[1])
     chain = regions[2]
 
 if not options.region and not options.relax_whole_structure:
@@ -180,7 +175,7 @@ for i in range(rosetta_start, rosetta_end+1):
         #Output Results
         OUTFILE.write(pdb_location + " "+residue+" "+repr(scorefxn(pose))+" "+repr(scorefxn(pose) -         native_relaxed_energy)+"\n")
         
-	OUTFILE.flush()
+    OUTFILE.flush()
     pose.dump_pdb(options.outpath+"/mutant_"+pdbSP[0]+"_"+pdbSP[1]+"_"+residue+".pdb")
         
 OUTFILE.close()

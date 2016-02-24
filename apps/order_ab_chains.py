@@ -4,8 +4,10 @@
 #Reorders PDBFiles in a dirctory according to LH_A in order for Rosetta Antibody Design benchmarking. Removes HetAtm!!!
 
 import sys
+import os
 
 from basic.structure.BasicPose import *
+from argparse import ArgumentParser
 
 def reorder_and_save_chains(in_path, out_path, remove_het = False):
     blank_pdb = BasicPose()
@@ -23,30 +25,48 @@ def reorder_and_save_chains(in_path, out_path, remove_het = False):
 
 if __name__ == "__main__":
 
-    #I don't have time to make this fancy right now.
+    parser = ArgumentParser("Reorders PDBFiles in a dirctory according to LH_A in order for Rosetta Antibody Design benchmarking. Removes HetAtm")
 
-    #Arguments:
-    ### Input Directory
-    ### Input PDBList
-    ### Output Directory
+    parser.add_argument("--in_dir", "-i",
+                        default = os.getcwd(),
+                        help = "Input Directory of PDB files listed in any passed PDBLIST. Default=PWD")
 
-    #Assumes PDBList has no paths and requires an input directory as if we run Rosetta.
+    parser.add_argument("--in_pdblist", "-l",
+                        help = "Input PDBList file. Assumes PDBList has no paths and requires an input directory as if we run Rosetta.",
+                        default = "")
 
-    in_dir = sys.argv[1]
-    in_pdblist = sys.argv[2]
-    out_dir = sys.argv[3]
+    parser.add_argument("--in_single", "-s",
+                        "Path to Input PDB File, instead of list.",
+                        default = "")
+
+    parser.add_argument("--out_dir", "-d",
+                        help = "Output Directory. Resultant PDB files will go here.")
+
+    options = parser.parse_args()
+
+    in_dir = options.in_dir
+    in_pdblist = options.in_pdblist
+    out_dir = options.out_dir
+    in_single = options.in_single
 
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
 
-    PDBLIST = open(in_pdblist, 'r')
-    for line in PDBLIST:
-        line = line.strip()
-        line = in_dir+"/"+line
+    if in_pdblist:
+        PDBLIST = open(in_pdblist, 'r')
+        for line in PDBLIST:
+            line = line.strip()
+            line = in_dir+"/"+line
 
-        print "Reordering "+line
-        outpath = out_dir+"/"+os.path.basename(line)
-        reorder_and_save_chains(line, outpath)
+            print "Reordering "+line
+            outpath = out_dir+"/"+os.path.basename(line)
+            reorder_and_save_chains(line, outpath)
+        PDBLIST.close()
+
+    elif in_single:
+        outpath = os.path.join(out_dir, in_single)
+        reorder_and_save_chains(in_single, outpath)
+    else:
+        sys.exit("Must pass either -s or -l ")
 
     print "Done!!"
-    PDBLIST.close()

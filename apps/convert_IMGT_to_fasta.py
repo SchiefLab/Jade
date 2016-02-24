@@ -4,6 +4,7 @@ import os
 import sys
 import re
 
+from argparse import ArgumentParser
 
 #This script converts an IMGT output file (5_AA-seqs.csv) to a FASTA.  All Framework and CDRs are concatonated.  * is skipped.
 # The FASTA file can then be used by PyIgClassify.
@@ -19,9 +20,22 @@ import re
 
 
 if __name__ == "__main__":
+    parser = ArgumentParser("#This script converts an IMGT output file (5_AA-seqs.csv) to a FASTA.  All Framework and CDRs are concatonated.  * is skipped.\n"
+                            "The FASTA file can then be used by PyIgClassify.")
 
-    inpath = sys.argv[1]
-    outpath = sys.argv[2]
+    parser.add_argument("--inpath", "-i",
+                        help = "Input IMGT file path",
+                        required = True)
+
+    parser.add_argument("--outpath", "-o",
+                        help = "Output Fasta outfile path.",
+                        required = True)
+
+    options = parser.parse_args()
+
+    inpath = options.inpath
+    outpath = options.outpath
+
 
     INFILE = open(inpath, 'r')
     INFILE.readline() ; #Read the first uncommented line.
