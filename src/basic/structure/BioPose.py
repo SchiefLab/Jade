@@ -140,6 +140,7 @@ class BioPose(object):
     def residues(self, chain_id, model_num = 0, include_alt = False):
         """
         Get residues, including or not including residues with alternate location codes - which can be a PITA
+        Adds chain_id attribute to residue.
 
         :param chain_id: str
         :param model_num: int
@@ -148,6 +149,7 @@ class BioPose(object):
         """
         resi = []
         for res in self.chain(chain_id, model_num):
+            res.chain_id = chain_id
             if res.id[0] ==' ':
                 resi.append(res)
             elif include_alt:
