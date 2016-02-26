@@ -30,6 +30,7 @@ class PDBInfo(object):
 
     def clear(self):
         self.pose_to_record_map = defaultdict()
+        self.pdb_to_pose_map.clear()
         self.extra_data = defaultdict()
 
     def set_residue_record(self, i, residue_record):
@@ -178,7 +179,7 @@ class ResidueRecord(object):
         return self.__str__()
 
     def tuple(self):
-        return self.pdb_num, self.chain, self.icode
+        return int(self.pdb_num), self.chain, self.icode
 
     def set_pdb_num(self, pdb_num):
         self.pdb_num = pdb_num
