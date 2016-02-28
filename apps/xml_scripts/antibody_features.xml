@@ -1,0 +1,21 @@
+<ROSETTASCRIPTS>
+	<MOVERS>
+		<ReportToDB name=features database_name=%%name%% batch_description=%%batch%%>
+			<feature name=ResidueFeatures/>
+			<feature name=PdbDataFeatures/>
+			<feature name=ResidueTypesFeatures/>
+			<feature name=ScoreTypeFeatures/>
+                	<feature name=StructureScoresFeatures/>
+			<feature name=CDRClusterFeatures numbering_scheme=AHO_Scheme/>
+			<feature name=AntibodyFeatures numbering_scheme=AHO_Scheme cdr_definition=North interface=LH_A pack_separated=%%pack_separated%% pack_together=%%pack_together%%/>
+			<feature name=ResidueSecondaryStructureFeatures/>
+			<feature name=ResidueScoresFeatures/>
+			<feature name=HBondFeatures/>
+			<feature name=SaltBridgeFeatures/>
+			<feature name=ResidueBurialFeatures/>
+		</ReportToDB>
+	</MOVERS>
+	<PROTOCOLS>
+		<Add mover_name=features/>
+	</PROTOCOLS>
+</ROSETTASCRIPTS>
