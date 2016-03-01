@@ -55,7 +55,11 @@ def get_xml_scripts_path():
     """
     return get_bin_path()+"/xml_scripts"
 
+def get_rosetta_flags_path():
+    return get_database_path()+"/rosetta/flags"
 
+def get_rosetta_json_run_path():
+    return get_database_path()+"/rosetta/jsons"
 
 ###########################################################################
 

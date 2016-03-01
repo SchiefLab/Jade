@@ -186,9 +186,9 @@ class RunRosetta(object):
 
 
         protocol_setup.add_argument("--json_base",
-                               default = os.path.dirname(os.path.abspath(__file__))+"/jsons/common_flags.json",
+                               default = get_rosetta_json_run_path()+"/common_flags.json",
                                help = "JSON file for setting up base paths/etc. for the cluster."
-                                      "Default = 'file_dir/jsons/common_flags.json' ")
+                                      "Default = 'database/rosetta/jsons/common_flags.json' ")
 
         protocol_setup.add_argument("--json_run",
                                 help = "JSON file for specific Rosetta run.  Not required.")
