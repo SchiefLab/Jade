@@ -5,6 +5,7 @@
 
 echo "PyRosetta must be installed separately.  Install Pip via Curl."
 
+pip install biopython
 pip install numpy
 pip install scipy
 pip install scikit-learn
