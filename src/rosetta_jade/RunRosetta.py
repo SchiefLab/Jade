@@ -166,6 +166,8 @@ class RunRosetta(object):
                                        "Default = 'rosetta_run'.  "
                                        "(Benchmarking: Override any set in json_base.)",)
 
+        job_setup.add_argument("--mpiexec",
+                               help = "Specify a particular path to an MPI exec.")
 
         protocol_setup = self.parser.add_argument_group("Protocol Setup")
 
@@ -567,10 +569,14 @@ class RunRosetta(object):
     def get_full_cmd(self, *args, **kwargs):
         cmd_string = self.get_output_string(*args, **kwargs)
 
+        mpiexec="mpiexec"
+        if self.options.mpiexec:
+            mpiexec = self.options.mpiexec
+
         if self.options.job_manager == "slurm":
-            cmd = "cd "+ self.get_root()+" \n"+"mpiexec "
+            cmd = "cd "+ self.get_root()+" \n"+mpiexec+" "
         else:
-            cmd = "cd "+ self.get_root()+" \n"+"mpiexec -np " + str(self.options.np)
+            cmd = "cd "+ self.get_root()+" \n"+mpiexec+" -np " + str(self.options.np)
 
         if self.options.machine_file:
             cmd = cmd + " --machine_file "+self.options.machine_file+" "+ cmd_string
@@ -619,7 +625,7 @@ class RunRosetta(object):
             run_on_qsub(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.get_job_manager_opts())
 
         elif self.options.job_manager == "slurm":
-            run_on_slurm(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.np, self.options.print_only, self.get_job_manager_opts())
+            run_on_slurm(cmd, queue_dir, self.get_job_name(*args, **kwargs), nodes=self.options.nodes, ntasks=self.options.np, print_only=self.options.print_only, extra_opts=self.get_job_manager_opts())
 
 
 if __name__ == "__main__":
