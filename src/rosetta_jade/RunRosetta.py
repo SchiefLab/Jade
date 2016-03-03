@@ -62,6 +62,7 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only
         print cmd + "\n\n"
         print(slurm_cmd)
     else:
+        print "Starting Slurm!!"
         print cmd + "\n\n"
         print(slurm_cmd)
         os.system(slurm_cmd)
