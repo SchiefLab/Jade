@@ -58,6 +58,7 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only
     slurm_cmd = slurm_cmd +" "+script_path
 
     if print_only:
+        print "Only Printing!"
         print cmd + "\n\n"
         print(slurm_cmd)
     else:
