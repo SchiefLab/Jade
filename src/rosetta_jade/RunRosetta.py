@@ -34,6 +34,7 @@ def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts
         print(cmd+"\n\n")
         print(qsub_cmd)
     else:
+	#qsub_cmd = "which sbatch"
         print(cmd+"\n\n")
         print(qsub_cmd)
         os.system(qsub_cmd)
@@ -63,8 +64,11 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only
         print(slurm_cmd)
     else:
         print "Starting Slurm!!"
-        print cmd + "\n\n"
+        
+	#slurm_cmd = "which sbatch"
+	print cmd + "\n\n"
         print(slurm_cmd)
+	os.system("which sbatch")
         os.system(slurm_cmd)
 
 def write_queue_file(cmd, queue_dir, name):
@@ -169,7 +173,8 @@ class RunRosetta(object):
                                        "(Benchmarking: Override any set in json_base.)",)
 
         job_setup.add_argument("--mpiexec",
-                               help = "Specify a particular path to an MPI exec.")
+                               help = "Specify a particular path to an MPI exec.",
+				default="/usr/bin/mpiexec" )
 
         protocol_setup = self.parser.add_argument_group("Protocol Setup")
 
