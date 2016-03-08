@@ -169,7 +169,8 @@ class RunRosetta(object):
                                        "(Benchmarking: Override any set in json_base.)",)
 
         job_setup.add_argument("--mpiexec",
-                               help = "Specify a particular path to an MPI exec.")
+                               help = "Specify a particular path (or type of) MPI exec. Default on vax is srun.",
+                               default = "srun")
 
         protocol_setup = self.parser.add_argument_group("Protocol Setup")
 
