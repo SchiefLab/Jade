@@ -15,7 +15,7 @@ class SetupRosettaOptionsGeneral(object):
     def __init__(self, cluster_json_file):
 
         if not os.path.exists(cluster_json_file):
-            cluster_json_file = os.path.dirname(os.path.abspath(__file__))+'/jsons/'+cluster_json_file
+            cluster_json_file = get_rosetta_json_run_path()+"/"+ cluster_json_file
             if not os.path.exists(cluster_json_file):
                 sys.exit("cluster json file not found")
 

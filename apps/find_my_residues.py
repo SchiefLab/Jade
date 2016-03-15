@@ -29,7 +29,7 @@ for i in range(1, pose.total_residue() +1 ):
     if options.chain and pose.pdb_info().pose2pdb(i).split()[1] != options.chain:
         continue
 
-    print repr(i)+" "+repr(pose.chain(i))+" "+pose.pdb_info().pose2pdb(i)
+    print repr(i)+" "+repr(pose.chain(i))+" "+pose.pdb_info().pose2pdb(i)+" "+pose.residue(i).name()
 
 if options.echo_input:
     pose.dump_pdb("echo_"+os.path.basename(options.pdb_file))

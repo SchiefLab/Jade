@@ -34,7 +34,7 @@ def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts
         print(cmd+"\n\n")
         print(qsub_cmd)
     else:
-	#qsub_cmd = "which sbatch"
+        #qsub_cmd = "which sbatch"
         print(cmd+"\n\n")
         print(qsub_cmd)
         os.system(qsub_cmd)
@@ -65,10 +65,10 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only
     else:
         print "Starting Slurm!!"
         
-	#slurm_cmd = "which sbatch"
-	print cmd + "\n\n"
+        #slurm_cmd = "which sbatch"
+        print cmd + "\n\n"
         print(slurm_cmd)
-	os.system("which sbatch")
+        os.system("which sbatch")
         os.system(slurm_cmd)
 
 def write_queue_file(cmd, queue_dir, name):
@@ -133,6 +133,15 @@ class RunRosetta(object):
                                     "Default = 'slurm ' ",
                                choices = ["slurm","qsub","local","local_test"] )
 
+        job_setup.add_argument("--local_test",
+                               default = False,
+                               help = "Is this a local test?  Easy way to set job manager.",
+                               action = "store_true")
+
+        job_setup.add_argument("--local",
+                               default = False,
+                               help = "Are we running locally?  Easy way to set job manager.",
+                               action = "store_true")
 
         job_setup.add_argument("--job_manager_opts",
                                  help = "Extra options for the job manager, such as queue or processor requests"
@@ -173,7 +182,7 @@ class RunRosetta(object):
                                        "(Benchmarking: Override any set in json_base.)",)
 
         job_setup.add_argument("--mpiexec",
-                               help = "Specify a particular path (or type of) MPI exec. Default on vax is srun.",
+                               help = "Specify a particular path (or type of) MPI exec. Default is srun (due to vax). If local or local test, will use mpiexex",
                                default = "srun")
 
         protocol_setup = self.parser.add_argument_group("Protocol Setup")
@@ -214,8 +223,8 @@ class RunRosetta(object):
                                         "Note NO - charactor. "
                                         "Booleans do not need an = sign.")
 
-        protocol_setup.add_argument("--one_file_mpi",
-                                 help = "Don't setup mpi_tracer_to_file. ",
+        protocol_setup.add_argument("--split_mpi_output",
+                                 help = "Setup mpi_tracer_to_file. ",
                                  default = False,
                                  action = "store_true")
 
@@ -261,6 +270,10 @@ class RunRosetta(object):
         elif not self.program:
             sys.exit("Rosetta Program to run must be specified.")
 
+        if self.options.local:
+            self.job_manger = "local"
+        if self.options.local_test:
+            self.job_manger = "local_test"
 
     def _setup_base_options(self):
         """
@@ -502,7 +515,7 @@ class RunRosetta(object):
         s = s + self.base_options.get_base_rosetta_flag_string()
 
         #Log Dir:
-        if not self.options.one_file_mpi:
+        if self.options.split_mpi_output:
             s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir(*args, **kwargs)+"/rosetta_mpi_run"
 
         #For these benchmarks, there are only a single root directory.
@@ -574,10 +587,16 @@ class RunRosetta(object):
     '''
 
     def get_full_cmd(self, *args, **kwargs):
+        """
+        Get the full command line.
+        :param args:
+        :param kwargs:
+        :rtype: str
+        """
         cmd_string = self.get_output_string(*args, **kwargs)
 
         mpiexec="mpiexec"
-        if self.options.mpiexec:
+        if self.options.mpiexec and not self.local_run():
             mpiexec = self.options.mpiexec
 
         if self.options.job_manager == "slurm":
@@ -599,6 +618,15 @@ class RunRosetta(object):
 
         return cmd
 
+    def local_run(self):
+        """
+        Get if we are running locally
+        :rtype: bool
+        """
+        if (self.options.job_manager == "local" or self.options.job_manager == "local_test"):
+            return True
+        else:
+            return False
 
     def run(self, *args, **kwargs):
 
@@ -616,13 +644,13 @@ class RunRosetta(object):
         if self.options.job_manager == "local" and self.options.print_only:
             print cmd + "\n"
 
-        elif self.options.job_manager == "local":
+        elif self.options.job_manager == "local" or self.options.local:
             print cmd + "\n"
             os.system(cmd)
-        elif self.options.job_manager == "local_test":
+        elif self.options.job_manager == "local_test" or self.options.local_test:
             self.options.np = 2
             self.options.nstruct = 1
-            self.options.one_file_mpi = True
+            self.options.split_mpi_output = False
 
             cmd = self.get_full_cmd()
             print cmd +"\n"
