@@ -7,7 +7,7 @@ import glob
 
 def get_Jade_root():
     """
-    Get the root path of Jade directory.  Not
+    Get the root path of Jade directory.
     :rtype: str
     """
     return os.path.split(os.path.abspath(__file__))[0]+"/../.."
