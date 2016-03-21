@@ -1,0 +1,3 @@
+{ "program": "rosetta_scripts",
+  "xml_script": "model_glycans_simple.xml"
+}
