@@ -228,9 +228,9 @@ class RunRosetta(object):
                                        "Specify as you would in Rosetta. like: glycosylation=137A,136A",
                                 nargs = '*')
 
-        protocol_setup.add_argument("--split_mpi_output",
+        protocol_setup.add_argument("--split_tracer",
                                  help = "Setup mpi_tracer_to_file. ",
-                                 default = False,
+                                 default = True,
                                  action = "store_true")
 
         protocol_setup.add_argument("--print_only",

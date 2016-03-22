@@ -3,9 +3,11 @@ import json
 from collections import OrderedDict
 
 import pandas
+import re
 
 from pymol_jade.PyMolScriptWriter import *
 from basic.pandas.PandasDataFrame import *
+from basic.plotting.MakeFigure import *
 from basic.path import *
 
 
@@ -13,7 +15,11 @@ from basic.path import *
 class ScoreFile:
   def __init__(self, filename):
     self.filename = filename
-    self.name = ".".join(os.path.basename(self.filename).split('.')[0:-1]).replace('score', "")
+
+    if re.search("score_", filename):
+        self.name = ".".join(os.path.basename(self.filename).split('.')[0:-1]).replace('score_', "")
+    else:
+        self.name = ".".join(os.path.basename(self.filename).split('.')[0:-1]).replace('score', "")
 
     self.decoys = []; #Main holder of data.  Array of dict of scoreterms and 'decoy']
 
@@ -178,7 +184,7 @@ class ScoreFile:
 
     return df
 
-def get_scorefiles(indir):
+def get_scorefiles(indir = os.getcwd()):
     """
     Get Score files from a directory.  Walk through all directories in directory.
     :param indir: str
