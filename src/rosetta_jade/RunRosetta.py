@@ -223,6 +223,11 @@ class RunRosetta(object):
                                         "Note NO - charactor. "
                                         "Booleans do not need an = sign.")
 
+        protocol_setup.add_argument("--script_vars",
+                                help = "Any script vars for XML scripts."
+                                       "Specify as you would in Rosetta. like: glycosylation=137A,136A",
+                                nargs = '*')
+
         protocol_setup.add_argument("--split_mpi_output",
                                  help = "Setup mpi_tracer_to_file. ",
                                  default = False,
@@ -271,9 +276,9 @@ class RunRosetta(object):
             sys.exit("Rosetta Program to run must be specified.")
 
         if self.options.local:
-            self.job_manger = "local"
+            self.options.job_manager = "local"
         if self.options.local_test:
-            self.job_manger = "local_test"
+            self.options.job_manager = "local_test"
 
     def _setup_base_options(self):
         """
@@ -568,6 +573,10 @@ class RunRosetta(object):
 
         #Extra Rosetta options:
         s = s + " "+self._get_extra_rosetta_options_string()
+
+        if self.options.script_vars:
+            s = s + " -parser:script_vars "+" ".join(self.options.script_vars)
+
         return s
 
     '''
@@ -625,6 +634,7 @@ class RunRosetta(object):
         """
         if (self.options.job_manager == "local" or self.options.job_manager == "local_test"):
             return True
+            print "Local Run!"
         else:
             return False
 
