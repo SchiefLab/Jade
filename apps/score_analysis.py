@@ -53,61 +53,59 @@ def main(argv):
                       default=[],
                       nargs='*')
 
-  parser.add_argument("-S", "--summary",
-                      action="store_true",
-                      default=False,
-                      help="Compute stats summarizing data" )
 
-  parser.add_argument("-c", "--csv",
-                      action="store_true",
-                      default=False,
-                      help="Output selected columns, top, and decoys as CSV.")
 
   parser.add_argument("--list_scoretypes",
                       action="store_true",
                       default=False,
                       help="List score term names" )
 
-  pdblist_opts = parser.add_argument_group("PDBLISTs", "Options for pdblist output")
+  parser.add_argument("--pdb_dir", "-d",
+                          type=str,
+                          help = "Directory for PDBs if different than the directory of the scorefile")
 
-  pdblist_opts.add_argument("--make_pdblist",
+  output_opts = parser.add_argument_group("Output", "General output options.")
+
+  output_opts.add_argument("--summary", "-S",
+                      action="store_true",
+                      default=False,
+                      help="Compute stats summarizing data" )
+
+  output_opts.add_argument("--csv", "-c",
+                      action="store_true",
+                      default=False,
+                      help="Output selected columns, top, and decoys as CSV.")
+
+
+  output_opts.add_argument("--make_pdblist",
                       default = False,
                       action = "store_true",
                       help = "Output PDBlist file(s)")
 
-  pdblist_opts.add_argument("--pdblist_prefix",
-                      default = "",
-                      help = "Prefix to use for PDBLIST outputs")
-
-  pdblist_opts.add_argument("--pdblist_outdir",
-                      default = os.getcwd(),
-                      help = "Output dir for pdblist files")
-
-  pymol_opts = parser.add_argument_group("PyMol", "Options for pymol session output")
-
-  pymol_opts.add_argument("--pymol_session",
+  output_opts.add_argument("--pymol_session",
                           help="Make pymol session(s) of the scoretypes specified",
                           default = False,
                           action = "store_true")
 
-  pymol_opts.add_argument("--session_prefix",
-                          default="",
+
+  output_opts.add_argument("--prefix", "-p",
+                      default = "",
+                      help = "Prefix to use for any file output")
+
+  output_opts.add_argument("--outdir", "-o",
+                          default = os.getcwd(),
                           type=str,
-                          help="Prefix used for output pymol session")
+                          help = "Output dir.  Default is current directory.")
 
 
-  pymol_opts.add_argument("--session_outdir",
-                          default = "sessions",
-                          type=str,
-                          help = "Output dir for pymol sessions.")
+
+  pymol_opts = parser.add_argument_group("PyMol", "Options for pymol session output")
+
+
 
   pymol_opts.add_argument("--native",
                           type=str,
                           help="Native structure to use for pymol sessions.")
-
-  pymol_opts.add_argument("--top_dir",
-                          type=str,
-                          help = "Top directory for PDBs if different than the directory of the scorefile")
 
   pymol_opts.add_argument("--ab_structure",
                           default = False,
@@ -187,8 +185,8 @@ def main(argv):
 
       ordered = sf.getOrdered(term, decoy_names=decoy_names, top_n=options.top_n)
 
-      if options.top_dir:
-        top_decoy_paths = [get_decoy_path( options.top_dir+"/"+o[1]  ) for o in ordered]
+      if options.pdb_dir:
+        top_decoy_paths = [get_decoy_path( options.pdb_dir+"/"+o[1]  ) for o in ordered]
       elif os.path.dirname(filename):
         top_decoy_paths = [get_decoy_path( os.path.dirname(filename)+"/"+o[1]  ) for o in ordered]
       else:
@@ -198,10 +196,10 @@ def main(argv):
         print "%.2f\t" % o[0] + o[1]
 
       if options.make_pdblist:
-        if not os.path.exists(options.pdblist_outdir):
-          os.mkdir(options.pdblist_dir)
+        if not os.path.exists(options.outdir):
+          os.mkdir(options.outdir)
 
-        outname = options.pdblist_outdir+"/PDBLIST_"+options.pdblist_prefix+"_"+term+"_"+repr(s)+".txt"
+        outname = options.outdir+"/PDBLIST_"+options.prefix+"_"+term+"_"+repr(s)+".txt"
 
         outfile = open(outname, 'w')
         for decoy in top_decoy_paths:
@@ -236,36 +234,36 @@ def main(argv):
           print "Top N by ten scoreterm not in scoreterms.  Please change the option"
 
 
-        pymol_name  = options.session_prefix+""+scorefile_name+"_"+scoreterm
+        pymol_name  = options.prefix+""+scorefile_name+"_"+scoreterm
         print "Creating: "+pymol_name
 
 
-        outdir = options.session_outdir
+        outdir = options.outdir
         if not os.path.exists(outdir):
           os.mkdir(outdir)
 
-        if not options.top_dir:
-          options.top_dir = os.path.dirname(filename)
-          if not options.top_dir:
-            options.top_dir = os.getcwd()
+        if not options.pdb_dir:
+          options.pdb_dir = os.path.dirname(filename)
+          if not options.pdb_dir:
+            options.pdb_dir = os.getcwd()
 
         if "top_n_by_10" in options.scoretypes and options.top_n_by_10_scoretype in scoreterms:
           top_p = int(len(decoy_names) / 10)
           top_decoys = [o[1] for o in sf.getOrdered("total_score", decoy_names=decoy_names, top_n=int(options.top_n))]
 
-          top_by_n_decoys = [[o[0], options.top_dir+"/"+o[1] ] for o in sf.getOrdered(options.top_n_by_10_scoretype, decoy_names=decoy_names) if o[1] in top_decoys][
+          top_by_n_decoys = [[o[0], options.pdb_dir+"/"+o[1] ] for o in sf.getOrdered(options.top_n_by_10_scoretype, decoy_names=decoy_names) if o[1] in top_decoys][
                           :options.top_n_by_10]
 
           if len(top_by_n_decoys) == 0:
             print "No pdbs found. Skipping"
-          make_pymol_session_on_top_scored(top_by_n_decoys, options.top_dir, outdir, pymol_name, int(options.top_n), options.native,
+          make_pymol_session_on_top_scored(top_by_n_decoys, options.pdb_dir, outdir, pymol_name, int(options.top_n), options.native,
                                            antibody=options.ab_structure, parellel=False, super = options.super)
 
         else:
           ordered = sf.getOrdered(scoreterm, top_n=int(options.top_n), decoy_names=decoy_names)
           print repr(ordered)
-          top_decoys = [[o[0], options.top_dir+"/"+o[1] ] for o in ordered]
-          make_pymol_session_on_top_scored(top_decoys, options.top_dir, outdir, pymol_name, int(options.top_n), options.native,
+          top_decoys = [[o[0], options.pdb_dir+"/"+o[1] ] for o in ordered]
+          make_pymol_session_on_top_scored(top_decoys, options.pdb_dir, outdir, pymol_name, int(options.top_n), options.native,
                                            antibody=options.ab_structure, parellel=False, super = options.super)
 
 ########################################################################
