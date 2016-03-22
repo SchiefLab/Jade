@@ -80,7 +80,7 @@ def main(argv):
                       help = "Prefix to use for PDBLIST outputs")
 
   pdblist_opts.add_argument("--pdblist_outdir",
-                      default = "pdblists",
+                      default = os.getcwd(),
                       help = "Output dir for pdblist files")
 
   pymol_opts = parser.add_argument_group("PyMol", "Options for pymol session output")
@@ -94,6 +94,7 @@ def main(argv):
                           default="",
                           type=str,
                           help="Prefix used for output pymol session")
+
 
   pymol_opts.add_argument("--session_outdir",
                           default = "sessions",
@@ -197,10 +198,10 @@ def main(argv):
         print "%.2f\t" % o[0] + o[1]
 
       if options.make_pdblist:
-        if not os.path.exists(options.pdblist_dir):
+        if not os.path.exists(options.pdblist_outdir):
           os.mkdir(options.pdblist_dir)
 
-        outname = options.pdblist_dir+"/PDBLIST_"+options.pdblist_prefix+"_"+term+"_"+repr(s)+".txt"
+        outname = options.pdblist_outdir+"/PDBLIST_"+options.pdblist_prefix+"_"+term+"_"+repr(s)+".txt"
 
         outfile = open(outname, 'w')
         for decoy in top_decoy_paths:
