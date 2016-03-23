@@ -2,6 +2,10 @@ from collections import defaultdict
 import os
 import sys
 
+from basic.pandas.PandasDataFrame import *
+import seaborn.apionly as sea
+
+import pandas
 import matplotlib.pyplot as plot
 import matplotlib as mpl
 import matplotlib.axes
@@ -9,6 +13,63 @@ import matplotlib.axes
 from matplotlib.dates import YearLocator, MonthLocator, DateFormatter, WeekdayLocator
 
 # Jared Adolf-Bryfogle
+
+def plot_x_vs_y_sea_with_regression(df, title, outpath, x, y, top_p = .95, reverse = True):
+    """
+    Plot X vs Y using a Pandas Dataframe and Seaborn, with regression line., save the figure, and return the Axes.
+
+    :param df: pandas.DataFrame
+    :param title: str
+    :param outpath: str
+    :param x: str
+    :param y: str
+    :param top_p: float
+    :param reverse:  bool
+    :rtype: matplotlib.Axes
+    """
+    df = detect_numeric(df)
+    df = df.sort(x, ascending=reverse)
+    slice_top = df[0:int(len(df)*float(top_p))]
+    ax = sea.regplot(x=x, y=y, data=slice_top)
+    ax.set_title(title)
+    pad_single_title(ax)
+    fig = ax.get_figure()
+    fig.savefig(outpath, dpi=300)
+    return ax
+
+def plot_general_pandas(df, title, outpath, plot_type, x, y = None, z = None, top_p = .95, reverse = True):
+    """
+    Plot anything in pandas.  Make it look descent.  Save the figure.
+
+    :param df: pandas.DataFrame
+    :param title: str
+    :param outpath: str
+    :param plot_type: str
+    :param x: str
+    :param y: str
+    :param z: str
+    :param top_p: float
+    :param reverse: bool
+    :rtype: matplotlib.Axes
+    """
+    print "Plotting "+plot_type+" For X: "+x +" and y: "+repr(y)
+
+    df = detect_numeric(df)
+    df = df.sort(x, ascending=reverse)
+    slice_top = df[0:int(len(df)*float(top_p))]
+
+    if y:
+        ax = slice_top.plot(x, y,  kind=plot_type, figsize=[11, 8], title = title)
+    else:
+        #Y=X is not an error.  For one dimensional plots, pandas uses y instead of X.  Super stupid.
+        ax = slice_top.plot(y=x, kind=plot_type, figsize=[11, 8], title = title)
+
+    pad_single_title(ax)
+    ax.set_axis_bgcolor('white')
+    fig = ax.get_figure()
+    fig.savefig(outpath, dpi=300)
+    return ax
+
 
 def pad_single_title(ax, x=.5, y=1.05):
     """
@@ -20,7 +81,7 @@ def pad_single_title(ax, x=.5, y=1.05):
     :return:
     """
     ttl = ax.title
-    ttl.set_position([.5, 1.05])
+    ttl.set_position([x, y])
 
 def set_common_title(fig, title, size=16, x=.5, y=1.05):
     """

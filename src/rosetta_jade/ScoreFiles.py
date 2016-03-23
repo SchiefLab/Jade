@@ -12,6 +12,8 @@ from basic.path import *
 
 
 ##Original Author: Luki Goldschmidt <lugo@uw.edu>
+##Forked by Jared Adolf-Bryfogle.
+##Needs to be completely refactored to hold and access its info via Pandas Dataframe.
 class ScoreFile:
   def __init__(self, filename):
     self.filename = filename
@@ -200,7 +202,7 @@ def get_scorefiles(indir = os.getcwd()):
 
 def plot_score_vs_rmsd(df, title, outpath, score="total_score", rmsd="looprms", top_p=.95, reverse=True):
   """
-  Plot a typical Score VS RMSD using matplotlib, save it somewhere.
+  Plot a typical Score VS RMSD using matplotlib, save it somewhere. Return the axes.
   By default, plot the top 95%
   :param df: pandas.DataFrame
   :param outpath: str
@@ -208,16 +210,9 @@ def plot_score_vs_rmsd(df, title, outpath, score="total_score", rmsd="looprms", 
   :param rmsd: str
   :rtype: matplotlib.Axes
   """
-  df = detect_numeric(df)
-  df = df.sort(score, ascending=reverse)
-  slice_top = df[0:int(len(df)*top_p)]
-  ax = slice_top.plot(kind="scatter", y=score, x=rmsd, figsize=[11, 8], title = title)
-  pad_single_title(ax)
-  ax.set_axis_bgcolor('white')
-  fig = ax.get_figure()
-  fig.savefig(outpath, dpi=300)
 
-  return ax
+
+  return plot_x_vs_y_sea_with_regression(df, title, outpath, score, rmsd, top_p=top_p, reverse=reverse)
 
 
 def pymol_session_on_top_df(df, outdir, decoy_dir,
