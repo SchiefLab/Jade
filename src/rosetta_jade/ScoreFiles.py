@@ -215,7 +215,7 @@ def plot_score_vs_rmsd(df, title, outpath, score="total_score", rmsd="looprms", 
   return plot_x_vs_y_sea_with_regression(df, title, outpath, score, rmsd, top_p=top_p, reverse=reverse)
 
 
-def pymol_session_on_top_df(df, outdir, decoy_dir,
+def pymol_session_on_top_df(df, outdir, decoy_dir = None,
                          scoreterm="total_score",
                          top_n=10,
                          decoy_column="decoy",
@@ -259,18 +259,20 @@ def pymol_session_on_top_df(df, outdir, decoy_dir,
     print pymol_name
 
     ascending = True
-    if scoreterm == "hbonds_int" or scoreterm == "dSASA_int": reverse = False
+    if scoreterm == "hbonds_int" or scoreterm == "dSASA_int": ascending = False
     df2 = df.sort(scoreterm, ascending = ascending)
     df2 = df2[0:top_n]
     print df2['total_score'].tail()
     if decoy_dir:
         df2['decoy_path'] = decoy_dir+"/"+df2[decoy_column]
+    elif 'decoy_path' in df2.columns:
+        pass
     else:
         df2['decoy_path'] = df2[decoy_column]
 
     top_decoys = zip(list(df2[scoreterm]), list( df2[ 'decoy_path' ]))
     #print repr(top_decoys)
-    scripter = make_pymol_session_on_top_scored(top_decoys, decoy_dir, outdir, pymol_name, int(top_n), native_path,
+    scripter = make_pymol_session_on_top_scored(top_decoys, outdir, outdir, pymol_name, int(top_n), native_path,
                                      ab_structure, parellel=False, super = superimpose, run_pymol = run_pymol)
 
     return scripter

@@ -18,6 +18,11 @@ def plot_x_vs_y_sea_with_regression(df, title, outpath, x, y, top_p = .95, rever
     """
     Plot X vs Y using a Pandas Dataframe and Seaborn, with regression line., save the figure, and return the Axes.
 
+    If you are doing this multiple times in a Notebook:
+        Don't forget to call (matplotlib.pyplot)
+             plot.show()
+             plot.close()
+
     :param df: pandas.DataFrame
     :param title: str
     :param outpath: str
@@ -35,11 +40,18 @@ def plot_x_vs_y_sea_with_regression(df, title, outpath, x, y, top_p = .95, rever
     pad_single_title(ax)
     fig = ax.get_figure()
     fig.savefig(outpath, dpi=300)
+
     return ax
 
 def plot_general_pandas(df, title, outpath, plot_type, x, y = None, z = None, top_p = .95, reverse = True):
     """
     Plot anything in pandas.  Make it look descent.  Save the figure.
+
+    If you are doing this multiple times in a Notebook:
+        Don't forget to call (matplotlib.pyplot)
+             plot.show()
+             plot.close()
+
 
     :param df: pandas.DataFrame
     :param title: str

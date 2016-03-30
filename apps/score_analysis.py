@@ -309,7 +309,7 @@ def main(argv):
 
                 outpath = options.outdir+"/"+options.prefix+options.plot_type+"_"+xy+"_"+scorefile_name+".pdf"
                 plot_general_pandas(df, title, outpath, options.plot_type, x, y = y, z = z, top_p=options.plot_filter)
-                
+
             os.system("open "+outpath)
 
 ########################################################################

@@ -575,6 +575,7 @@ def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, o
         return
 
     scripter = PyMolScriptWriter(script_dir)
+    print "Outputting script to: " +script_dir
 
     if native_path:
         scripter.add_load_pdb(native_path, "native_"+os.path.basename(native_path))
