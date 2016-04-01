@@ -3,13 +3,14 @@ import json
 from collections import OrderedDict
 
 import pandas
+import ast
 import re
 
 from pymol_jade.PyMolScriptWriter import *
 from basic.pandas.PandasDataFrame import *
 from basic.plotting.MakeFigure import *
 from basic.path import *
-
+from utility.string_util import *
 
 ##Original Author: Luki Goldschmidt <lugo@uw.edu>
 ##Forked by Jared Adolf-Bryfogle.
@@ -33,6 +34,9 @@ class ScoreFile:
     else:
       lines = file(filename).readlines()
 
+    header = lines[0]
+    headerSP = lines[1].split()
+    print repr(headerSP)
     for line in lines:
       try:
         o = json.loads(line)
@@ -41,8 +45,27 @@ class ScoreFile:
         if not re.search("initial_benchmark_perturbation", o[self.decoy_field_name]):
           self.decoys.append(o)
         #self.decoys.append(o)
-      except ValueError:
-        print >> sys.stderr, "Failed to parse JSON object; skipping line:\n", line
+      except Exception:
+        ##Store as defaultdict instead of JSON.
+        #
+        d = defaultdict()
+        values = line.split()
+        if len(values) != len(headerSP):
+            if len(values) == 1 and values[0] =="SEQUENCE:": continue
+            print >> sys.stderr, "Failed to parse JSON object or as regular score file; skipping line:\n", line
+        else:
+            for i in range(0, len(values)):
+                k = headerSP[ i ]
+                if  k == "description":
+                    k = "decoy"
+
+                if values[i] == "SCORE:": continue
+
+                d[ k ] = deduce_str_type(values[i])
+
+            self.decoys.append(d)
+
+    print repr(self.decoys)
 
   def getDecoyCount(self):
     return len(self.decoys)
@@ -193,7 +216,9 @@ def get_scorefiles(indir = os.getcwd()):
     :rtype: list
     """
     matches = []
+    matches.extend(glob.glob(indir+"/*.sc"))
     for root, dirnames, filenames in os.walk(indir):
+
         for dirname in dirnames:
             matches.extend( glob.glob(root+"/"+dirname+"/*.sc") )
 

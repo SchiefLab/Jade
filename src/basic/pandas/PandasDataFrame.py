@@ -86,6 +86,23 @@ def get_matches(df, column, to_match):
 
     return df[df[column] == to_match]
 
+def get_match_by_array(df, column, match_array):
+    """
+    Get a new dataframe of all dataframes of the subset series, match_array
+
+    Note: This will result in a dataframe, but there may be strange issues when you go to plot the data in seaborn
+            No idea why.
+
+    :param df: pandas.DataFrame
+    :param column: str
+    :param match_array: pandas.Series
+    :rtype: pandas.DataFrame
+    """
+
+    new_df = df[df[column].isin(match_array)]
+    return new_df
+
+
 def get_row_matches(df, column1, to_match, column2):
     """
     Get the elements of the rows that match a particular column.  If one element, this can be converted easily enough

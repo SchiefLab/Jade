@@ -72,10 +72,11 @@ def plot_general_pandas(df, title, outpath, plot_type, x, y = None, z = None, to
 
     if y:
         ax = slice_top.plot(x, y,  kind=plot_type, figsize=[11, 8], title = title)
-    else:
-        #Y=X is not an error.  For one dimensional plots, pandas uses y instead of X.  Super stupid.
+    elif plot_type=="kde":
+        #Y=X is not an error.  For KDE plots, pandas uses y instead of X.  Super stupid.
         ax = slice_top.plot(y=x, kind=plot_type, figsize=[11, 8], title = title)
-
+    else:
+        ax = slice_top.plot(x=x, kind=plot_type, figsize=[11, 8], title = title)
     pad_single_title(ax)
     ax.set_axis_bgcolor('white')
     fig = ax.get_figure()
