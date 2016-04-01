@@ -95,8 +95,7 @@ def get_decoy_path(decoy, alternate_paths = None):
     """
 
     #This is a hack due to wierd issues with the score file vs pdb file and an extra '_'
-
-    decoy = decoy.replace('pre_model_1_', 'pre_model_1__')
+    #decoy = decoy.replace('pre_model_1_', 'pre_model_1__')
 
     if alternate_paths:
         for dir in alternate_paths:

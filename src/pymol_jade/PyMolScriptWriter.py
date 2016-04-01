@@ -577,14 +577,16 @@ def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, o
     scripter = PyMolScriptWriter(script_dir)
     print "Outputting script to: " +script_dir
 
-    if native_path:
+    if native_path and os.path.exists(native_path):
         scripter.add_load_pdb(native_path, "native_"+os.path.basename(native_path))
+    else:
+        print "No native path or it does not exist..."
 
     i = 1
     for score_pdb in pdbpaths_scores:
-        #print repr(score_pdb)
+        print repr(score_pdb)
         decoy = get_decoy_path(score_pdb[1])
-        #print repr(decoy)
+        print repr(decoy)
         scripter.add_load_pdb(decoy, "model_"+repr(i)+"_"+score_pdb[1].split("_")[-1]+"_%.2f"%(score_pdb[0]))
         i+=1
 

@@ -140,7 +140,6 @@ def main(argv):
 
     s = 0
     for filename in options.scorefiles:
-        scorefile_name = ".".join(os.path.basename(filename).split('.')[0:-1])
         s += 1
         if filename != "":
             printVerbose("    Scorefile: %s" % filename)
@@ -250,37 +249,40 @@ def main(argv):
                 if scoreterm == "top_n_by_ten" and options.top_n_by_10_scoretype not in scoreterms:
                     print "Top N by ten scoreterm not in scoreterms.  Please change the option"
 
-                pymol_name = options.prefix + "" + scorefile_name + "_" + scoreterm
+
+                pymol_name = options.prefix + "" + sf.name + scoreterm
                 print "Creating: " + pymol_name
 
                 outdir = options.outdir
 
                 if not options.pdb_dir:
-                    options.pdb_dir = os.path.dirname(filename)
-                    if not options.pdb_dir:
-                        options.pdb_dir = os.getcwd()
+                    pdb_dir = os.path.dirname(filename)
+                    if not pdb_dir:
+                        pdb_dir = os.getcwd()
+                print "PDB DIR: "+pdb_dir
 
                 if "top_n_by_10" in options.scoretypes and options.top_n_by_10_scoretype in scoreterms:
                     top_p = int(len(decoy_names) / 10)
                     top_decoys = [o[1] for o in
                                   sf.getOrdered("total_score", decoy_names=decoy_names, top_n=int(options.top_n))]
 
-                    top_by_n_decoys = [[o[0], options.pdb_dir + "/" + o[1]] for o in
+                    top_by_n_decoys = [[o[0], pdb_dir + "/" + o[1]] for o in
                                        sf.getOrdered(options.top_n_by_10_scoretype, decoy_names=decoy_names) if
                                        o[1] in top_decoys][
                                       :options.top_n_by_10]
 
                     if len(top_by_n_decoys) == 0:
                         print "No pdbs found. Skipping"
-                    make_pymol_session_on_top_scored(top_by_n_decoys, options.pdb_dir, outdir, pymol_name,
+                    make_pymol_session_on_top_scored(top_by_n_decoys, pdb_dir, outdir, pymol_name,
                                                      int(options.top_n), options.native,
                                                      antibody=options.ab_structure, parellel=False, super=options.super)
 
                 else:
                     ordered = sf.getOrdered(scoreterm, top_n=int(options.top_n), decoy_names=decoy_names)
-                    print repr(ordered)
-                    top_decoys = [[o[0], options.pdb_dir + "/" + o[1]] for o in ordered]
-                    make_pymol_session_on_top_scored(top_decoys, options.pdb_dir, outdir, pymol_name,
+
+                    top_decoys = [[o[0], pdb_dir + "/" + o[1]] for o in ordered]
+                    print repr(top_decoys)
+                    make_pymol_session_on_top_scored(top_decoys, pdb_dir, outdir, pymol_name,
                                                      int(options.top_n), options.native,
                                                      antibody=options.ab_structure, parellel=False, super=options.super)
 
@@ -290,7 +292,7 @@ def main(argv):
                 x = options.plot[0]
                 y = options.plot[1]
                 title = options.plot[2]
-                outpath = options.outdir+"/"+options.prefix+options.plot_type+"_"+x+"_"+y+"_"+scorefile_name+".pdf"
+                outpath = options.outdir+"/"+options.prefix+options.plot_type+"_"+x+"_"+y+"_"+sf.name+".pdf"
                 plot_x_vs_y_sea_with_regression(df, title, outpath, x, y, top_p=options.plot_filter)
             else:
                 y = None
@@ -307,7 +309,7 @@ def main(argv):
                 else:
                     sys.exit("Plot option must either be a length of 2 or 3.  See help for more information!")
 
-                outpath = options.outdir+"/"+options.prefix+options.plot_type+"_"+xy+"_"+scorefile_name+".pdf"
+                outpath = options.outdir+"/"+options.prefix+options.plot_type+"_"+xy+"_"+sf.name+".pdf"
                 plot_general_pandas(df, title, outpath, options.plot_type, x, y = y, z = z, top_p=options.plot_filter)
 
             os.system("open "+outpath)
