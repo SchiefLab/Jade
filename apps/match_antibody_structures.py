@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import sqlite3
 from collections import defaultdict
 from argparse import ArgumentParser
@@ -27,7 +28,7 @@ if __name__ == "__main__":
                         help = "Your where clause for the db in quotes.  Not including WHERE. Use ' ' for string matches",
                         required = True)
 
-    optional = parser.add_argument_group("Optional Arguments")
+    optional = parser.add_argument_group("Other Arguments")
 
     optional.add_argument("--outdir", "-o",
                         help = "Output directory.",
@@ -58,23 +59,32 @@ if __name__ == "__main__":
             pdb = row[0].lower()+row[1]+"_"+options.cdr.upper()
             matching_files[pdb] += 1
     else:
-        for row in ab_db.execute("select PDB, original_chain FROM cdr_data WHERE "+options.where):
+        query = "select PDB, original_chain FROM cdr_data WHERE "+options.where
+        print query
+        for row in ab_db.execute(query):
             pdb = row[0].lower()+row[1]
             matching_files[pdb ] += 1
 
 
-    all_pdb_files = glob.glob(options.ab_dir)
-
+    print "Globbing: "+options.ab_dir+"/*.pdb*"
+    all_pdb_files = glob.glob(options.ab_dir+"/*.pdb*")
     pdb_paths = []
+
+    PDBLIST = open(options.outdir+"/"+options.prefix+"PDBLIST.txt")
+
     print "Matching PDB Files:"
     for found_pdb in matching_files:
+        print "Matching "+found_pdb
         for globed_pdb in all_pdb_files:
             if re.search(found_pdb, globed_pdb):
                 pdb_paths.append(globed_pdb)
-                print pdb_paths
+                print globed_pdb
+                PDBLIST.write(globed_pdb)
                 break
 
-
+    PDBLIST.close()
+    if len(pdb_paths) == 0:
+        sys.exit("No matching pdb paths found!")
 
     ### Make the PyMol session and save the script ###
     scripter = PyMolScriptWriter(options.outdir)
@@ -83,5 +93,5 @@ if __name__ == "__main__":
     scripter.add_show("cartoon")
     scripter.add_center()
     scripter.add_antibody_script()
-    scripter.add_save_session(options.outdir+"/"+options.prefix+"_ab_session.pse")
+    scripter.add_save_session(options.outdir+"/"+options.prefix+"ab_session.pse")
     scripter.run_script()
