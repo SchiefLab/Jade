@@ -77,7 +77,7 @@ class PDBConsensusInfo():
                 #print "PDBInfo has no residues to get sequence!"
                 continue;
 
-            seq = pdb_res_info.get_sequence_bt_residues(res1, res2, chain)
+            seq = pdb_res_info.get_sequence_bt_residue_records(res1, res2, chain)
             if not seq: continue
             sequences.append(seq)
 
@@ -100,7 +100,7 @@ class PDBConsensusInfo():
                 #print repr(region)
                 #print repr(region.res1)+" "+repr(region.res2)
                 if not isinstance(region, ResidueRegion): sys.exit()
-                seq = seq + pdb_res_info.get_sequence_bt_residues(region.res1, region.res2, chain)
+                seq = seq + pdb_res_info.get_sequence_bt_residue_records(region.res1, region.res2, chain)
 
             if not seq: continue
             sequences.append(seq)
@@ -202,7 +202,7 @@ class PDBConsensusInfo():
                 self.pdb_info_list.remove(pdb_info)
                 continue
 
-            for residue in pdb_info.get_all_residues():
+            for residue in pdb_info.get_all_residue_records():
                 if not isinstance(residue, ResidueRecord): sys.exit()
                 position = self.get_position_from_residue(residue)
 
@@ -219,7 +219,7 @@ class PDBConsensusInfo():
         #If we have removed sequences with unknown residues or missing residues:
         for pdb_info in self.pdb_info_list:
             if not isinstance(pdb_info, PDBInfo): sys.exit()
-            for residue in pdb_info.get_all_residues():
+            for residue in pdb_info.get_all_residue_records():
                 if not isinstance(residue, ResidueRecord): sys.exit()
                 position = self.get_position_from_residue(residue)
 
@@ -247,7 +247,7 @@ class PDBConsensusInfo():
         self.freq = defaultdict()
         for pdb_info in self.pdb_info_list:
             if not isinstance(pdb_info, PDBInfo): sys.exit()
-            for residue in pdb_info.get_all_residues():
+            for residue in pdb_info.get_all_residue_records():
                 if not isinstance(residue, ResidueRecord): sys.exit()
 
                 resnum_triple = self.get_position_from_residue(residue)

@@ -20,7 +20,7 @@ if __name__ == "__main__":
                         help = " Database to use from PyIgClassify.",
                         required = True)
 
-    required.add_argument("--ab_dir", "-a",
+    required.add_argument("--ab_dir", "-b",
                         help = "Directory with renumbered antibody PDBs (Full or CDRs-only)",
                         required = True)
 
@@ -39,6 +39,7 @@ if __name__ == "__main__":
 
     optional.add_argument("--cdr", "-c",
                         help = "Optionally load the CDR PDBs of the given type in the ab_dir. If this option is set, the ab_dir should be of CDRs only from PyIgClassify.")
+
 
 
 
@@ -70,16 +71,15 @@ if __name__ == "__main__":
     all_pdb_files = glob.glob(options.ab_dir+"/*.pdb*")
     pdb_paths = []
 
-    PDBLIST = open(options.outdir+"/"+options.prefix+"PDBLIST.txt")
+    PDBLIST = open(options.outdir+"/"+options.prefix+"PDBLIST.txt", 'w')
 
     print "Matching PDB Files:"
     for found_pdb in matching_files:
-        print "Matching "+found_pdb
         for globed_pdb in all_pdb_files:
             if re.search(found_pdb, globed_pdb):
                 pdb_paths.append(globed_pdb)
                 print globed_pdb
-                PDBLIST.write(globed_pdb)
+                PDBLIST.write(globed_pdb+"\n")
                 break
 
     PDBLIST.close()

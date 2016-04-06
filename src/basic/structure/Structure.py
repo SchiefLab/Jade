@@ -159,6 +159,8 @@ class PDBInfo(object):
     def total_residue_record(self):
         return len(self.pose_to_record_map)
 
+    def total_residue(self):
+        return self.total_residue_record()
 
 class ResidueRecord(object):
     """
