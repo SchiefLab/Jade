@@ -350,8 +350,19 @@ class PyMolScriptWriter:
 
         self.script_lines.append("color "+color+", "+sele)
 
+    def add_antibody_script(self):
+        """
+        Add running the color cdrs pymol script.  Antibody must be in AHO numbering
+        """
+        color_cdrs_path = get_bin_path()+"/color_cdrs.pml"
+        self.add_line("@"+color_cdrs_path)
 
-
+    def run_script(self, script_outname = "pml_script.pml", delete_script = True, parellel_process = False):
+        """
+        Save and Run the Pymol script
+        :param script_outname: str
+        """
+        run_pymol_script(self.save_script(script_outname), delete_script = delete_script, parellel_process=parellel_process)
 
 ########################################################################################################################
 ## Helper Functions
