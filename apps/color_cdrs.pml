@@ -31,6 +31,13 @@ select L3_frame, br. (L3 around 5) and not antigen
 color salmon, L3 and symbol c
 show cartoon, L3
 
+#L4 Selection coloring
+select L4, chain L and resid 82-89
+select L4_epitope, br. (L4 around 5) and not antibody
+select L4_frame, br. (L4 around 5 ) and not antigen
+color yellow, L4 and symbol c
+show cartoon, L4
+
 #H1 Selection coloring
 select H1, chain H and resid 24-42
 select H1_epitope, br. (H1 around 5) and not antibody
@@ -52,6 +59,15 @@ select H3_frame, br. (H3 around 5) and not antigen
 color magenta, H3 and symbol c
 show cartoon, H3
 
+#H4 Selection coloring
+select H4, chain H and resid 82-89
+select H4_epitope, br. (H4 around 5) and not antibody
+select H4_frame, br. (H4 around 5 ) and not antigen
+color cyan, H4 and symbol c
+show cartoon, H4
+
+#DE Selection coloring
+
 #Groups
 #group CDRs, L1 L2 L3 H1 H2 H3
 #group epitopes, L1_epitope L2_epitope L3_epitope H1_epitope H2_epitope H3_epitope
@@ -63,9 +79,11 @@ select full_paratope, br. antigen around 5
 group L1_group, L1 L1_epitope L1_frame
 group L2_group, L2 L2_epitope L2_frame
 group L3_group, L3 L3_epitope L3_frame
+group L4_group, L4 L4_epitope L4_frame
 group H1_group, H1 H1_epitope H1_frame
 group H2_group, H2 H2_epitope H2_frame
 group H3_group, H3 H3_epitope H3_frame
+group H4_group, H4 H4_epitope H4_frame
 
 #group full, full_epitope full_paratope
 
