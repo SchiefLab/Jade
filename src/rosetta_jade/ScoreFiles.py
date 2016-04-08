@@ -36,7 +36,7 @@ class ScoreFile:
 
     header = lines[0]
     headerSP = lines[1].split()
-    print repr(headerSP)
+    #print repr(headerSP)
     for line in lines:
       try:
         o = json.loads(line)
@@ -65,7 +65,7 @@ class ScoreFile:
 
             self.decoys.append(d)
 
-    print repr(self.decoys)
+    #print repr(self.decoys)
 
   def getDecoyCount(self):
     return len(self.decoys)
@@ -287,7 +287,7 @@ def pymol_session_on_top_df(df, outdir, decoy_dir = None,
     if scoreterm == "hbonds_int" or scoreterm == "dSASA_int": ascending = False
     df2 = df.sort(scoreterm, ascending = ascending)
     df2 = df2[0:top_n]
-    print df2['total_score'].tail()
+    #print df2['total_score'].tail()
     if decoy_dir:
         df2['decoy_path'] = decoy_dir+"/"+df2[decoy_column]
     elif 'decoy_path' in df2.columns:

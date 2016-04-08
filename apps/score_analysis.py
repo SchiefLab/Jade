@@ -281,7 +281,7 @@ def main(argv):
                     ordered = sf.getOrdered(scoreterm, top_n=int(options.top_n), decoy_names=decoy_names)
 
                     top_decoys = [[o[0], pdb_dir + "/" + o[1]] for o in ordered]
-                    print repr(top_decoys)
+                    #print repr(top_decoys)
                     make_pymol_session_on_top_scored(top_decoys, pdb_dir, outdir, pymol_name,
                                                      int(options.top_n), options.native,
                                                      antibody=options.ab_structure, parellel=False, super=options.super)
