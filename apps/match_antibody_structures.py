@@ -40,6 +40,8 @@ if __name__ == "__main__":
     optional.add_argument("--cdr", "-c",
                         help = "Optionally load the CDR PDBs of the given type in the ab_dir. If this option is set, the ab_dir should be of CDRs only from PyIgClassify.")
 
+    optional.add_argument("--native", "-n",
+                          help = "Align everything to this PDB, the native or something you are interested in. ")
 
 
 
@@ -88,8 +90,17 @@ if __name__ == "__main__":
 
     ### Make the PyMol session and save the script ###
     scripter = PyMolScriptWriter(options.outdir)
+
+    if options.native:
+        scripter.add_load_pdb(options.native)
+
     scripter.add_load_pdbs(pdb_paths)
-    scripter.add_align_all_to(pdb_paths[0])
+
+    if options.native:
+        scripter.add_align_all_to(options.native, limit_to_bb=False)
+    else:
+        scripter.add_align_all_to(pdb_paths[0], limit_to_bb=False)
+
     scripter.add_show("cartoon")
     scripter.add_center()
     scripter.add_antibody_script()

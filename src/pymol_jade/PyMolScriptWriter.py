@@ -278,7 +278,7 @@ class PyMolScriptWriter:
         """
         for name in self.final_names:
             if name !=model:
-                self.add_align_to(name, model, sele1, sele2)
+                self.add_align_to(name, model, sele1, sele2, limit_to_bb)
 
 
     def add_align_to(self, model1, model2, sele1="", sele2 = "", limit_to_bb = True, pair_fit = False):
@@ -286,6 +286,9 @@ class PyMolScriptWriter:
         Align one model to another, optionally specifying a selection.
         Recommended to use superimpose instead
         """
+
+        m1 = get_decoy_name(model1)
+        m2 = get_decoy_name(model2)
 
         align = "align "
         if pair_fit:
@@ -296,9 +299,9 @@ class PyMolScriptWriter:
             bb = " & name n+ca+c+o "
 
         if not sele1:
-            self.script_lines.append(align+model1+bb+","+model2+bb)
+            self.script_lines.append(align + m1 + bb+","+m2 + bb)
         else:
-            self.script_lines.append(align+model1+" & "+sele1+bb+", "+model2+" &"+sele2+bb)
+            self.script_lines.append(align + m1+" & "+sele1+bb+", "+m2 +" &"+sele2+  bb)
 
 
       ####################################################################################################
