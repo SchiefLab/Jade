@@ -1,3 +1,7 @@
 { "program": "rosetta_scripts",
-  "xml_script": "model_glycans_simple.xml"
+  "xml_script": "model_glycans_simple.xml",
+  "flags": [
+    "-include_sugars",
+    "-write_pdb_link_records"
+  ]
 }

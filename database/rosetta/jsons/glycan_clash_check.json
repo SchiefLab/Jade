@@ -1,6 +1,6 @@
 { "program": "glycan_clash_check",
   "flags": [
     "-include_sugars",
-    "-read_pdb_link_records"
+    "-write_pdb_link_records"
   ]
 }
