@@ -9,6 +9,7 @@
     "-out:pdb_gz",
     "-other_pose_to_scorefile",
     "-scorefile_format json",
-    "-flip_HNQ"
+    "-flip_HNQ",
+    "-delete_old_poses"
   ]
 }

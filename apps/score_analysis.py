@@ -30,8 +30,7 @@ def main(argv):
     parser.add_argument("scorefiles", nargs='*', help="A list of scorefiles")
 
     parser.add_argument("-s", "--scoretypes",
-                        default=["dSASA_int", "delta_unsatHbonds", "hbonds_int", "total_score", "dG_separated",
-                                 "top_n_by_10"],
+                        default=["dSASA_int", "delta_unsatHbonds", "hbonds_int", "total_score", "dG_separated", "top_n_by_10"],
                         help="List of score terms to extract",
                         nargs='*')
 
@@ -240,14 +239,19 @@ def main(argv):
                 print "%.2f\t" % o[0] + o[1] + "%.2f" % sf.getScore(o[1], "total_score")
 
         if options.pymol_session:
+            print "Making PyMol Session "
             for scoreterm in options.scoretypes:
-
-                if not scoreterm in scoreterms:
+                print "Scoreterm "+scoreterm
+                if scoreterm == "top_n_by_10" and not options.top_n_by_10_scoretype in scoreterms:
+                    print "Top N by ten scoreterm not in scoreterms.  Please change the option"
+                    continue
+                elif scoreterm == "top_n_by_10" and options.top_n_by_10_scoretype in scoreterms:
+                    pass
+                elif scoreterm in scoreterms:
+                    pass
+                else:
                     print scoreterm + " specified for pymol session not present. Skipping"
                     continue
-
-                if scoreterm == "top_n_by_ten" and options.top_n_by_10_scoretype not in scoreterms:
-                    print "Top N by ten scoreterm not in scoreterms.  Please change the option"
 
 
                 pymol_name = options.prefix + "" + sf.name + scoreterm
@@ -270,6 +274,7 @@ def main(argv):
                                        sf.getOrdered(options.top_n_by_10_scoretype, decoy_names=decoy_names) if
                                        o[1] in top_decoys][
                                       :options.top_n_by_10]
+
 
                     if len(top_by_n_decoys) == 0:
                         print "No pdbs found. Skipping"
