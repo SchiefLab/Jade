@@ -265,7 +265,7 @@ def main(argv):
                         pdb_dir = os.getcwd()
                 print "PDB DIR: "+pdb_dir
 
-                if "top_n_by_10" in options.scoretypes and options.top_n_by_10_scoretype in scoreterms:
+                if scoreterm == "top_n_by_10" and "top_n_by_10" in options.scoretypes and options.top_n_by_10_scoretype in scoreterms:
                     top_p = int(len(decoy_names) / 10)
                     top_decoys = [o[1] for o in
                                   sf.getOrdered("total_score", decoy_names=decoy_names, top_n=int(options.top_n))]
