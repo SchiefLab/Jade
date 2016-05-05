@@ -14,6 +14,13 @@ Nothing fancy yet.
 <code>export PATH=$PATH:/path/to/Jade/apps</code>
 
 
+3) __RABD Applications__:
+ Add the path to Jade/apps/RAbD to your PATH environment variable.
+ 
+ ```export PATH=$PATH:/path/to/Jade/apps/RAbD```
+ 
+ 
+ 
 # Code Organization
 
 <code>Jade/apps</code>

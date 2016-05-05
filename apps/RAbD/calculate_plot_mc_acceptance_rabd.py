@@ -4,11 +4,11 @@ import os
 import sys
 from collections import defaultdict
 from RAbD_BM import tools as bm_tools
-from tools import path as path_tools
+from basic import path as path_tools
 import json
 import re
 import numpy
-from plotting.MakeFigure import MakeFigure
+from basic.plotting.MakeFigure import MakeFigure
 
 import matplotlib.pyplot as plot
 import matplotlib as mpl

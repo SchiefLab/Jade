@@ -36,8 +36,9 @@ class BenchmarkRAbD(RunRosetta):
         RunRosetta.__init__(self, "antibody_designer")
         self._set_outer_cycle_rounds()
         self._set_exp()
-        self.current_mintype = None
-        self.current_l_chain = None
+
+        self._current_settings = defaultdict()
+        self._current_settings["pdb"] = None
 
     def _add_args(self, parser = None):
         RunRosetta._add_args(self, parser)
@@ -47,26 +48,20 @@ class BenchmarkRAbD(RunRosetta):
 
         rabd_options = self.parser.add_argument_group("RAbD Benchmark Options", "Options specific for RAbD Benchmarking")
 
-        rabd_options.add_argument("--outer_cycle_rounds")
+        rabd_options.add_argument("--outer_cycle_rounds",
+                                default = [],
+                                help = "A list of outer cycle rounds to run.",
+                                nargs = "*")
 
         rabd_options.add_argument("--json_rabd",
                                help = "JSON file for setting up specific benchmark")
 
-        rabd_options.add_argument("--mintypes",
-                               default = "pack,min,relax")
 
-        rabd_options.add_argument("--paper_ab_db",
-                               default = True)
+        rabd_options.add_argument("-separate_job_per_pdb",
+                                default = False,
+                                action = "store_true",
+                                help = "Separate each PDB in the data")
 
-        rabd_options.add_argument("--with_antigen",
-                               default = True)
-
-        rabd_options.add_argument("--dataset",
-                               default = "new_20")
-
-        rabd_options.add_argument("--dock",
-                               default = False,
-                               action = "store_true")
 
     def _setup_base_options(self):
         RunRosetta._setup_base_options(self)
@@ -74,13 +69,6 @@ class BenchmarkRAbD(RunRosetta):
         if not self.options.json_rabd:
             sys.exit("No RAbD Json Given.  This is currently required to run benchmarks.")
         self._set_extra_options(AntibodyDesignBMSetup(self.options.json_rabd))
-
-    def _set_outer_cycle_rounds(self):
-
-        if self.options.outer_cycle_rounds:
-            pass
-        elif self.extra_options.get_outer_cycle_rounds():
-            self.options.outer_cycle_rounds = str(self.extra_options.get_outer_cycle_rounds())
 
     def _set_exp(self):
         if hasattr(self.options, "exp_name") and self.options.exp_name:
@@ -90,11 +78,20 @@ class BenchmarkRAbD(RunRosetta):
         else:
             self.options.exp_name = "unknown_exp"
 
-    ##Full Overrides###
+
+
+    ###################################################################################################################
+    ######################################                                #############################################
+    #############################                 Full Overrides                    ###################################
+    ######################################                                #############################################
+    ###################################################################################################################
+
+
+
 
     def get_make_log_dir(self):
 
-        name = self.get_out_prefix()+"_"+self.current_l_chain
+        name = self.get_out_prefix()+"_"+self._current_settings["l_chain"]
         print name
         log_path = self.base_options.get_make_log_dir()+"/"+name
         if not os.path.exists(log_path):
@@ -114,7 +111,7 @@ class BenchmarkRAbD(RunRosetta):
     def get_output_string(self):
         s = self._get_program()
 
-        s = s + " -out:prefix "+self.get_out_prefix()+"."+" -out:suffix _"+self.current_l_chain+" -antibody:light_chain "+self.current_l_chain
+        s = s + " -out:prefix "+self.get_out_prefix()+"."+" -antibody:light_chain "+self._current_settings["l_chain"]
 
 
         #Nstruct
@@ -125,17 +122,23 @@ class BenchmarkRAbD(RunRosetta):
         s = s + self.base_options.get_base_rosetta_flag_string()
 
         #Decoys
-        s = s + " -l "+self.options.dataset+"."+self.current_l_chain+".PDBLIST.txt"
+        s = s +" -in:path "+self.options.dataset
+
+        if not self.options.separate_job_per_pdb:
+            s = s + " -l "+ self.get_pdb_list_fname(self._current_settings["l_chain"])
+        else:
+            s = s +" -s "+self.options.dataset+"/"+self._current_settings["pdb"]
+
 
         #Log Dir:
-        if not self.options.one_file_mpi:
+        if not self.options.split_mpi_output:
             s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir()+"/rosetta_mpi_run"
 
         #Graft Rounds
-        s = s + " -outer_cycle_rounds " + str(self.options.outer_cycle_rounds)
+        s = s + " -outer_cycle_rounds " + str(self._current_settings["outer_cycle_rounds"])
 
         #Instructions
-        s = s + " -cdr_instructions " + self.current_mintype+".instructions.txt"
+        s = s + " -cdr_instructions " + self.create_instructions();
 
         #For these benchmarks, there is only a single root directory.
         s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options.get_root())
@@ -148,12 +151,12 @@ class BenchmarkRAbD(RunRosetta):
             return self.options.out_prefix+"."
 
         s = ""
-        if self.options.with_antigen:
-            s = "with_antigen"
-        else:
+        if self._current_settings["remove_antigen"]:
             s = "without_antigen"
+        else:
+            s = "with_antigen"
 
-        if self.options.dock:
+        if self._current_settings["dock"]:
             s = s +".dock"
         else:
             s = s +".no_dock"
@@ -162,24 +165,30 @@ class BenchmarkRAbD(RunRosetta):
 
 
         if self.options.paper_ab_db:
-            s = s+"-paper_db"
+            s = s+".paper_db"
         else:
-            s = s+"-newest_db"
+            s = s+".newest_db"
 
-        s = s +"."+self.current_mintype+"."+self.options.outer_cycle_rounds
+        s = s +"."+self._current_settings["mintype"]+"."+self._current_settings["outer_cycle_rounds"]
 
         return s
 
     ###Override Run to setup for each mintype and l chain given###
     def run_bm(self):
-        mintypesSP = self.options.mintypes.split(",")
+        mintypesSP = self.options.mintypes
         l_chains =  self.extra_options.get_l_chains()
 
         for mintype in mintypesSP:
-            self.current_mintype = mintype
+            self._current_settings["mintype"] = mintype
             for l_chain in l_chains:
-                self.current_l_chain = l_chain
-                self.run()
+                self._current_settings["l_chain"] = l_chain
+
+                if self.options.separate_job_per_pdb:
+                    for pdb_file_name in self.get_pdb_list_ids(l_chain):
+                        self._current_settings["pdb"] = pdb_file_name
+                        self.run()
+                else:
+                    self.run()
 
 
 
@@ -206,6 +215,25 @@ class BenchmarkRAbD(RunRosetta):
                     print new_cmd
                     #os.system(new_cmd)
                 """
+
+    ## Help Functions ##
+
+    def get_pdb_list_fname(self, l_chain):
+        return self.options.dataset+"."+l_chain+".PDBLIST.txt"
+
+    def get_pdb_list_ids(self, l_chain):
+
+        pdb_fnames = []
+        INFILE = open(self.get_pdb_list_fname( l_chain ), 'r')
+        for line in INFILE:
+            line = line.strip()
+            if not line or line[0] == "#": continue
+            pdb_fnames.append(line)
+        INFILE.close()
+
+        return pdb_fnames
+
+
 
 if __name__ == "__main__":
     bm = BenchmarkRAbD()

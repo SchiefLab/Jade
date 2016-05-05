@@ -1,0 +1,39 @@
+{ "exp": "nstruct_test_no_H3_GD",
+  //"flags":["-global_dihedral_cst_scoring true","-dihedral_cst_weight 0.3"],
+  "nstruct":1000,
+  "dataset":["bm2_"],
+  "rel":["pareto"],
+
+  "outer_cycle_rounds":[25, 50, 75, 100],
+  "inner_cycle_rounds":[1],
+  "l_chain":["lambda", "kappa"],
+  "mintype":["relax"],
+  "dock":[true],
+  "paper_ab_db":[true],
+
+  "base_cdr_instruction_lines":[
+    "DE FIX",
+    "ALL MinProtocol MinType {mintype}",
+    "L1 MinProtocol Min_Neighbors L2 L3",
+    "L2 MinProtocol Min_Neighbors L1",
+    "L3 MinProtocol Min_Neighbors L1 H3",
+
+    "H1 MinProtocol Min_Neighbors H2 H3",
+    "H2 MinProtocol Min_Neighbors H1",
+    "H3 MinProtocol Min_Neighbors L1 L3"
+
+  ],
+
+  "separate_cdrs_per_job":[false],
+  "if_separate_allow_all_given_to_seq_design":false,
+
+  "graft_design_cdrs":["L1","L2","L3","H1","H2"],
+  "seq_design_cdrs":["L1","L2","L3","H1","H2","H3"],
+
+  "in_paths": [{
+    "paths": [
+      "bm2_instructions",
+      "bm2_flags"
+    ]
+  }]
+}

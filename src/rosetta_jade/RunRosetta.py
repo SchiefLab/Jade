@@ -7,13 +7,13 @@
 
 import os
 import sys
-import re
+from collections import defaultdict
 import argparse
 from basic.general import get_platform
 from basic.path import *
 
 from rosetta_jade.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
-import copy
+
 
 def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts = ""):
     script_path = write_queue_file(cmd, queue_dir, name)
@@ -31,11 +31,15 @@ def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts
     qsub_cmd = qsub_cmd +" "+script_path
 
     if print_only:
-        print(cmd+"\n\n")
+        print print_full_cmd(cmd)
+        print("\n\n")
         print(qsub_cmd)
     else:
         #qsub_cmd = "which sbatch"
-        print(cmd+"\n\n")
+        print_full_cmd(cmd)
+
+        print "\n\n"
+
         print(qsub_cmd)
         os.system(qsub_cmd)
 
@@ -62,16 +66,57 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only
 
     if print_only:
         print "Only Printing!"
-        print cmd + "\n\n"
+
+        print_full_cmd(cmd)
+
+        print "\n\n"
         print(slurm_cmd)
     else:
         print "Starting Slurm!!"
         
         #slurm_cmd = "which sbatch"
+
         print cmd + "\n\n"
         print(slurm_cmd)
         os.system("which sbatch")
         os.system(slurm_cmd)
+
+def print_full_cmd(cmd):
+    cmdSP = cmd.split(" ")
+    print cmdSP[0]+" "+cmdSP[1]
+    print "\n"
+    print get_option_strings(cmd)
+
+def get_option_strings(cmd):
+    """
+    Get the options as a string to be printed or saved to a file.
+    :param cmd:
+    :rtype: str
+    """
+
+    grouped = defaultdict(list)
+    cmdSP = cmd.split(" ")
+    if len(cmdSP)< 3: return ""
+    options = []
+    current_option = cmdSP[2]
+
+    for c in cmdSP[3:]:
+        if not c: continue
+        if c[0] =='-':
+            current_option = c
+            options.append(current_option)
+
+            continue
+        else:
+            grouped[current_option].append(c)
+
+    final_string = []
+    for option in options:
+        opt = option+" "+" ".join(grouped[option])
+        final_string.append(opt)
+
+    return "\n".join(final_string)
+
 
 def write_queue_file(cmd, queue_dir, name):
 
@@ -219,11 +264,8 @@ class RunRosetta(object):
                                         "(Benchmarking: Override any set in json_base.)")
 
         protocol_setup.add_argument("--extra_options", "-e",
-                                 nargs = '*',
                                  help = "Extra Rosetta options.  "
-                                        "Specify like: cdr_instructions=my_file other_option=setting.  "
-                                        "Note NO - charactor. "
-                                        "Booleans do not need an = sign.")
+                                        "Specify in quotes!  ")
 
         protocol_setup.add_argument("--script_vars",
                                 help = "Any script vars for XML scripts."
@@ -306,6 +348,8 @@ class RunRosetta(object):
         if not self.options.extra_options:
             return ""
         else:
+
+            '''
             opts = []
 
             skip_next = False
@@ -337,6 +381,9 @@ class RunRosetta(object):
                     continue
 
             return " ".join(opts)
+            '''
+
+            return self.options.extra_options
 
     def _resolve_options(self):
         """
@@ -453,6 +500,12 @@ class RunRosetta(object):
         if get_platform() == 'macos':
             self.options.compiler = 'clang'
 
+        if not self.program and not self.options.json_run:
+            sys.exit("Please set a JSON run file.")
+
+        elif not self.program:
+            sys.exit("Please specify a program in the JSON run file")
+
         return self.program +".mpi."+get_platform() + self.options.compiler+"release"
 
     def get_make_queue_dir(self, *args, **kwargs):
@@ -523,7 +576,7 @@ class RunRosetta(object):
 
         #Log Dir:
         if self.options.split_mpi_output:
-            s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir(*args, **kwargs)+"/rosetta_mpi_run"
+            s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir(*args, **kwargs)
 
         #For these benchmarks, there are only a single root directory.
         if self.options.json_run:

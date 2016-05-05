@@ -1,0 +1,11 @@
+{ "exp": "short_test",
+  "flags":["-global_dihedral_cst_scoring true","-dihedral_cst_weight 0.3"],
+  "nstruct":1,
+  "outer_cycle_rounds":1,
+  "l_chains":["lambda"],
+  "in_paths": [{
+    "paths": [
+      "instructions/graft_only"
+    ]
+  }]
+}

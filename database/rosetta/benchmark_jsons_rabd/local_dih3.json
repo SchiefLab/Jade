@@ -1,0 +1,15 @@
+{ "exp": "local_dih3",
+  "flags":["-global_dihedral_cst_scoring true","-dihedral_cst_weight 0.3"],
+  "nstruct":10,
+  "outer_cycle_rounds":150,
+  "l_chains":["lambda", "kappa"],
+  "remove_antigen":[false],
+  "mintypes":["relax"],
+  "cdrs":["ALL_both"],
+
+  "in_paths": [{
+    "paths": [
+      "instructions/graft_only"
+    ]
+  }]
+}
