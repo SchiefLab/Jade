@@ -31,12 +31,12 @@ def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts
     qsub_cmd = qsub_cmd +" "+script_path
 
     if print_only:
-        print print_full_cmd(cmd)
+        print print_full_cmd(cmd, script_path)
         print("\n\n")
         print(qsub_cmd)
     else:
         #qsub_cmd = "which sbatch"
-        print_full_cmd(cmd)
+        print_full_cmd(cmd, script_path)
 
         print "\n\n"
 
@@ -44,7 +44,7 @@ def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts
         os.system(qsub_cmd)
 
 
-def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only = False, extra_opts = ""):
+def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = None, print_only = False, extra_opts = ""):
     script_path = write_queue_file(cmd, queue_dir, name)
 
 
@@ -67,7 +67,7 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only
     if print_only:
         print "Only Printing!"
 
-        print_full_cmd(cmd)
+        print_full_cmd(cmd, script_path)
 
         print "\n\n"
         print(slurm_cmd)
@@ -76,16 +76,27 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = False, print_only
         
         #slurm_cmd = "which sbatch"
 
-        print cmd + "\n\n"
-        print(slurm_cmd)
+        print_full_cmd(cmd, script_path)
         os.system("which sbatch")
         os.system(slurm_cmd)
 
-def print_full_cmd(cmd):
+def print_full_cmd(cmd, script_path = None):
     cmdSP = cmd.split(" ")
     print cmdSP[0]+" "+cmdSP[1]
     print "\n"
-    print get_option_strings(cmd)
+
+    flags = get_option_strings(cmd)
+
+    print flags
+
+    if script_path:
+        outfilename = script_path.replace(".sh", ".flags")
+
+        F = open(outfilename, 'w')
+        F.write(flags)
+        F.close()
+        print "\nFlags file written to "+outfilename
+
 
 def get_option_strings(cmd):
     """
@@ -688,8 +699,9 @@ class RunRosetta(object):
         :rtype: bool
         """
         if (self.options.job_manager == "local" or self.options.job_manager == "local_test"):
-            return True
             print "Local Run!"
+            return True
+
         else:
             return False
 
@@ -718,7 +730,7 @@ class RunRosetta(object):
             self.options.split_mpi_output = False
 
             cmd = self.get_full_cmd()
-            print cmd +"\n"
+            print_full_cmd(cmd)
             os.system(cmd)
 
         elif self.options.job_manager == "qsub":
