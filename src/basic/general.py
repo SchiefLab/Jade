@@ -1,5 +1,6 @@
 import sys
 import re
+import itertools
 
 def get_rosetta_program(program, mpi = True, compiler = 'gcc'):
     """
@@ -29,3 +30,16 @@ def get_platform():
     else:
         print "Platform Not Found"
         return "error"
+
+def get_all_combos(list_of_lists):
+    """
+    Get all the position-specific combos of a list of lists.
+
+    This is taken directly from Stack Overflow:
+       http://stackoverflow.com/questions/798854/all-combinations-of-a-list-of-lists
+
+    :param list_of_lists: A list of lists we would like combos of.
+    :rtype: list[list]
+    """
+
+    return list(itertools.product(list_of_lists))

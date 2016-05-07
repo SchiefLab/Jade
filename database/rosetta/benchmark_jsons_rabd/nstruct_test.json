@@ -1,19 +1,67 @@
 { "exp": "nstruct_test_no_H3_GD",
   //"flags":["-global_dihedral_cst_scoring true","-dihedral_cst_weight 0.3"],
   "nstruct":1000,
-  "dataset":["bm2_"],
-  "rel":["pareto"],
+  "dataset": {
+    "benchmarks":[
+      "bm2_"
+    ]
+  },
+  "input_pdb_type": {
+    "benchmarks":[
+      "pareto"
+    ]
+  },
+  "remove_antigen":{
+    "rosetta_option":"-remove_antigen",
+    "benchmarks":[
+      true
+    ]
+  },
+  "outer_cycle_rounds":{
+    "rosetta_option":"-outer_cycle_rounds",
+    "benchmarks":[
+      25,
+      50,
+      75,
+      100]
+  },
+  "inner_cycle_rounds":{
+    "rosetta_option":"-inner_cycle_rounds",
+    "benchmarks":[
+      1
+    ]
+  },
 
-  "outer_cycle_rounds":[25, 50, 75, 100],
-  "inner_cycle_rounds":[1],
-  "l_chain":["lambda", "kappa"],
-  "mintype":["relax"],
-  "dock":[true],
-  "paper_ab_db":[true],
+  "dock":{
+    "rosetta_option":"-do_dock",
+    "benchmarks":[
+      true
+    ]
+  },
+
+  "paper_ab_db":{
+    "rosetta_option":"-paper_ab_db",
+    "benchmarks":[
+      true
+    ]
+  },
+  "l_chain": {
+    "benchmarks": [
+      "lambda",
+      "kappa"
+    ],
+    "use_for_prefix":false,
+    "use_for_outdir":false
+  },
+
+  "mintype": {
+    "bencharks": [
+      "relax"
+    ]
+  },
 
   "base_cdr_instruction_lines":[
     "DE FIX",
-    "ALL MinProtocol MinType {mintype}",
     "L1 MinProtocol Min_Neighbors L2 L3",
     "L2 MinProtocol Min_Neighbors L1",
     "L3 MinProtocol Min_Neighbors L1 H3",
@@ -24,8 +72,11 @@
 
   ],
 
-  "separate_cdrs_per_job":[false],
-  "if_separate_allow_all_given_to_seq_design":false,
+  "separate_cdrs":{
+    "benchmarks":[false],
+    "all_given_seq_design":false
+  },
+
 
   "graft_design_cdrs":["L1","L2","L3","H1","H2"],
   "seq_design_cdrs":["L1","L2","L3","H1","H2","H3"],

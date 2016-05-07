@@ -24,10 +24,10 @@ class ScoreFile:
     else:
         self.name = ".".join(os.path.basename(self.filename).split('.')[0:-1]).replace('score', "")
 
-    self.decoys = []; #Main holder of data.  Array of dict of scoreterms and 'decoy']
+    self.decoys = [] #Main holder of data.  Array of dict of scoreterms and 'decoy']
 
     self.decoy_field_name = "decoy"
-    self.decoy_dir = os.path.dirname(filename); #Assume filename is in decoy dir.  This is not nessessarily the case...
+    self.decoy_dir = os.path.dirname(filename) #Assume filename is in decoy dir.  This is not nessessarily the case...
 
     if filename == "-":
       lines = file(sys.stdin).readlines()
@@ -67,13 +67,13 @@ class ScoreFile:
 
     #print repr(self.decoys)
 
-  def getDecoyCount(self):
+  def get_decoy_count(self):
     return len(self.decoys)
 
-  def getDecoyNames(self):
+  def get_decoy_names(self):
     return [str(r[self.decoy_field_name]) for r in self.decoys]
 
-  def getScoreTermNames(self):
+  def get_scoreterm_names(self):
     r = []
     for rec in self.decoys:
       for k in rec.keys():
@@ -82,10 +82,10 @@ class ScoreFile:
     r.sort()
     return r
 
-  def getScoreTerms(self, scoreterms=""):
+  def get_scoreterms(self, scoreterms=""):
     if type(scoreterms) == str:
       if scoreterms in ["", "*"]:
-        scoreterms = self.getScoreTermNames()
+        scoreterms = self.get_scoreterm_names()
         scoreterms.sort()
       else:
         scoreterms = scoreterms.split(",")
@@ -97,20 +97,20 @@ class ScoreFile:
       r[str(rec[self.decoy_field_name])] = scores
     return r
 
-  def getScoreTerm(self, scoreterm):
+  def get_scoreterm(self, scoreterm):
     r = {}
     for rec in self.decoys:
       r[str(rec[self.decoy_field_name])] = rec.get(scoreterm)
     return r
 
-  def getStats(self, scoreterms="", decoy_names = None):
+  def get_stats(self, scoreterms="", decoy_names = None):
 
     print repr(len(decoy_names))
-    scores = self.getScoreTerms(scoreterms)
+    scores = self.get_scoreterms(scoreterms)
     stats = None
 
     if not decoy_names:
-      decoy_names = self.getDecoyNames()
+      decoy_names = self.get_decoy_names()
 
     #print repr(decoy_names)
     # Collect data
@@ -154,19 +154,21 @@ class ScoreFile:
 
     return calc_stats
 
-  def getOrdered(self, scoreterm, decoy_names = None, top_n=-1, reverse=False, ):
+  def get_ordered_decoy_list(self, scoreterm, decoy_names = None, top_n=-1, reverse=False, ):
     """
     Get an ordered tuple of [[score, decoy_name], ...]
     Will automatically order some known scoreterms (hbonds_int, dSASA_int)
+
+    :rtype: list[list]
     """
 
     if not decoy_names:
-      decoy_names = self.getDecoyNames()
+      decoy_names = self.get_decoy_names()
 
     if scoreterm == "hbonds_int" or scoreterm == "dSASA_int": reverse = True
     return sorted([[x[scoreterm], x[self.decoy_field_name]] for x in self.decoys if x[self.decoy_field_name] in decoy_names and scoreterm in x ], reverse=reverse)[:top_n]
 
-  def getScore(self, decoy, scoreterm):
+  def get_score(self, decoy, scoreterm):
     """
     Get Score of a particular decoy and scoreterm
     :param decoy: str
@@ -177,11 +179,11 @@ class ScoreFile:
       if o[self.decoy_field_name] == decoy:
         return o[scoreterm]
 
-  def getScores(self, scoreterm, decoy_names=None, top_n=-1, reverse=False):
-    ordered_decoy_names = self.getOrdered(scoreterm, decoy_names, top_n, reverse)
-    return [self.getScore( decoy, scoreterm) for decoy in ordered_decoy_names]
+  def get_scores(self, scoreterm, decoy_names=None, top_n=-1, reverse=False):
+    ordered_decoy_names = self.get_ordered_decoy_list(scoreterm, decoy_names, top_n, reverse)
+    return [self.get_score( decoy, scoreterm) for decoy in ordered_decoy_names]
 
-  def getDataframe(self, scoreterms=None, order_by="total_score", top_n=-1, reverse=True):
+  def get_Dataframe(self, scoreterms=None, order_by="total_score", top_n=-1, reverse=True):
     """
     Get data as a pandas dataframe.  Definitely preferred now.
     :param scoreterms: list

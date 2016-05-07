@@ -15,6 +15,8 @@ from pymol_jade.PyMolScriptWriter import *
 from rosetta_jade.ScoreFiles import ScoreFile
 from basic.plotting.MakeFigure import *
 
+from shutil import copyfile
+
 ########################################################################
 
 def printVerbose(s):
@@ -93,6 +95,11 @@ def main(argv):
                              nargs='*',
                              default=[])
 
+    output_opts.add_argument("--copy_top_models",
+                             help = "Copy the top -n to the output directory for each scorefile passed.",
+                             default = False,
+                             action = "store_true")
+
 
     output_opts.add_argument("--prefix", "-p",
                              default="",
@@ -148,10 +155,10 @@ def main(argv):
             continue
 
         sf = ScoreFile(filename)
-        df = sf.getDataframe()
+        df = sf.get_Dataframe()
 
-        printVerbose("  File Decoys: %d" % sf.getDecoyCount())
-        printVerbose("  Score terms: %s" % ", ".join(sf.getScoreTermNames()))
+        printVerbose("  File Decoys: %d" % sf.get_decoy_count())
+        printVerbose("  Score terms: %s" % ", ".join(sf.get_scoreterm_names()))
         printVerbose("")
 
         #Optionally make the ouptut directory.
@@ -164,16 +171,16 @@ def main(argv):
         if options.decoy_names:
             decoy_names = options.decoy_names
         else:
-            decoy_names = sf.getDecoyNames()
+            decoy_names = sf.get_decoy_names()
 
-        scoreterms = sf.getScoreTermNames()
+        scoreterms = sf.get_scoreterm_names()
         if options.list_scoretypes:
             print "\n".join(scoreterms)
             continue
 
         ### Stats summary
         if options.summary:
-            stats = sf.getStats(options.scoretypes, decoy_names)
+            stats = sf.get_stats(options.scoretypes, decoy_names)
             max_width = max([len(x) for x in stats.keys()])
             fmt = "%*s:  %4s  %10s  %10s  %10s  %10s  %10s"
             print fmt % (max_width, "TERM", "n", "Min", "Max", "Mean", "Median", "StdDev")
@@ -188,7 +195,7 @@ def main(argv):
             continue
 
         ### Default score list handler
-        scores = sf.getScoreTerms(options.scoretypes)
+        scores = sf.get_scoreterms(options.scoretypes)
         out = []
         for decoy_name in scores:
             if not decoy_name in decoy_names: continue
@@ -202,7 +209,7 @@ def main(argv):
             if term not in scoreterms: continue
             print "\nBy " + term
 
-            ordered = sf.getOrdered(term, decoy_names=decoy_names, top_n=options.top_n)
+            ordered = sf.get_ordered_decoy_list(term, decoy_names=decoy_names, top_n=options.top_n)
 
             if options.pdb_dir:
                 top_decoy_paths = [get_decoy_path(options.pdb_dir + "/" + o[1]) for o in ordered]
@@ -227,8 +234,8 @@ def main(argv):
         ### Top 10 by ten
         if "top_n_by_10" in options.scoretypes and options.top_n_by_10_scoretype in scoreterms:
             top_p = int(len(decoy_names) / 10)
-            top_decoys = [o[1] for o in sf.getOrdered("total_score", decoy_names=decoy_names, top_n=top_p)]
-            top_by_n_decoys = [o for o in sf.getOrdered(options.top_n_by_10_scoretype, decoy_names=decoy_names) if
+            top_decoys = [o[1] for o in sf.get_ordered_decoy_list("total_score", decoy_names=decoy_names, top_n=top_p)]
+            top_by_n_decoys = [o for o in sf.get_ordered_decoy_list(options.top_n_by_10_scoretype, decoy_names=decoy_names) if
                                o[1] in top_decoys][
                               :options.top_n_by_10]
 
@@ -236,7 +243,7 @@ def main(argv):
             print options.top_n_by_10_scoretype + "\t" + "decoy" + "\t" + "total_score"
 
             for o in top_by_n_decoys:
-                print "%.2f\t" % o[0] + o[1] + "%.2f" % sf.getScore(o[1], "total_score")
+                print "%.2f\t" % o[0] + o[1] + "%.2f" % sf.get_score(o[1], "total_score")
 
         if options.pymol_session:
             print "Making PyMol Session "
@@ -268,10 +275,10 @@ def main(argv):
                 if scoreterm == "top_n_by_10" and "top_n_by_10" in options.scoretypes and options.top_n_by_10_scoretype in scoreterms:
                     top_p = int(len(decoy_names) / 10)
                     top_decoys = [o[1] for o in
-                                  sf.getOrdered("total_score", decoy_names=decoy_names, top_n=int(options.top_n))]
+                                  sf.get_ordered_decoy_list("total_score", decoy_names=decoy_names, top_n=int(options.top_n))]
 
                     top_by_n_decoys = [[o[0], pdb_dir + "/" + o[1]] for o in
-                                       sf.getOrdered(options.top_n_by_10_scoretype, decoy_names=decoy_names) if
+                                       sf.get_ordered_decoy_list(options.top_n_by_10_scoretype, decoy_names=decoy_names) if
                                        o[1] in top_decoys][
                                       :options.top_n_by_10]
 
@@ -283,7 +290,7 @@ def main(argv):
                                                      antibody=options.ab_structure, parellel=False, super=options.super)
 
                 else:
-                    ordered = sf.getOrdered(scoreterm, top_n=int(options.top_n), decoy_names=decoy_names)
+                    ordered = sf.get_ordered_decoy_list(scoreterm, top_n=int(options.top_n), decoy_names=decoy_names)
 
                     top_decoys = [[o[0], pdb_dir + "/" + o[1]] for o in ordered]
                     #print repr(top_decoys)
@@ -318,6 +325,33 @@ def main(argv):
                 plot_general_pandas(df, title, outpath, options.plot_type, x, y = y, z = z, top_p=options.plot_filter)
 
             os.system("open "+outpath)
+
+        if options.copy_top_models:
+            for scoreterm in options.scoretypes:
+                if scoreterm == "top_n_by_10" and "top_n_by_10" in options.scoretypes and options.top_n_by_10_scoretype in scoreterms:
+                    top_p = int(len(decoy_names) / 10)
+                    top_decoys = [o[1] for o in
+                                  sf.get_ordered_decoy_list("total_score", decoy_names=decoy_names, top_n=int(options.top_n))]
+                    top_by_n_decoys = [[o[0], pdb_dir + "/" + o[1]] for o in
+                                       sf.get_ordered_decoy_list(options.top_n_by_10_scoretype, decoy_names=decoy_names) if
+                                       o[1] in top_decoys][
+                                      :options.top_n_by_10]
+
+
+                    if len(top_by_n_decoys) == 0:
+                        print "No pdbs found. Skipping"
+
+
+                    for i in range(0, options.top_n):
+                        print top_by_n_decoys[i][1]
+                        copyfile(top_by_n_decoys[i][1], options.outdir)
+                else:
+                    ordered = sf.get_ordered_decoy_list(scoreterm, top_n=int(options.top_n), decoy_names=decoy_names)
+                    top_decoys = [[o[0], pdb_dir + "/" + o[1]] for o in ordered]
+
+                    for i in range(0, options.top_n):
+                        print top_decoys[i][1]
+                        copyfile(top_decoys[i][1], options.outdir)
 
 ########################################################################
 

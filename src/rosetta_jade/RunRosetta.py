@@ -343,8 +343,9 @@ class RunRosetta(object):
             sys.exit("No Base Json Given.  This is required for general cluster settings.")
         self.base_options = SetupRosettaOptionsGeneral(self.options.json_base)
 
-    def set_json_run(self, json_run):
+    def _set_json_run(self, json_run):
         self._set_extra_options(SetupRosettaOptionsGeneral( json_run))
+
     def _set_extra_options(self, extra_options):
         """
         Set extra options (derived SetupRosettaOptionsGeneral or baseclass) for benchmarking runs.
@@ -422,11 +423,11 @@ class RunRosetta(object):
         def _set_job_manager_opts():
             if self.options.job_manager_opts:
                 pass
-            elif self.extra_options.get_job_manager_opts():
-                self.options.machine_file = self.extra_options.get_job_manager_opts()
+            elif self.extra_options._get_job_manager_opts():
+                self.options.machine_file = self.extra_options._get_job_manager_opts()
 
-            elif self.base_options.get_job_manager_opts():
-                self.options.machine_file = self.base_options.get_job_manager_opts()
+            elif self.base_options._get_job_manager_opts():
+                self.options.machine_file = self.base_options._get_job_manager_opts()
 
         def _setup_program():
             if hasattr(self.options, "program") and self.options.program:
@@ -451,7 +452,6 @@ class RunRosetta(object):
 
         #Resolve options overrides
         _set_nstruct()
-        #_set_exp()
         _set_db_mode()
         _clean_up_db_name()
         _set_machine_file()
@@ -459,18 +459,18 @@ class RunRosetta(object):
         _setup_program()
 
 
-    def get_root(self):
+    def _get_root(self):
 
         if self.options.root:
             return self.options.root
-        elif self.extra_options.get_root():
-            return self.extra_options.get_root()
-        elif self.base_options.get_root():
-            return self.base_options.get_root()
+        elif self.extra_options._get_root():
+            return self.extra_options._get_root()
+        elif self.base_options._get_root():
+            return self.base_options._get_root()
         else:
             return os.getcwd()
 
-    def get_job_manager_opts(self):
+    def _get_job_manager_opts(self):
         opts = []
         for opt in self.options.job_manager_opts:
             if re.search('-', opt):
@@ -479,7 +479,7 @@ class RunRosetta(object):
                 opts.append("--"+opt)
         return " ".join(opts)
 
-    def get_job_name(self, *args, **kwargs):
+    def _get_job_name(self, *args, **kwargs):
         """
         Get the job name.
           job_name -> exp_name.
@@ -519,39 +519,41 @@ class RunRosetta(object):
 
         return self.program +".mpi."+get_platform() + self.options.compiler+"release"
 
-    def get_make_queue_dir(self, *args, **kwargs):
+    def _get_make_queue_dir(self, *args, **kwargs):
         """
         Get and make the queue dir where qsub/slurm scripts will go.
         """
-        log_path = self.base_options.get_make_log_dir()+"/queue"
+        log_path = self.base_options._get_make_log_dir() + "/queue"
         if not os.path.exists(log_path):
             os.mkdir(log_path)
         return log_path
 
+    def _set_outdir(self, outdir):
+        self.options.outdir = outdir
+        self._get_make_out_path()
+
 
     ### Methods to override for specific Benchmarks ###
 
-    def get_make_log_dir(self, *args, **kwargs):
+    def _get_make_log_dir(self, *args, **kwargs):
         """
         Get and make the dir to which the MPI output of each process will go.
         """
 
         #name = self.get_out_prefix(*args, **kwargs)
-        log_path = self.base_options.get_make_log_dir()+"/"+self.options.job_name
+        log_path = self.base_options._get_make_log_dir() + "/" + self.options.job_name
         if not os.path.exists(log_path):
             os.mkdir(log_path)
         return log_path
 
+    def _get_out_prefix(self, *args, **kwargs):
+        return None
 
-    def set_outdir(self, outdir):
-        self.options.outdir = outdir
-        self.get_make_out_path()
-
-    def get_make_out_path(self, *args, **kwargs):
+    def _get_make_out_path(self, *args, **kwargs):
         """
         Get and make the dir to which decoys will go.  root/decoys
         """
-        s = self.base_options.get_root()+"/"+self.options.outdir
+        s = self.base_options._get_root() + "/" + self.options.outdir
         if not os.path.exists(s):
             os.mkdir(s)
         #s = s + "/"+self.get_out_prefix(*args, **kwargs)
@@ -560,14 +562,15 @@ class RunRosetta(object):
         return s
 
 
-    def get_output_string(self, *args, **kwargs):
+
+    def _get_output_string(self, *args, **kwargs):
         """
         Get the full output string for MPI
         """
         s = self._get_program()
 
-        #if self.get_out_prefix(*args, **kwargs):
-        #    s = s + " -out:prefix "+self.get_out_prefix(*args, **kwargs)
+        if self._get_out_prefix():
+            s = s + " -out:prefix "+self._get_out_prefix()
 
         if re.search("out:path:all", self._get_extra_rosetta_options_string()):
             print self._get_extra_rosetta_options_string()
@@ -575,23 +578,20 @@ class RunRosetta(object):
 
 
 
-
-
-
         #Nstruct
         s = s + " -nstruct " + str(self.options.nstruct)
 
         #Outpath
-        s = s + " -out:path:all " + self.get_make_out_path(*args, **kwargs)
+        s = s + " -out:path:all " + self._get_make_out_path(*args, **kwargs)
         s = s + self.base_options.get_base_rosetta_flag_string()
 
         #Log Dir:
         if self.options.split_mpi_output:
-            s = s + " -mpi_tracer_to_file "+ self.get_make_log_dir(*args, **kwargs)
+            s = s + " -mpi_tracer_to_file "+ self._get_make_log_dir(*args, **kwargs)
 
         #For these benchmarks, there are only a single root directory.
         if self.options.json_run:
-            s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options.get_root())
+            s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options._get_root())
 
         #DB Mode
         if self.options.db_in:
@@ -661,23 +661,23 @@ class RunRosetta(object):
         #return s
     '''
 
-    def get_full_cmd(self, *args, **kwargs):
+    def _get_full_cmd(self, *args, **kwargs):
         """
         Get the full command line.
         :param args:
         :param kwargs:
         :rtype: str
         """
-        cmd_string = self.get_output_string(*args, **kwargs)
+        cmd_string = self._get_output_string(*args, **kwargs)
 
         mpiexec="mpiexec"
         if self.options.mpiexec and not self.local_run():
             mpiexec = self.options.mpiexec
 
         if self.options.job_manager == "slurm":
-            cmd = "cd "+ self.get_root()+" \n"+mpiexec+" "
+            cmd = "cd "+ self._get_root() + " \n" + mpiexec + " "
         else:
-            cmd = "cd "+ self.get_root()+" \n"+mpiexec+" -np " + str(self.options.np)
+            cmd = "cd "+ self._get_root() + " \n" + mpiexec + " -np " + str(self.options.np)
 
         if self.options.machine_file:
             cmd = cmd + " --machine_file "+self.options.machine_file+" "+ cmd_string
@@ -693,7 +693,7 @@ class RunRosetta(object):
 
         return cmd
 
-    def local_run(self):
+    def local_run(self, *args, **kwargs):
         """
         Get if we are running locally
         :rtype: bool
@@ -707,16 +707,16 @@ class RunRosetta(object):
 
     def run(self, *args, **kwargs):
 
-        log_dir = self.get_make_log_dir(*args, **kwargs)
-        outpath = self.get_make_out_path(*args, **kwargs)
-        queue_dir = self.get_make_queue_dir(*args, **kwargs)
+        log_dir = self._get_make_log_dir(*args, **kwargs)
+        outpath = self._get_make_out_path(*args, **kwargs)
+        queue_dir = self._get_make_queue_dir(*args, **kwargs)
 
         print "\nLogDir: "+log_dir
         print "QueueDir: "+queue_dir
         print "OutPath: "+outpath+"\n\n"
 
 
-        cmd = self.get_full_cmd()
+        cmd = self._get_full_cmd()
 
         if self.options.job_manager == "local" and self.options.print_only:
             print cmd + "\n"
@@ -729,15 +729,15 @@ class RunRosetta(object):
             self.options.nstruct = 1
             self.options.split_mpi_output = False
 
-            cmd = self.get_full_cmd()
+            cmd = self._get_full_cmd()
             print_full_cmd(cmd)
             os.system(cmd)
 
         elif self.options.job_manager == "qsub":
-            run_on_qsub(cmd, queue_dir, self.get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self.get_job_manager_opts())
+            run_on_qsub(cmd, queue_dir, self._get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self._get_job_manager_opts())
 
         elif self.options.job_manager == "slurm":
-            run_on_slurm(cmd, queue_dir, self.get_job_name(*args, **kwargs), nodes=self.options.nodes, ntasks=self.options.np, print_only=self.options.print_only, extra_opts=self.get_job_manager_opts())
+            run_on_slurm(cmd, queue_dir, self._get_job_name(*args, **kwargs), nodes=self.options.nodes, ntasks=self.options.np, print_only=self.options.print_only, extra_opts=self._get_job_manager_opts())
 
 
 if __name__ == "__main__":

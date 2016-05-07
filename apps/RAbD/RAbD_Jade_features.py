@@ -247,7 +247,7 @@ class AnalyzeBenchmarks:
             all_ens_list = create_list(benchmark.full_name+".ens."+features_type, all_ens_files)
 
             #Top
-            self.run_mpi_rosetta.set_json_run(features_type+".json")
+            self.run_mpi_rosetta._set_json_run(features_type + ".json")
             self.run_mpi_rosetta.options.l = all_list
             self.run_mpi_rosetta.options.outdir = self.base_dir+"/databases"
             self.run_mpi_rosetta.options.db_name = benchmark.full_name+".top."+features_type+"."+benchmark.scorefunction+".db"
@@ -255,7 +255,7 @@ class AnalyzeBenchmarks:
 
             #Ens
             if get_ensemble_data:
-                self.run_mpi_rosetta.set_json_run(features_type+".json")
+                self.run_mpi_rosetta._set_json_run(features_type + ".json")
                 self.run_mpi_rosetta.options.l = all_ens_list
                 self.run_mpi_rosetta.options.outdir =  self.base_dir+"/databases"
                 self.run_mpi_rosetta.options.db_name = benchmark.full_name+".ens."+features_type+"."+benchmark.scorefunction+".db"
