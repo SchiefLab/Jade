@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys
+import sys, os
 from rosetta_jade.RunRosettaBenchmarks import RunRosettaBenchmarks
 from rosetta_jade.RunRosetta import RunRosetta
 
@@ -42,6 +42,9 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
             sys.exit("PDBLIST should be created in datasets/pdblists.  See antibody_design repo for an example.")
 
 
+        if not os.path.exists(self.instructions_dir):
+            os.mkdir(self.instructions_dir)
+
     @overrides
     def run_benchmark(self, benchmark_names, benchmark_options):
         """
@@ -51,9 +54,6 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         :param benchmark_options: List of benchmark options
         :return:
         """
-
-        cdr_setting = False
-        cdr_setting_index = 0
 
         for index, bm_name in enumerate(benchmark_names):
             self._current_settings[bm_name] = benchmark_options[index]
@@ -66,25 +66,27 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         if separate_cdrs:
             for cdr in self._get_designable_cdrs():
                 self._current_settings["CDR"] = cdr
+                self._write_current_benchmark_file()
                 RunRosetta.run(self)
         else:
             self._current_settings["CDR"] = "ALL"
+            self._write_current_benchmark_file()
             RunRosetta.run(self)
 
 
     @overrides
     def _get_output_string(self):
 
-        if not self.options.separate_pdb_per_job():
+        if not self.options.separate_job_per_pdb:
             self.options.l = self._get_pdb_list_fname()
 
         s = RunRosettaBenchmarks._get_output_string(self)
 
         #Decoys
-        s.append(" -in:path "+self.dataset_root_dir+"/"+self._current_settings["dataset"])
+        s = s + (" -in:path "+self.dataset_root_dir+"/"+self._current_settings["dataset"])
 
         #Instructions
-        s = s + " -cdr_instructions " + self._create_instructions(self.instructions_dir+"/"+self._get_out_prefix+".instruct")
+        s = s + " -cdr_instructions " + self._create_instructions(self.instructions_dir+"/"+self._get_out_prefix()+".instruct")
         return s
 
     @overrides
@@ -98,8 +100,10 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
 
     def _create_instructions(self, output_path):
         extra_lines=[]
-        extra_lines.append(self.extra_options.json_dict["base_cdr_instruction_lines"])
+        extra_lines.append("\n".join( str(line) for line in self.extra_options.json_dict["base_cdr_instruction_lines"]))
 
+
+        #print repr(self._current_settings)
 
         extra_lines.append("ALL MinProtocol MinType "+self._current_settings["mintype"])
         extra_lines.append("ALL FIX")
@@ -118,7 +122,11 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
                 extra_lines.append(cdr+" SeqDesign Allow")
 
         FILE = open(output_path, "w")
-        FILE.write("\n".join(extra_lines))
+        line = "\n".join(str(s) for s in extra_lines)
+
+
+        print line
+        FILE.write(line)
         FILE.close()
         return output_path
 

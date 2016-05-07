@@ -1,5 +1,4 @@
 { "exp": "nstruct_test_no_H3_GD",
-  //"flags":["-global_dihedral_cst_scoring true","-dihedral_cst_weight 0.3"],
   "nstruct":1000,
   "dataset": {
     "benchmarks":[
@@ -55,7 +54,7 @@
   },
 
   "mintype": {
-    "bencharks": [
+    "benchmarks": [
       "relax"
     ]
   },

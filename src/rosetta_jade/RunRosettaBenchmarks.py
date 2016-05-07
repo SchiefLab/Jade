@@ -22,7 +22,7 @@ class RunRosettaBenchmarks(RunRosetta):
         Derived class for any set of Benchmarks in Rosetta
 
         """
-        RunRosetta.__init__(self, program = None, parser = None)
+        RunRosetta.__init__(self, program = program, parser = parser)
 
 
         self._current_settings = defaultdict()
@@ -30,6 +30,8 @@ class RunRosettaBenchmarks(RunRosetta):
 
         self.key_bm_options = 'bm_options'
         self.key_bm_names = 'bm_names'
+
+        self._setup_base_options()
 
     def _get_list_of_benchmarks(self):
         """
@@ -60,6 +62,7 @@ class RunRosettaBenchmarks(RunRosetta):
             list_of_lists.append(self._get_pdb_list_ids())
             self.options.l = None
 
+        self._current_settings_ordered_keys = benchmarks
 
         return benchmark_dict
 
@@ -74,11 +77,13 @@ class RunRosettaBenchmarks(RunRosetta):
         """
 
         for index, bm_name in enumerate(benchmark_names):
+            print bm_name+" "+repr(index)
             self._current_settings[bm_name] = benchmark_options[index]
 
             if bm_name == 'pdb':
                 self.options.s = benchmark_options[bm_name]
 
+        self._write_current_benchmark_file()
         RunRosetta.run(self)
 
     ###################################################################################################################
@@ -143,7 +148,8 @@ class RunRosettaBenchmarks(RunRosetta):
 
         rosetta_opts = self.extra_options.get_benchmark_names(only_rosetta=True)
         for opt in rosetta_opts:
-            s = s + self.extra_options.get_rosetta_option_of_key(opt)+" "+self._current_settings[opt]
+            print opt
+            s = s + self.extra_options.get_rosetta_option_of_key(opt)+" "+str(self._current_settings[opt])
 
         return s
 
@@ -189,6 +195,9 @@ class RunRosettaBenchmarks(RunRosetta):
         """
         json_dict = self.extra_options.json_dict
 
+        if not os.path.exists("decoys"):
+            os.mkdir("decoys")
+
         if hasattr(self.options, "out_prefix") and self.options.out_prefix:
             return self.options.out_prefix
 
@@ -210,7 +219,13 @@ class RunRosettaBenchmarks(RunRosetta):
 
                 s.append(key+"-"+opt)
 
-        self._set_outdir(".".join(s))
+        outdir = "decoys/"+".".join(s)
+        print outdir
+        if not os.path.exists(outdir):
+            os.mkdir(outdir)
+
+        self._set_outdir(outdir)
+        return outdir
 
     def _get_pdb_list_ids(self):
 
@@ -234,6 +249,18 @@ class RunRosettaBenchmarks(RunRosetta):
                      "Rosetta proper, pass it to the program instead.")
         else:
             return self.options.l
+
+    def _write_current_benchmark_file(self):
+        """
+        Writes a file in the directory of decoys which has all the settings that were used for each run.
+        :return:
+        """
+
+        OUTFILE = open(self._get_make_out_path()+"/RUN_SETTINGS.txt", 'w')
+        for benchmark in sorted(self._current_settings):
+            OUTFILE.write(" = ".join([benchmark.upper(), str(self._current_settings[benchmark])]) +"\n")
+        OUTFILE.close()
+
 
 
 

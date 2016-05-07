@@ -42,4 +42,4 @@ def get_all_combos(list_of_lists):
     :rtype: list[list]
     """
 
-    return list(itertools.product(list_of_lists))
+    return list(itertools.product(*list_of_lists))

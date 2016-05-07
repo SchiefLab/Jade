@@ -19,7 +19,7 @@ class SetupRosettaOptionsBenchmark(SetupRosettaOptionsGeneral):
         SetupRosettaOptionsGeneral.__init__( self, json_file)
 
         self.key_benchmarks = "benchmarks"
-        self.key_rosetta_options = "rosetta_options"
+        self.key_rosetta_option = "rosetta_option"
 
         self.key_use_for_prefix = "use_for_prefix"
         self.key_use_for_outdir = "use_for_outdir"
@@ -56,8 +56,8 @@ class SetupRosettaOptionsBenchmark(SetupRosettaOptionsGeneral):
 
         benchmark_names = []
         for key in self.json_dict:
-            if self.json_dict[key].has_key("benchmarks"):
-                if only_rosetta and self.json_dict[key].has_key("rosetta_option"):
+            if type(self.json_dict[key]) == dict and self.json_dict[key].has_key(self.key_benchmarks):
+                if only_rosetta and type(self.json_dict[key]) == dict and self.json_dict[key].has_key(self.key_rosetta_option):
                     benchmark_names.append(key)
                 elif not only_rosetta:
                     benchmark_names.append(key)
@@ -75,8 +75,8 @@ class SetupRosettaOptionsBenchmark(SetupRosettaOptionsGeneral):
 
         benchmark_names = []
         for key in self.json_dict:
-            if self.json_dict[key].has_key("benchmarks"):
-                if not self.json_dict[key].has_key("rosetta_option"):
+            if type(self.json_dict[key]) == dict and self.json_dict[key].has_key(self.key_benchmarks):
+                if  not self.json_dict[key].has_key(self.key_rosetta_option):
                     benchmark_names.append(key)
                 else:
                     continue
@@ -102,4 +102,4 @@ class SetupRosettaOptionsBenchmark(SetupRosettaOptionsGeneral):
         :rtype: str
         """
 
-        return self.json_dict[benchmark_name][self.key_rosetta_options]
+        return self.json_dict[benchmark_name][self.key_rosetta_option]

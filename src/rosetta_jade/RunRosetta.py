@@ -530,7 +530,6 @@ class RunRosetta(object):
 
     def _set_outdir(self, outdir):
         self.options.outdir = outdir
-        self._get_make_out_path()
 
 
     ### Methods to override for specific Benchmarks ###

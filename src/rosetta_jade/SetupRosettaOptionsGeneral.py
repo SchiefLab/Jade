@@ -30,7 +30,7 @@ class SetupRosettaOptionsGeneral(object):
         else:
             return None
 
-    def get_make_log_dir(self):
+    def _get_make_log_dir(self):
         if not self.json_dict.has_key("logs"):
             return None
 
@@ -113,7 +113,7 @@ class SetupRosettaOptionsGeneral(object):
         else:
             return self.json_dict['machine_file']
 
-    def get_job_manager_opts(self):
+    def _get_job_manager_opts(self):
         if not self.json_dict.has_key("job_manager_opts"):
             return []
         else:
