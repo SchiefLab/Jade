@@ -222,7 +222,7 @@ class RunRosetta(object):
 
 
         job_setup.add_argument("--nstruct",
-                                 default = 1)
+                               help = "The number of structures/parallel runs.  Can also set this in any JSON file.")
 
         job_setup.add_argument("--compiler", "-c",
                                  default = "gcc",

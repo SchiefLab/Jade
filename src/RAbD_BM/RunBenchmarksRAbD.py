@@ -33,6 +33,8 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         RunRosettaBenchmarks.__init__(self, program = "antibody_designer")
 
         self._current_settings["CDR"] = "ALL"
+        self._current_settings_ordered_keys.append("CDR")
+
 
         self.dataset_root_dir = "datasets"
         self.pdblist_dir = self.dataset_root_dir+"/pdblists"
@@ -55,23 +57,15 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         :return:
         """
 
-        for index, bm_name in enumerate(benchmark_names):
-            self._current_settings[bm_name] = benchmark_options[index]
-
-            if bm_name == 'pdb':
-                self.options.s = benchmark_options[bm_name]
-
         separate_cdrs = benchmark_options[benchmark_names.index("separate_cdrs")]
 
         if separate_cdrs:
             for cdr in self._get_designable_cdrs():
                 self._current_settings["CDR"] = cdr
-                self._write_current_benchmark_file()
-                RunRosetta.run(self)
+                RunRosettaBenchmarks.run_benchmark(self, benchmark_names, benchmark_options)
         else:
             self._current_settings["CDR"] = "ALL"
-            self._write_current_benchmark_file()
-            RunRosetta.run(self)
+            RunRosettaBenchmarks.run_benchmark(self, benchmark_names, benchmark_options)
 
 
     @overrides
@@ -83,7 +77,7 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         s = RunRosettaBenchmarks._get_output_string(self)
 
         #Decoys
-        s = s + (" -in:path "+self.dataset_root_dir+"/"+self._current_settings["dataset"])
+        s = s + (" -in:path "+self.dataset_root_dir+"/"+self._current_settings["input_pdb_type"])
 
         #Instructions
         s = s + " -cdr_instructions " + self._create_instructions(self.instructions_dir+"/"+self._get_out_prefix()+".instruct")
@@ -92,7 +86,6 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
     @overrides
     def _get_pdb_list_fname(self):
         return ".".join([self.pdblist_dir+"/"+self._current_settings["dataset"],
-                        self._current_settings["input_pdb_type"],
                         self._current_settings["l_chain"]+".PDBLIST.txt"])
 
     ### Helper Functions ###
@@ -125,7 +118,7 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         line = "\n".join(str(s) for s in extra_lines)
 
 
-        print line
+        #print line
         FILE.write(line)
         FILE.close()
         return output_path

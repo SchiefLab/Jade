@@ -2,7 +2,7 @@
   "nstruct":1000,
   "dataset": {
     "benchmarks":[
-      "bm2_"
+      "bm2_five"
     ]
   },
   "input_pdb_type": {
@@ -13,7 +13,7 @@
   "remove_antigen":{
     "rosetta_option":"-remove_antigen",
     "benchmarks":[
-      true
+      false
     ]
   },
   "outer_cycle_rounds":{
@@ -34,7 +34,7 @@
   "dock":{
     "rosetta_option":"-do_dock",
     "benchmarks":[
-      true
+      false
     ]
   },
 

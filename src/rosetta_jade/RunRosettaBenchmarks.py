@@ -12,7 +12,7 @@ from collections import defaultdict
 from rosetta_jade.SetupRosettaOptionsBenchmark import SetupRosettaOptionsBenchmark
 from rosetta_jade.RunRosetta import RunRosetta
 from basic import general
-
+from basic import path
 from overrides import overrides
 
 
@@ -57,12 +57,9 @@ class RunRosettaBenchmarks(RunRosetta):
         benchmark_dict[self.key_bm_options] = list_of_lists
         benchmark_dict[self.key_bm_names] = benchmarks
 
-        if self.options.separate_job_per_pdb and self._get_pdb_list_fname():
-            benchmarks.append('pdb')
-            list_of_lists.append(self._get_pdb_list_ids())
-            self.options.l = None
-
-        self._current_settings_ordered_keys = benchmarks
+        for bm in benchmarks:
+            if not bm in self._current_settings_ordered_keys:
+                self._current_settings_ordered_keys.append(bm)
 
         return benchmark_dict
 
@@ -75,16 +72,28 @@ class RunRosettaBenchmarks(RunRosetta):
         :param benchmark_options: List of benchmark options
         :return:
         """
+        def run_single():
+            self._write_current_benchmark_file()
+            RunRosetta.run(self)
+
 
         for index, bm_name in enumerate(benchmark_names):
             print bm_name+" "+repr(index)
             self._current_settings[bm_name] = benchmark_options[index]
 
-            if bm_name == 'pdb':
-                self.options.s = benchmark_options[bm_name]
+        #Run BM for every PDB if separating PDBLISTS
+        if self.options.separate_job_per_pdb and self._get_pdb_list_fname():
+            self.options.l = None
+            for pdb in self._get_pdb_list_ids():
+                print "Running Job for "+pdb
+                self.options.s = pdb
+                self._current_settings['pdb'] = pdb
 
-        self._write_current_benchmark_file()
-        RunRosetta.run(self)
+                run_single()
+        else:
+            "Running Single"
+            run_single()
+
 
     ###################################################################################################################
     ######################################                                #############################################
@@ -94,10 +103,19 @@ class RunRosettaBenchmarks(RunRosetta):
 
     @overrides
     def run(self):
+        """
+        Run All Benchmarks.
+        This code callse the following:
+           run -> _get_list_of_benchmarks -> run_benchmark
+
+        :return:
+        """
         benchmark_dict = self._get_list_of_benchmarks()
 
         benchmarks_to_run = general.get_all_combos(benchmark_dict[self.key_bm_options])
         for benchmark_set in benchmarks_to_run:
+
+
             self.run_benchmark(benchmark_dict[self.key_bm_names], benchmark_set)
 
 
@@ -114,7 +132,6 @@ class RunRosettaBenchmarks(RunRosetta):
         benchmark_options.add_argument("--json_benchmark",
                                help = "JSON file for setting up specific benchmark")
 
-        benchmark_options.add_argument("--pdblist_")
         benchmark_options.add_argument("-p", "--separate_job_per_pdb",
                                 default = False,
                                 action = "store_true",
@@ -149,7 +166,7 @@ class RunRosettaBenchmarks(RunRosetta):
         rosetta_opts = self.extra_options.get_benchmark_names(only_rosetta=True)
         for opt in rosetta_opts:
             print opt
-            s = s + self.extra_options.get_rosetta_option_of_key(opt)+" "+str(self._current_settings[opt])
+            s = s + " "+self.extra_options.get_rosetta_option_of_key(opt)+" "+str(self._current_settings[opt])
 
         return s
 
@@ -168,11 +185,12 @@ class RunRosettaBenchmarks(RunRosetta):
 
         s = []
 
+        s.append(self.extra_options.get_exp())
         for key in self._current_settings_ordered_keys:
-            if json_dict[key].has_key( self.extra_options.key_use_for_prefix) and not json_dict[key][self.extra_options.key_use_for_prefix]:
+            if not self.extra_options.use_benchmark_for_prefix(key):
                 continue
 
-            if self._current_settings[key]:
+            if self._current_settings.has_key(key) and self._current_settings[key]:
                 opt = self._current_settings[key]
                 if type(opt) == bool:
                     if opt == True:
@@ -202,12 +220,15 @@ class RunRosettaBenchmarks(RunRosetta):
             return self.options.out_prefix
 
         s = []
+        s.append(self.extra_options.get_exp())
 
+        if self.options.separate_job_per_pdb:
+            s.append(path.get_decoy_name(self._current_settings['pdb']))
         for key in self._current_settings_ordered_keys:
-            if json_dict[key].has_key( self.extra_options.key_use_for_outdir) and not json_dict[key][self.extra_options.key_use_for_outdir]:
+            if not self.extra_options.use_benchmark_for_outdir(key):
                 continue
 
-            if self._current_settings[key]:
+            if self._current_settings.has_key(key) and self._current_settings[key]:
                 opt = self._current_settings[key]
                 if type(opt) == bool:
                     if opt == True:
@@ -260,7 +281,6 @@ class RunRosettaBenchmarks(RunRosetta):
         for benchmark in sorted(self._current_settings):
             OUTFILE.write(" = ".join([benchmark.upper(), str(self._current_settings[benchmark])]) +"\n")
         OUTFILE.close()
-
 
 
 

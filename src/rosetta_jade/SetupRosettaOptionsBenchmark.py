@@ -26,7 +26,7 @@ class SetupRosettaOptionsBenchmark(SetupRosettaOptionsGeneral):
 
     def get_exp(self):
         """
-        Get the benchmark name.
+        Get the benchmark name or fail.
         :rtype: str
         """
         if self.json_dict.has_key("exp"):
@@ -103,3 +103,41 @@ class SetupRosettaOptionsBenchmark(SetupRosettaOptionsGeneral):
         """
 
         return self.json_dict[benchmark_name][self.key_rosetta_option]
+
+    def use_benchmark_for_outdir(self, benchmark):
+        """
+        Should we use the benchmark name for output?
+
+         Specified by the 'use_for_outdir' in JSON.
+         If not specified, or benchmark not in list, we assume True!
+
+        :param benchmark: str
+        :rtype: bool
+        """
+
+
+        if self.json_dict.has_key(benchmark):
+            if self.json_dict[benchmark].has_key(self.key_use_for_outdir):
+                if not self.json_dict[benchmark][self.key_use_for_outdir]:
+                    return False
+
+        return True
+
+    def use_benchmark_for_prefix(self, benchmark):
+        """
+        Should we use the benchmark name for prefix?
+
+         Specified by the 'use_for_prefix' in JSON.
+         If not specified, or benchmark not in list, we assume True!
+
+        :param benchmark: str
+        :rtype: bool
+        """
+
+
+        if self.json_dict.has_key(benchmark):
+            if self.json_dict[benchmark].has_key(self.key_use_for_prefix):
+                if not self.json_dict[benchmark][self.key_use_for_prefix]:
+                    return False
+
+        return True

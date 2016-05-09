@@ -3,6 +3,12 @@ import re
 import gzip
 import glob
 
+
+
+extensions = [".pdb", ".cif", ".xml"]
+compressions = [".gz", ".tar.gz", ""]
+
+
 #A Collection of pathing/file/dir functions
 
 def get_Jade_root():
@@ -85,7 +91,7 @@ def get_decoy_name(decoy):
 
 def get_decoy_path(decoy, alternate_paths = None):
     """
-    Search no extensions or with .pdb or .pdb.gz.
+    Search no extensions or with .pdb, .pdb.gz, .cif, .cif.gz, .xml, .xml.gz
     Search alternative search paths.
     Return found path or NONE.
 
@@ -97,26 +103,38 @@ def get_decoy_path(decoy, alternate_paths = None):
     #This is a hack due to wierd issues with the score file vs pdb file and an extra '_'
     #decoy = decoy.replace('pre_model_1_', 'pre_model_1__')
 
+    def find_decoy(decoy):
+        for ext in extensions:
+            for comp in compressions:
+                search_path = decoy+ext+comp
+                if os.path.exists(search_path):
+                    return search_path
+
+        return None
+
     if alternate_paths:
         for dir in alternate_paths:
-            decoy = dir +"/"+decoy
-        if os.path.exists(decoy):
-            return decoy
-        elif os.path.exists(decoy+".pdb"):
-            return decoy+".pdb"
-        elif os.path.exists(decoy+".pdb.gz"):
-            return decoy+".pdb.gz"
-        else:
-            return None
+            new_decoy_path = dir +"/"+decoy
+            return find_decoy(new_decoy_path)
+
     else:
-        if os.path.exists(decoy):
-            return decoy
-        elif os.path.exists(decoy+".pdb"):
-            return decoy+".pdb"
-        elif os.path.exists(decoy+".pdb.gz"):
-            return decoy+".pdb.gz"
-        else:
-            return None
+        return find_decoy(decoy)
+
+def get_decoy_extension(decoy):
+    """
+    Return the extension of the decoy.  .pdb, .pdb.gz, .cif, .cif.gz, etc.
+    :param decoy: str
+    :rtype: str
+    """
+
+    for ext in extensions:
+        if re.search(ext, decoy):
+            if re.search(".gz"):
+                return ext+".gz"
+            else:
+                return ext
+
+    return None
 
 
 def make_dir_if_not_exists(dir):
@@ -152,3 +170,17 @@ def open_file(file, mode = 'r'):
         INFILE = open(file, mode)
 
     return INFILE
+
+def get_directories_recursively(inpath):
+    """
+    Get a list of directories recursively in a path.  Skips hidden directories.
+    :param inpath: str
+    :rtype: list
+    """
+
+    all_dirs = []
+    for root, dirs, files in os.walk(inpath):
+        all_dirs.extend([root+"/"+d for d in dirs if d[0] != '.'])
+    return all_dirs
+
+
