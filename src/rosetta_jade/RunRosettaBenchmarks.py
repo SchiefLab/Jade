@@ -132,7 +132,7 @@ class RunRosettaBenchmarks(RunRosetta):
         benchmark_options.add_argument("--json_benchmark",
                                help = "JSON file for setting up specific benchmark")
 
-        benchmark_options.add_argument("-p", "--separate_job_per_pdb",
+        benchmark_options.add_argument("--separate_job_per_pdb",
                                 default = False,
                                 action = "store_true",
                                 help = "Separate each PDB in any PDB list given (to python app) into a separate Job and Directory")

@@ -15,6 +15,7 @@ from basic.path import *
 from rosetta_jade.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
 
 
+
 def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts = ""):
     script_path = write_queue_file(cmd, queue_dir, name)
 
@@ -178,10 +179,10 @@ class RunRosetta(object):
         """
         if not parser:
             self.parser = argparse.ArgumentParser("This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  "
-                                              "Relative paths are accepted.")
+                                        "Relative paths are accepted.")
+
         else:
             self.parser = parser
-
 
 
         job_setup = self.parser.add_argument_group("Job Setup" )
@@ -224,7 +225,7 @@ class RunRosetta(object):
         job_setup.add_argument("--nstruct",
                                help = "The number of structures/parallel runs.  Can also set this in any JSON file.")
 
-        job_setup.add_argument("--compiler", "-c",
+        job_setup.add_argument("--compiler",
                                  default = "gcc",
                                  help = "Set the compiler used.  Will set clang automatically for macos. "
                                         "Default = 'gcc' ",
@@ -255,7 +256,7 @@ class RunRosetta(object):
         protocol_setup.add_argument("-l",
                                  help = "Path to a list of pdb files")
 
-        protocol_setup.add_argument("--outdir", "-o",
+        protocol_setup.add_argument("--outdir",
                                  default = "decoys",
                                  help = "Outpath.  "
                                         "Default = 'pwd/decoys' ")
@@ -274,9 +275,9 @@ class RunRosetta(object):
                                         "Default = pwd.  "
                                         "(Benchmarking: Override any set in json_base.)")
 
-        protocol_setup.add_argument("--extra_options", "-e",
+        protocol_setup.add_argument("--extra_options",
                                  help = "Extra Rosetta options.  "
-                                        "Specify in quotes!  ")
+                                        "Specify in quotes!  If you get an error, add a space after the first quote.")
 
         protocol_setup.add_argument("--script_vars",
                                 help = "Any script vars for XML scripts."
