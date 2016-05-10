@@ -1,8 +1,8 @@
-{ "exp": "nstruct_test_no_H3_GD",
-  "nstruct":1000,
+{ "exp": "all_no_H3_GD",
+  "nstruct":100,
   "dataset": {
     "benchmarks":[
-      "bm2_five"
+      "bm2_ten"
     ]
   },
   "input_pdb_type": {
@@ -13,7 +13,8 @@
   "remove_antigen":{
     "rosetta_option":"-remove_antigen",
     "benchmarks":[
-      false
+      false,
+      true
     ]
   },
   "protocol":{
@@ -25,9 +26,6 @@
   "outer_cycle_rounds":{
     "rosetta_option":"-outer_cycle_rounds",
     "benchmarks":[
-      25,
-      50,
-      75,
       100]
   },
   "inner_cycle_rounds":{
@@ -36,7 +34,12 @@
       1
     ]
   },
-
+  "random_start":{
+    "rosetta_option":"-random_start",
+    "benchmarks":[
+      true
+    ]
+  },
   "dock":{
     "rosetta_option":"-do_dock",
     "benchmarks":[

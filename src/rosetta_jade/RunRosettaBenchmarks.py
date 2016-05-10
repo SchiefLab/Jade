@@ -158,7 +158,8 @@ class RunRosettaBenchmarks(RunRosetta):
 
         if not os.path.exists(log_path):
             os.mkdir(log_path)
-        return log_path
+
+        return log_path+"/"+self.extra_options.get_exp()
 
     @overrides
     def _get_output_string(self):
