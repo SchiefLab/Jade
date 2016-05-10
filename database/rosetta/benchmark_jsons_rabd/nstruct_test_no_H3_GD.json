@@ -56,6 +56,7 @@
     ]
   },
   "l_chain": {
+    "rosetta_option":"-light_chain",
     "benchmarks": [
       "lambda",
       "kappa"
