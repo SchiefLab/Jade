@@ -283,9 +283,9 @@ class RunRosetta(object):
                                        "Specify as you would in Rosetta. like: glycosylation=137A,136A",
                                 nargs = '*')
 
-        protocol_setup.add_argument("--split_mpi_output",
-                                 help = "Setup mpi_tracer_to_file. ",
-                                 default = True,
+        protocol_setup.add_argument("--one_file_mpi",
+                                 help = "Output all MPI std::out to a single file instead of splitting it. ",
+                                 default = False,
                                  action = "store_true")
 
         protocol_setup.add_argument("--print_only",
