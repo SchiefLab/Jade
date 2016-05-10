@@ -235,7 +235,7 @@ class RunRosettaBenchmarks(RunRosetta):
 
             if self._current_settings.has_key(key) and self._current_settings[key] != None:
                 opt = self._current_settings[key]
-                print "Opt: "+str(opt)
+
                 if type(opt) == bool:
                     if opt == True:
                         opt = "T"
