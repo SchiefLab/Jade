@@ -115,8 +115,8 @@ class RunRosettaBenchmarks(RunRosetta):
         benchmarks_to_run = general.get_all_combos(benchmark_dict[self.key_bm_options])
         for benchmark_set in benchmarks_to_run:
 
-
-            self.run_benchmark(benchmark_dict[self.key_bm_names], benchmark_set)
+            benchmark_set = list(benchmark_set)
+            self.run_benchmark(list(benchmark_dict[self.key_bm_names]), benchmark_set)
 
 
     @overrides
