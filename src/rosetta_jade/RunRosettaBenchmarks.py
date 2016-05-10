@@ -194,7 +194,7 @@ class RunRosettaBenchmarks(RunRosetta):
             if not self.extra_options.use_benchmark_for_prefix(key):
                 continue
 
-            if self._current_settings.has_key(key) and self._current_settings[key]:
+            if self._current_settings.has_key(key) and self._current_settings[key] != None:
                 opt = self._current_settings[key]
                 if type(opt) == bool:
                     if opt == True:
@@ -229,11 +229,13 @@ class RunRosettaBenchmarks(RunRosetta):
         if self.options.separate_job_per_pdb:
             s.append(path.get_decoy_name(self._current_settings['pdb']))
         for key in self._current_settings_ordered_keys:
+
             if not self.extra_options.use_benchmark_for_outdir(key):
                 continue
 
-            if self._current_settings.has_key(key) and self._current_settings[key]:
+            if self._current_settings.has_key(key) and self._current_settings[key] != None:
                 opt = self._current_settings[key]
+                print "Opt: "+str(opt)
                 if type(opt) == bool:
                     if opt == True:
                         opt = "T"
