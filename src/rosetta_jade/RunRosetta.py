@@ -585,7 +585,7 @@ class RunRosetta(object):
         s = s + self.base_options.get_base_rosetta_flag_string()
 
         #Log Dir:
-        if self.options.split_mpi_output:
+        if not self.options.one_file_mpi:
             s = s + " -mpi_tracer_to_file "+ self._get_make_log_dir(*args, **kwargs)
 
         #For these benchmarks, there are only a single root directory.
