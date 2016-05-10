@@ -88,6 +88,10 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         return ".".join([self.pdblist_dir+"/"+self._current_settings["dataset"],
                         self._current_settings["l_chain"]+".PDBLIST.txt"])
 
+    @overrides
+    def _get_make_log_dir(self):
+        return RunRosettaBenchmarks._get_make_log_dir(self)+"."+self._current_settings["l_chain"]
+
     ### Helper Functions ###
 
 

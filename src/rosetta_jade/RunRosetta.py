@@ -572,7 +572,7 @@ class RunRosetta(object):
             s = s + " -out:prefix "+self._get_out_prefix()
 
         if re.search("out:path:all", self._get_extra_rosetta_options_string()):
-            print self._get_extra_rosetta_options_string()
+            #print self._get_extra_rosetta_options_string()
             sys.exit( "Please use --outdir script option instead of out:path:all" )
 
 

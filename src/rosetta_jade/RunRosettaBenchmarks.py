@@ -78,14 +78,14 @@ class RunRosettaBenchmarks(RunRosetta):
 
 
         for index, bm_name in enumerate(benchmark_names):
-            print bm_name+" "+repr(index)
+            #print bm_name+" "+repr(index)
             self._current_settings[bm_name] = benchmark_options[index]
 
         #Run BM for every PDB if separating PDBLISTS
         if self.options.separate_job_per_pdb and self._get_pdb_list_fname():
             self.options.l = None
             for pdb in self._get_pdb_list_ids():
-                print "Running Job for "+pdb
+                #print "Running Job for "+pdb
                 self.options.s = pdb
                 self._current_settings['pdb'] = pdb
 
@@ -151,8 +151,11 @@ class RunRosettaBenchmarks(RunRosetta):
     def _get_make_log_dir(self):
 
         name = self._get_out_prefix()
-        print name
+        #print name
         log_path = self.base_options._get_make_log_dir() + "/" + name
+        if self.options.separate_job_per_pdb:
+            log_path = log_path+"."+path.get_decoy_name(self._current_settings['pdb'])
+
         if not os.path.exists(log_path):
             os.mkdir(log_path)
         return log_path
@@ -165,7 +168,7 @@ class RunRosettaBenchmarks(RunRosetta):
 
         rosetta_opts = self.extra_options.get_benchmark_names(only_rosetta=True)
         for opt in rosetta_opts:
-            print opt
+            #print opt
             s = s + " "+self.extra_options.get_rosetta_option_of_key(opt)+" "+str(self._current_settings[opt])
 
         return s
@@ -241,12 +244,16 @@ class RunRosettaBenchmarks(RunRosetta):
                 s.append(key+"-"+opt)
 
         outdir = "decoys/"+".".join(s)
-        print outdir
+        #print outdir
         if not os.path.exists(outdir):
             os.mkdir(outdir)
 
         self._set_outdir(outdir)
         return outdir
+
+    @overrides
+    def _get_job_name(self):
+        return self._get_make_log_dir().replace('/', '.').replace("logs.", "")
 
     def _get_pdb_list_ids(self):
 
@@ -281,7 +288,6 @@ class RunRosettaBenchmarks(RunRosetta):
         for benchmark in sorted(self._current_settings):
             OUTFILE.write(" = ".join([benchmark.upper(), str(self._current_settings[benchmark])]) +"\n")
         OUTFILE.close()
-
 
 
 if __name__ == "__main__":
