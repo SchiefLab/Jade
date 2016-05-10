@@ -16,6 +16,12 @@
       false
     ]
   },
+  "protocol":{
+    "rosetta_option":"-design_protocol",
+    "benchmarks":[
+      "even_cluster_mc"
+    ]
+  },
   "outer_cycle_rounds":{
     "rosetta_option":"-outer_cycle_rounds",
     "benchmarks":[
