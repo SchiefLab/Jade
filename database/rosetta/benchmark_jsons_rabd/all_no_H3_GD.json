@@ -3,7 +3,9 @@
   "dataset": {
     "benchmarks":[
       "bm2_ten"
-    ]
+    ],
+    "use_for_prefix":false,
+    "use_for_outdir":false
   },
   "input_pdb_type": {
     "benchmarks":[
@@ -26,7 +28,8 @@
   "outer_cycle_rounds":{
     "rosetta_option":"-outer_cycle_rounds",
     "benchmarks":[
-      100]
+      100
+    ]
   },
   "inner_cycle_rounds":{
     "rosetta_option":"-inner_cycle_rounds",
@@ -64,6 +67,7 @@
 
   "mintype": {
     "benchmarks": [
+      "min",
       "relax"
     ]
   },
