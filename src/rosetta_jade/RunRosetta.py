@@ -11,10 +11,12 @@ from collections import defaultdict
 import argparse
 from basic.general import get_platform
 from basic.path import *
+from basic.general import fix_input_args
 
 from rosetta_jade.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
 
-
+#Fixes parser for extra rosetta opts.
+fix_input_args()
 
 def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts = ""):
     script_path = write_queue_file(cmd, queue_dir, name)
@@ -114,20 +116,24 @@ def get_option_strings(cmd):
 
     for c in cmdSP[3:]:
         if not c: continue
-        if c[0] =='-':
+        if c[0] =='-' and c != '-':
             current_option = c
             options.append(current_option)
 
             continue
-        else:
+        elif c != '-':
             grouped[current_option].append(c)
 
     final_string = []
     for option in options:
         opt = option+" "+" ".join(grouped[option])
-        final_string.append(opt)
+        if opt[0] =='-' and opt != '-':
+            final_string.append(opt)
 
-    return "\n".join(final_string)
+    full_s = "\n".join(final_string)
+
+
+    return "\n".join([s for s in full_s.split("\n") if (s[0] == '-' and s  != '-')])
 
 
 def write_queue_file(cmd, queue_dir, name):
@@ -223,6 +229,7 @@ class RunRosetta(object):
 
 
         job_setup.add_argument("--nstruct",
+                               default = 1,
                                help = "The number of structures/parallel runs.  Can also set this in any JSON file.")
 
         job_setup.add_argument("--compiler",
@@ -256,7 +263,7 @@ class RunRosetta(object):
         protocol_setup.add_argument("-l",
                                  help = "Path to a list of pdb files")
 
-        protocol_setup.add_argument("--outdir",
+        protocol_setup.add_argument("--outdir", "-o",
                                  default = "decoys",
                                  help = "Outpath.  "
                                         "Default = 'pwd/decoys' ")
@@ -345,6 +352,7 @@ class RunRosetta(object):
         self.base_options = SetupRosettaOptionsGeneral(self.options.json_base)
 
     def _set_json_run(self, json_run):
+        print "JSON Run Set: "+json_run
         self._set_extra_options(SetupRosettaOptionsGeneral( json_run))
 
     def _set_extra_options(self, extra_options):
@@ -538,13 +546,14 @@ class RunRosetta(object):
     def _get_make_log_dir(self, *args, **kwargs):
         """
         Get and make the dir to which the MPI output of each process will go.
+        ONLY for MPI TRACER LOGs
         """
 
         #name = self.get_out_prefix(*args, **kwargs)
-        log_path = self.base_options._get_make_log_dir() + "/" + self.options.job_name
+        log_path = self.base_options._get_make_log_dir() + "/" + self._get_job_name()
         if not os.path.exists(log_path):
             os.mkdir(log_path)
-        return log_path
+        return log_path +"/"+self._get_job_name()
 
     def _get_out_prefix(self, *args, **kwargs):
         return None
@@ -590,7 +599,7 @@ class RunRosetta(object):
             s = s + " -mpi_tracer_to_file "+ self._get_make_log_dir(*args, **kwargs)
 
         #For these benchmarks, there are only a single root directory.
-        if self.options.json_run:
+        if self.extra_options:
             s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options._get_root())
 
         #DB Mode

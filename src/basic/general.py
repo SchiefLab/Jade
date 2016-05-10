@@ -43,3 +43,33 @@ def get_all_combos(list_of_lists):
     """
 
     return list(itertools.product(*list_of_lists))
+
+def fix_input_args():
+    """
+    Enables options to be passed to ArgumentParser with dashes, but not single charactor ones.
+    Example:
+      --rosetta_args "-out:prefix test -out:path:all my/dir/"
+
+    Normally, this would fail if you had declared an -o option to the ArgumentParser.
+      This happens because although the quotes are being parsed correctly, the system is looking or options using the
+      starting '-' charactor.  If you give a quote and then a space, you will recieve no error.
+
+    This code essentially checks for single dashes and puts a space in front of them.  Note that this does not work with single
+     charactor options you are hoping to pass with a quote.  Because there is no way to grab the input string from the system and fix it myself,
+     for these it will have to have a space after the quotes.  This at least fixes the most common use cases (Mostly for use with Rosetta.).
+
+
+    """
+    new_argv = []
+    for arg in sys.argv:
+
+        if arg[0:2] == "--":
+            new_argv.append(arg)
+        elif arg[0] == '-' and len(arg) > 2 and arg[2] != ' ':
+
+            new_arg = ' '+arg
+            new_argv.append(new_arg)
+        else:
+            new_argv.append(arg)
+
+    sys.argv = new_argv
