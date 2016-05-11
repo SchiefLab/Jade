@@ -51,7 +51,7 @@ def main():
 
     analysis_options.add_argument("--db_prefix",
                       help = "Prefix to use for output databases.  Recommended to use the design and strategy name",
-                      default = "")
+                      required = True)
 
     run_mpi_rosetta = RunRosetta(program = "rosetta_scripts", parser = parser)
 
@@ -107,6 +107,10 @@ def main():
 
     #### Create Features Databases ###
     starting_job_name = run_mpi_rosetta.options.job_name
+    if starting_job_name == "rosetta_run":
+        print "Using db_prefix as job name."
+        starting_job_name = options.db_prefix
+
     for pdb_list in pdb_lists:
         print "PDBList "+ repr(pdb_list)
         if options.analysis == "all" or options.analysis == "antibody_features":
