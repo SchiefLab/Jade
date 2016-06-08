@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+
+
+import re
+import sys
+import os
+
+from argparse import ArgumentParser
+
+from basic import path
+
+
+
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser("Renames original files to new names for design ordering.  Run from directory with pdb files already copied in!")
+    parser.add_argument("-i", "--new_names",
+                        help = "File with new to old names.  Example: new_name  *  filename.  Can have lines that don't have all three.  Will only rename if it has a start in it.",
+                        required = True)
+
+
+    options = parser.parse_args()
+
+
+    INFILE = open(options.new_names, 'r')
+    for line in INFILE:
+        line = line.strip()
+        lineSP = line.split()
+        if not line or len(lineSP) != 3:
+            continue
+
+        new_name = lineSP[0].strip()
+        create = lineSP[1].strip()
+        old_name = lineSP[2].strip()
+
+        if create != '*': continue
+
+        print "Renaming "+old_name+" to "+new_name+path.get_decoy_extension(old_name)
+
+        os.system("mv "+old_name+" "+new_name+path.get_decoy_extension(old_name))
+
+    INFILE.close()
+
+
+

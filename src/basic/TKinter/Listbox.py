@@ -1,5 +1,11 @@
-from basic.TKinter import *
+from Tkinter import *
 from tkFont import *
+
+
+
+
+
+
 class AutoListbox(Listbox):
     def autowidth(self, maxwidth, list=None):
         f = Font(font=self.cget("font"))

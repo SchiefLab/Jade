@@ -45,7 +45,7 @@ class CompareAntibodyDesignStrategies:
 
     def _init_default_options(self):
 
-        self.scorefxn = "talaris2013"
+        self.scorefxn = "talaris2014"
 
         self.main_dir = StringVar()
 
@@ -521,12 +521,47 @@ class CompareAntibodyDesignStrategies:
         df = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs))
         return df
 
+    def output_all_data_as_excel_file(self, top = True):
+        final_dfs = []
+        final_tab_names = []
+
+
+        #All Data:
+        dfs, names = self.get_csv_data(top, summary = False)
+        final_dfs.extend(dfs)
+        final_tab_names.extend(names)
+
+        #Summary Data:
+        dfs, names = self.get_csv_data(top, summary = True)
+        final_dfs.extend(dfs)
+        final_tab_names.extend(dfs)
+
+
+
+
+
     def output_csv_data(self, top = False, summary = False):
         """
-        Output data by converting everything to a pandas dataframe first.
-        For now, one function pretty much does everything.
+        Output a CSV file of combined or individual data.
 
         """
+        output_dfs, output_names = self.get_csv_data(top, summary)
+        for index, df in enumerate(output_dfs):
+            name = output_names[index]
+            df.to_csv(name+".csv")
+
+            print "Wrote: "+name+".csv"
+
+    def get_csv_data(self, top = False, summary = False):
+        """
+        Get data by converting everything to a pandas dataframe first.
+        For now, one function pretty much does everything.
+
+        :rtype: [pandas.Dataframe],[str]
+
+        """
+        final_dfs = []
+        final_names = []
 
         dfs = []
         venn_dfs = [] #Best decoys/data seen in all score classes of the top n together.
@@ -623,9 +658,12 @@ class CompareAntibodyDesignStrategies:
 
                 if summary:
                     top_df = top_df.convert_objects(convert_numeric=True)
-                    top_df.groupby(by=["strategy", "by_score_group"]).describe(exclude=['object']).to_csv(self._setup_outdir_individual()+"/per_strategy_summary_top.csv")
+
+                    final_dfs.append(top_df.groupby(by=["strategy", "by_score_group"]).describe(exclude=['object']))
+                    final_names.append(self._setup_outdir_individual()+"/per_strategy_summary_top")
                 else:
-                    top_df.to_csv(self._setup_outdir_individual()+"/ind_per_model_top.csv")
+                    final_dfs.append(top_df)
+                    final_names.append(self._setup_outdir_individual()+"/ind_per_model_top")
 
 
             if self.combined_analysis.get():
@@ -645,9 +683,12 @@ class CompareAntibodyDesignStrategies:
                 if summary:
                     #df.groupby(by="strategy").describe().to_csv(self._setup_outdir_combined()+"/com_summary_top_by_"+score.name+".csv")
                     df = df.convert_objects(convert_numeric=True)
-                    df.groupby(by=["by_score_group"]).describe(exclude=['object']).to_csv(self._setup_outdir_combined()+"/com_summary_top.csv")
+
+                    final_dfs.append(df.groupby(by=["by_score_group"]).describe(exclude=['object']))
+                    final_names.append(self._setup_outdir_combined()+"/com_summary_top.csv")
                 else:
-                    df.to_csv(self._setup_outdir_combined()+"/com_per_model_top.csv")
+                    final_dfs.append(df)
+                    final_names.append(self._setup_outdir_combined()+"/com_per_model_top")
 
 
         else:
@@ -655,25 +696,32 @@ class CompareAntibodyDesignStrategies:
             if self.individual_analysis.get():
                 combined_scores.sort(columns = ['strategy', 'dG'])
                 if summary:
-                    combined_scores.groupby(by="strategy").describe(exclude=['object']).to_csv(self._setup_outdir_individual()+"/per_strategy_summary_all.csv")
+
+                    final_dfs.append(combined_scores.groupby(by="strategy").describe(exclude=['object']))
+                    final_names.append(self._setup_outdir_individual()+"/per_strategy_summary_all.csv")
                 else:
-                    combined_scores.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_all.csv", "w"))
+                    final_dfs.append(combined_scores)
+                    final_names.append(self._setup_outdir_individual()+"/ind_per_model_all")
 
             if self.combined_analysis.get():
                 combined_scores.sort(columns = ['dG'])
                 if summary:
                     #combined_scores.groupby(by="strategy").describe().to_csv(self._setup_outdir_combined()+"/")
-                    combined_scores.describe(exclude=['object']).to_csv(self._setup_outdir_combined()+"/com_summary_all.csv")
+                    final_dfs.append(combined_scores.describe(exclude=['object']))
+                    final_names.append(self._setup_outdir_combined()+"/com_summary_all")
                 else:
-                    combined_scores.to_csv(open(self._setup_outdir_combined()+"/com_per_model_all.csv", "w"))
+                    final_dfs.append(combined_scores)
+                    final_names.append(self._setup_outdir_combined()+"/com_per_model_all")
 
         #How to add Native Line?
         #Maybe a 'print native info' function...
 
-
-        print "Complete"
+        return final_dfs, final_names
 
     def output_stats(self):
+        """
+        Depracated in favor of dataframe summaries.
+        """
 
         def output_all_stats():
 
@@ -772,6 +820,7 @@ class CompareAntibodyDesignStrategies:
             print "Complete"
 
         def output_score_extra_stats():
+
             top_n = self.top_n.get()
             main_scores = self._setup_scores()
             all_scores = self._setup_scores("antibody", True)

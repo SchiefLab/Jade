@@ -18,18 +18,13 @@ from rosetta_jade.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
 #Fixes parser for extra rosetta opts.
 fix_input_args()
 
-def run_on_qsub(cmd, queue_dir, name, nodes, ppn, print_only = False, extra_opts = ""):
+def run_on_qsub(cmd, queue_dir, name, print_only = False, extra_opts = ""):
     script_path = write_queue_file(cmd, queue_dir, name)
 
 
     #qsub -q dna -l nodes=10:ppn=11 -V -N $1 -d $qsub_output -v np=101 $benchmarks/$1
 
     qsub_cmd = " qsub " +extra_opts+" -V -N "+name + " -d "+queue_dir
-    if ppn:
-
-        qsub_cmd = qsub_cmd + " -l nodes="+str(nodes)+":ppn="+str(ppn)
-    else:
-        qsub_cmd = qsub_cmd + " -l nodes="+str(nodes)
 
     qsub_cmd = qsub_cmd +" "+script_path
 
@@ -146,7 +141,7 @@ def write_queue_file(cmd, queue_dir, name):
 
 
 class RunRosetta(object):
-    def __init__(self, program = None, parser = None):
+    def __init__(self, program = None, parser = None, db_mode = False):
         """
         Base class for Running Rosetta through python.
         Mainly used for benchmarking experiments.
@@ -165,7 +160,9 @@ class RunRosetta(object):
         self.base_options = None
         self.extra_options = None
         self.program = program
+        self.db_mode = db_mode
 
+        self.jsons = [os.path.basename(d) for d in glob.glob(os.path.join(get_rosetta_json_run_path(),"*.json"))]
 
         self._add_args(parser)
         self._parse_args()
@@ -179,6 +176,9 @@ class RunRosetta(object):
 
         self._resolve_options()
 
+
+
+
     def _add_args(self, parser = None):
         """
         Add Arguments to an Argument Parser or create a new one.
@@ -191,119 +191,123 @@ class RunRosetta(object):
             self.parser = parser
 
 
-        job_setup = self.parser.add_argument_group("Job Setup" )
-        job_setup.add_argument("--job_manager",
-                               default="slurm",
-                               help="Job Manager to launch job. "
-                                    "Default = 'slurm ' ",
-                               choices = ["slurm","qsub","local","local_test"] )
+        common_options = self.parser.add_argument_group("Common Options" )
 
-        job_setup.add_argument("--local_test",
-                               default = False,
-                               help = "Is this a local test?  Easy way to set job manager.",
-                               action = "store_true")
+        common_options.add_argument("-s",
+                                 help = "Path to a pdb file")
 
-        job_setup.add_argument("--local",
-                               default = False,
-                               help = "Are we running locally?  Easy way to set job manager.",
-                               action = "store_true")
+        common_options.add_argument("-l",
+                                 help = "Path to a list of pdb files")
 
-        job_setup.add_argument("--job_manager_opts",
-                                 help = "Extra options for the job manager, such as queue or processor requests"
-                                        "Remove double dashes. Exclusive is on by default.  Specify like: -p imperial exclusive.",
-                                 default = [],
-                                 nargs = "*")
-
-
-        job_setup.add_argument("--np",
+        common_options.add_argument("--np",
                                default = 101,
                                  help = "Number of processors to use for MPI.  "
                                         "Default = 101")
 
-        job_setup.add_argument("--nodes",
-                                 help = "Number of nodes to ask for.  Optional. ")
-
-        job_setup.add_argument("--ppn",
-                                 help = "Processors per node for qsub.  NTasks is np for slurm")
-
-
-
-        job_setup.add_argument("--nstruct",
+        common_options.add_argument("--nstruct",
                                default = 1,
                                help = "The number of structures/parallel runs.  Can also set this in any JSON file.")
 
-        job_setup.add_argument("--compiler",
-                                 default = "gcc",
-                                 help = "Set the compiler used.  Will set clang automatically for macos. "
-                                        "Default = 'gcc' ",
-                                 choices = ["gcc", "clang"])
 
-        job_setup.add_argument("--machine_file",
-                                 help = "Optional machine file for passing to MPI")
-
-        job_setup.add_argument("--job_name",
+        common_options.add_argument("--job_name",
                                 default = "rosetta_run",
                                 help = "Set the job name used for mpi_tracer_to_file dir and queue.  "
                                        "Default = 'rosetta_run'.  "
                                        "(Benchmarking: Override any set in json_base.)",)
 
-        job_setup.add_argument("--mpiexec",
-                               help = "Specify a particular path (or type of) MPI exec. Default is srun (due to vax). If local or local test, will use mpiexex",
-                               default = "srun")
-
-        protocol_setup = self.parser.add_argument_group("Protocol Setup")
-
-        if not self.program:
-            protocol_setup.add_argument("--program",
-                                 help = "Define the Rosetta program to use if not set in json_run")
-
-        protocol_setup.add_argument("-s",
-                                 help = "Path to a pdb file")
-
-        protocol_setup.add_argument("-l",
-                                 help = "Path to a list of pdb files")
-
-        protocol_setup.add_argument("--outdir", "-o",
+        common_options.add_argument("--outdir", "-o",
                                  default = "decoys",
                                  help = "Outpath.  "
                                         "Default = 'pwd/decoys' ")
 
+        common_options.add_argument("--json_run",
+                                help = "JSON file for specific Rosetta run.  Not required.  Pre-Configured JSONS include: "+repr(self.jsons),
+                                )
 
-        protocol_setup.add_argument("--json_base",
-                               default = get_rosetta_json_run_path()+"/common_flags.json",
-                               help = "JSON file for setting up base paths/etc. for the cluster."
-                                      "Default = 'database/rosetta/jsons/common_flags.json' ")
 
-        protocol_setup.add_argument("--json_run",
-                                help = "JSON file for specific Rosetta run.  Not required.")
-
-        protocol_setup.add_argument("--root",
-                                 help = "Set the root directory.  "
-                                        "Default = pwd.  "
-                                        "(Benchmarking: Override any set in json_base.)")
-
-        protocol_setup.add_argument("--extra_options",
+        common_options.add_argument("--extra_options",
                                  help = "Extra Rosetta options.  "
-                                        "Specify in quotes!  If you get an error, add a space after the first quote.")
+                                        "Specify in quotes!")
 
-        protocol_setup.add_argument("--script_vars",
+        common_options.add_argument("--script_vars",
                                 help = "Any script vars for XML scripts."
                                        "Specify as you would in Rosetta. like: glycosylation=137A,136A",
                                 nargs = '*')
 
-        protocol_setup.add_argument("--one_file_mpi",
-                                 help = "Output all MPI std::out to a single file instead of splitting it. ",
-                                 default = False,
-                                 action = "store_true")
+        if not self.program:
+            common_options.add_argument("--program",
+                                 help = "Define the Rosetta program to use if not set in json_run")
 
-        protocol_setup.add_argument("--print_only",
+
+
+
+        debug_options = self.parser.add_argument_group("Testing and Debugging")
+
+        debug_options.add_argument("--print_only",
                                  help = "Do not actually run anything.  Just print setup for review.",
                                  default = False,
                                  action = "store_true")
 
-        db_group = self.parser.add_argument_group("Relational Databases", "Options for Rosetta Database input and output.  Use for features or for inputting and output structures as databases")
 
-        db_group.add_argument("--db_mode",
+        debug_options.add_argument("--local_test",
+                               default = False,
+                               help = "Is this a local test?  Will change nstruct to 1 and run on 2 processors",
+                               action = "store_true")
+
+        debug_options.add_argument("--one_file_mpi",
+                                 help = "Output all MPI std::out to a single file instead of splitting it. ",
+                                 default = False,
+                                 action = "store_true")
+
+
+
+        special_options = self.parser.add_argument_group("Special Options for controlling execution")
+        special_options.add_argument("--job_manager",
+                               default="slurm",
+                               help="Job Manager to launch job. (Or none if local or local_test)"
+                                    "Default = 'slurm ' ",
+                               choices = ["slurm","qsub","local","local_test"] )
+
+
+
+        special_options.add_argument("--job_manager_opts",
+                                 help = "Extra options for the job manager, such as queue or processor requests"
+                                        "Remove double dashes. Exclusive is on by default.  Specify like: -p imperial exclusive.",
+                                 default = [],
+                                 nargs = "*")
+
+        special_options.add_argument("--json_base",
+                               default = get_rosetta_json_run_path()+"/common_flags.json",
+                               help = "JSON file for setting up base paths/etc. for the cluster."
+                                      "Default = 'database/rosetta/jsons/common_flags.json' ")
+
+        special_options.add_argument("--compiler",
+                                 default = "gcc",
+                                 help = "Set the compiler used.  Will set clang automatically for macos. "
+                                        "Default = 'gcc' ",
+                                 choices = ["gcc", "clang"])
+
+
+
+
+        special_options.add_argument("--mpiexec",
+                               help = "Specify a particular path (or type of) MPI exec. Default is srun (due to vax). If local or local test, will use mpiexex",
+                               default = "srun")
+
+        special_options.add_argument("--machine_file",
+                                 help = "Optional machine file for passing to MPI")
+
+
+
+
+
+
+
+
+        if self.db_mode:
+            db_group = self.parser.add_argument_group("Relational Databases", "Options for Rosetta Database input and output.  Use for features or for inputting and output structures as databases")
+
+            db_group.add_argument("--db_mode",
                             help = "Set the mode for Rosetta to use if using a database.  "
                                       "Features will be output to a database.  "
                                       "If not sqlite3, must build Rosetta with extras.  "
@@ -311,21 +315,21 @@ class RunRosetta(object):
                                       "Default DB mode for features is sqlite3.  ",
                             choices = ["sqlite3", "mysql", "postgres"])
 
-        db_group.add_argument("--db_name",
+            db_group.add_argument("--db_name",
                               help = "In or Out database name",
                               default = "features.db"
                                 )
 
-        db_group.add_argument("--db_batch",
+            db_group.add_argument("--db_batch",
                               help = "Batch of structures.",
                               default ="feat")
 
-        db_group.add_argument("--db_in",
+            db_group.add_argument("--db_in",
                               help = "Use an input database",
                               default = False,
                               action = "store_true")
 
-        db_group.add_argument("--db_out",
+            db_group.add_argument("--db_out",
                               help = "Use an output database",
                               default = False,
                               action = "store_true")
@@ -338,8 +342,6 @@ class RunRosetta(object):
         elif not self.program:
             sys.exit("Rosetta Program to run must be specified.")
 
-        if self.options.local:
-            self.options.job_manager = "local"
         if self.options.local_test:
             self.options.job_manager = "local_test"
 
@@ -461,18 +463,17 @@ class RunRosetta(object):
 
         #Resolve options overrides
         _set_nstruct()
-        _set_db_mode()
-        _clean_up_db_name()
         _set_machine_file()
         _set_job_manager_opts()
         _setup_program()
 
+        if self.db_mode:
+            _set_db_mode()
+            _clean_up_db_name()
 
     def _get_root(self):
 
-        if self.options.root:
-            return self.options.root
-        elif self.extra_options._get_root():
+        if self.extra_options._get_root():
             return self.extra_options._get_root()
         elif self.base_options._get_root():
             return self.base_options._get_root()
@@ -603,32 +604,33 @@ class RunRosetta(object):
             s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options._get_root())
 
         #DB Mode
-        if self.options.db_in:
-            s = s + " -in:use_database"
-            if not self.options.db_mode:
-                sys.exit("Please select the database mode you wish to use.")
+        if self.db_mode:
+            if self.options.db_in:
+                s = s + " -in:use_database"
+                if not self.options.db_mode:
+                    sys.exit("Please select the database mode you wish to use.")
 
-        if self.options.db_out:
-            s = s + " -out:use_database"
-            if not self.options.db_mode:
-                sys.exit("Please select the database mode you wish to use. ")
+            if self.options.db_out:
+                s = s + " -out:use_database"
+                if not self.options.db_mode:
+                    sys.exit("Please select the database mode you wish to use. ")
 
-            if self.options.db_mode == "sqlite3" and (not re.search('separate_db_per_mpi_process', s)) :
-                s = s + " -separate_db_per_mpi_process"
+                if self.options.db_mode == "sqlite3" and (not re.search('separate_db_per_mpi_process', s)) :
+                    s = s + " -separate_db_per_mpi_process"
 
-        if self.options.db_mode:
-            s = s + " -inout:dbms:mode "+self.options.db_mode
-
-        if self.options.db_name:
-            s = s + " -inout:dbms:database_name " +self.options.db_name
-
-
-        if re.search("features", self.base_options.get_xml_script() + self.extra_options.get_xml_script()):
+            if self.options.db_mode:
+                s = s + " -inout:dbms:mode "+self.options.db_mode
 
             if self.options.db_name:
-                s = s +" -parser:script_vars name="+self.options.db_name
-            if self.options.db_batch:
-                s = s +" -parser:script_vars batch="+self.options.db_batch
+                s = s + " -inout:dbms:database_name " +self.options.db_name
+
+
+            if re.search("features", self.base_options.get_xml_script() + self.extra_options.get_xml_script()):
+
+                if self.options.db_name:
+                    s = s +" -parser:script_vars name="+self.options.db_name
+                if self.options.db_batch:
+                    s = s +" -parser:script_vars batch="+self.options.db_batch
 
 
         #Input decoys
@@ -693,7 +695,7 @@ class RunRosetta(object):
         else:
             cmd = cmd + " "+ cmd_string
 
-        if self.options.db_mode == "sqlite3":
+        if self.db_mode and self.options.db_mode == "sqlite3":
             cmd = cmd + "\n"
             cmd = cmd + "cd "+self.options.outdir+"\n"
             cmd = cmd + "bash "+ get_rosetta_features_root()+"/sample_sources/merge.sh "+self.options.db_name + " "+self.options.db_name+"_*\n"
@@ -730,7 +732,7 @@ class RunRosetta(object):
         if self.options.job_manager == "local" and self.options.print_only:
             print cmd + "\n"
 
-        elif self.options.job_manager == "local" or self.options.local:
+        elif self.options.job_manager == "local":
             print cmd + "\n"
             os.system(cmd)
         elif self.options.job_manager == "local_test" or self.options.local_test:
@@ -743,10 +745,10 @@ class RunRosetta(object):
             os.system(cmd)
 
         elif self.options.job_manager == "qsub":
-            run_on_qsub(cmd, queue_dir, self._get_job_name(*args, **kwargs), self.options.nodes, self.options.ppn, self.options.print_only, self._get_job_manager_opts())
+            run_on_qsub(cmd, queue_dir, self._get_job_name(*args, **kwargs), self.options.print_only, self._get_job_manager_opts())
 
         elif self.options.job_manager == "slurm":
-            run_on_slurm(cmd, queue_dir, self._get_job_name(*args, **kwargs), nodes=self.options.nodes, ntasks=self.options.np, print_only=self.options.print_only, extra_opts=self._get_job_manager_opts())
+            run_on_slurm(cmd, queue_dir, self._get_job_name(*args, **kwargs), ntasks=self.options.np, print_only=self.options.print_only, extra_opts=self._get_job_manager_opts())
 
 
 if __name__ == "__main__":

@@ -49,11 +49,11 @@ rosetta.init(" -ignore_unrecognized_res -ignore_zero_occupancy false -ex1 -ex2 -
 def main():
     parser = ArgumentParser()
     parser.add_argument("--db_dir",
-                        help="Directory with databases to compare",
+                        help="Directory with databases to compare. DEFAULT = databases",
                         default="databases")
 
     parser.add_argument("--analysis_name",
-                        help="Main directory to complete analysis",
+                        help="Main directory to complete analysis. DEFAULT = prelim_analysis",
                         default="prelim_analysis")
 
     parser.add_argument("--native",
@@ -70,7 +70,7 @@ def main():
                         default=["L1", "L2", "L3", "H1", "H2", "H3"])
 
     parser.add_argument("--pyigclassify_dir",
-                        help = "DBOUT directory of PyIgClassify",
+                        help = "PyIgClassify Root Directory with DBOUT",
                         default = "")
 
     options = parser.parse_args()

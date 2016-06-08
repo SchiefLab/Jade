@@ -105,7 +105,7 @@ class JsonCreator:
     """
     def __init__(self, out_path, script_type):
         self.out_path = out_path
-        self.script_types = ["antibody", "interface", "cluster", "antibody_minimal","antibody_min_hbond_analysis", "antibody_no_hbond_analysis", "antibody_minimal_min_hbond_analysis"]
+        self.script_types = ["antibody", "interface", "cluster", "antibody_minimal","antibody_minimal_hbond_analysis", "antibody_minimal_no_hbond_analysis"]
         if not script_type in self.script_types:
             sys.exit(script_type +" unrecognized.  Available JSON script types are: "+repr(self.script_types))
 

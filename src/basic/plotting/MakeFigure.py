@@ -319,3 +319,8 @@ class MakeFigure:
         else:
             self.p.savefig(outpath, dpi=300, bbox_inches='tight')
 
+
+x = MakeFigure()
+y = MakeFigure()
+z = MakeFigure(rows=4, columns=5)
+v = [x, y, z]

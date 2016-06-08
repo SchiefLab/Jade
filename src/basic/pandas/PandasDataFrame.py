@@ -1,5 +1,5 @@
 import pandas as pd
-
+import os
 
 
 
@@ -44,6 +44,29 @@ class GeneralPandasDataFrame(pd.DataFrame):
         """
 
         return self[self[column1] == to_match][column2]
+
+def multi_tab_excel(df_list, sheet_list, file_name):
+    """
+    Writes multiple dataframes as separate sheets in an output excel file.
+
+    If directory of output does not exist, it will create it.
+
+    Author: Tom Dobbs
+    http://stackoverflow.com/questions/32957441/putting-many-python-pandas-dataframes-to-one-excel-worksheet
+
+
+    :param df_list: [pd.Dataframe]
+    :param sheet_list: [str]
+    :param file_name: str
+
+    """
+    if not os.path.exists(os.path.dirname(file_name)):
+        os.mkdir(os.path.dirname(file_name))
+
+    writer = pd.ExcelWriter(file_name,engine='xlsxwriter')
+    for dataframe, sheet in zip(df_list, sheet_list):
+        dataframe.to_excel(writer, sheet_name=sheet, startrow=0 , startcol=0)
+    writer.save()
 
 
 def drop_duplicate_columns(df):

@@ -129,12 +129,12 @@ def get_decoy_extension(decoy):
 
     for ext in extensions:
         if re.search(ext, decoy):
-            if re.search(".gz"):
+            if re.search(".gz", decoy):
                 return ext+".gz"
             else:
                 return ext
 
-    return None
+    return ""
 
 
 def make_dir_if_not_exists(dir):

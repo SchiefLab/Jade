@@ -95,13 +95,16 @@ class AntibodyDesignAnalysisMenu(object):
         ## Alignment ##
         self.per_model_menu = Menu(self.main_menu, tearoff=0)
 
+        '''
         self.per_model_menu.add_command(label="Output Length Alignments",
                                         command=lambda: self.compare_designs.output_len_or_clus_alignment('length', 'antibody'))
         self.per_model_menu.add_command(label="Output Cluster Alignments",
                                         command=lambda: self.compare_designs.output_len_or_clus_alignment('cluster', 'antibody'))
         self.per_model_menu.add_command(label="Output CDR Sequence Alignments",
-                                        command=lambda: self.compare_designs.output_len_or_clus_alignment('aligned_sequence', 'antibody'))
+                                     command=lambda: self.compare_designs.output_len_or_clus_alignment('aligned_sequence', 'antibody'))
         self.per_model_menu.add_separator()
+        '''
+
         self.per_model_menu.add_command(label="Output to CSV (Top)", command = lambda: self.compare_designs.output_csv_data(top = True))
         self.per_model_menu.add_command(label="Output to CSV (ALL)", command = lambda: self.compare_designs.output_csv_data(top = False))
         self.per_model_menu.add_separator()

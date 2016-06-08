@@ -1,6 +1,7 @@
 import sys
 import re
 import itertools
+import re
 
 def get_rosetta_program(program, mpi = True, compiler = 'gcc'):
     """
@@ -73,3 +74,20 @@ def fix_input_args():
             new_argv.append(arg)
 
     sys.argv = new_argv
+
+def match_patterns(search_string, patterns):
+    """
+    Uses RE to match multiple patterns.  Returns boolean of success
+
+    :param search_string: str
+    :param patterns: [str]
+    :rtype: boolean
+
+    """
+    match = False
+
+    for pattern in patterns:
+        if re.search(pattern, search_string):
+            match = True
+            break
+    return match

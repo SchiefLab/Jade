@@ -15,7 +15,7 @@ from basic import general
 from basic import path
 from overrides import overrides
 
-fix_input_args()
+general.fix_input_args()
 class RunRosettaBenchmarks(RunRosetta):
     def __init__(self, program = None, parser = None):
         """
