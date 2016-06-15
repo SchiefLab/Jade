@@ -54,6 +54,13 @@ def get_rosetta_features_root():
     """
     return os.getenv('ROSETTA3_DB')+"/../tests/features"
 
+def get_rosetta_features_run_script():
+    """
+    Get the path to Rosetta features script dir through the set ROSETTA3_DB env variable.
+    :rtype: str
+    """
+    return os.getenv('ROSETTA3_DB')+"/../source/scripts/features/run_features.R"
+
 def get_xml_scripts_path():
     """
     Get the path to the Rosetta xml script directory.  Useful for variable substitutions.

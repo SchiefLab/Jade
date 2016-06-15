@@ -137,8 +137,43 @@ class JsonCreator:
     def run_json(self, backround = False):
         run_features_json(self.json_path, backround, self.out_path)
 
-
 def run_features_json(json_path, backround = False, outpath = ""):
+    """
+    Convenience function
+    Outputs an R script for running a JSON file, and runs it.
+    Works with the new Library structure of the Features Reporter Framework.
+    """
+    def move_delete_build():
+        """
+        Only used because the outpath STILL doesn't work in RosettaFeatures even though I've fixed it like 5 times already!
+        :return:
+        """
+        if os.path.exists("build"):
+            c = glob.glob("build/*")
+            for d in c:
+                os.system("cp -r "+d+" "+outpath)
+        if os.path.exists("build"):
+            shutil.rmtree("build")
+
+
+
+    r_cmd = get_rosetta_features_run_script()+" "+json_path
+
+    print "Running: "+r_cmd
+
+    if backround:
+        thread = Threader()
+
+        f = []
+        f.append(lambda: os.system(r_cmd))
+        f.append(lambda: move_delete_build())
+        thread.run_functions(f)
+
+    else:
+        os.system(r_cmd)
+        move_delete_build()
+
+def run_features_json_old(json_path, backround = False, outpath = ""):
     """
     Convenience function
     Run compare_sample_sources with json path.
@@ -165,3 +200,4 @@ def run_features_json(json_path, backround = False, outpath = ""):
     else:
         os.system(r_cmd)
         move_delete_build()
+
