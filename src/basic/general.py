@@ -91,3 +91,31 @@ def match_patterns(search_string, patterns):
             match = True
             break
     return match
+
+def strip_right(s, pattern):
+    """
+    Strips a string right (end) of string if found.  Otherwise, returns the original string.
+
+    :param s: str
+    :param pattern: str
+    :rtype: str
+    """
+
+    if s.endswith(pattern):
+        return s[:-(len(pattern))]
+    else:
+        return s
+
+def strip_left(s, pattern):
+    """
+    Strips a string left (start) of string if found.  Otherwise, returns the original string.
+
+    :param s: str
+    :param pattern: str
+    :rtype: str
+    """
+
+    if s.startswith(pattern):
+        return s[len(pattern):-1]
+    else:
+        return s

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding: utf-8
 
 #from sequence import fasta
 import argparse
@@ -7,8 +8,40 @@ from collections import defaultdict
 
 from basic import path
 from basic.structure import util
+from basic import general
+
+begin_schief_order = """
+Scripps PO C426550C
+
+all genes are:
+synthesis
+codon optimization for mammalian (293) cells
+various vectors are used
+"""
+
+end_schief_ab_order = """
+
+-------- order nothing below this line --------------
+
+###################################################################################################################
+Notes for Bill:
+GCACTTGTCACGAATTCG--[Antibody-Heavy-FV]--GCTAGCACCAAGGGCCCATC translates to ALVTNS--[Antibody-Heavy-FV]--ASTKGP
+GCACTTGTCACGAATTCA--[Antibody-Kappa-Fv]--CGTACGGTGGCTGCACCA translates to ALVTNS--[Antibody-Kappa-Fv]--RTVAAP
+(*** so kappa gene insert should end in K ***)
+GCACTTGTCACGAATTCG--[Antibody-Lambda-FV]—-CTAGGTCAGCCCAAGGCTGCCCC translates to ALVTNS--[Antibody-Lambda-FV]—-LGQPKAA
+(*** so lambda gene insert should normally end in V and should NOT include the last L ***)
+###################################################################################################################
+"""
+
+
 
 if __name__ == "__main__":
+
+
+    igg_types = ["IgG_order", "IgG_order_lambda", "IgG_order_kappa", "IgG_order_heavy"]
+    format_types = ["basic", "fasta", "general_order"]
+    format_types.extend(igg_types)
+
     parser = argparse.ArgumentParser(description="Uses Biopython to print sequence information.  Example:\n"
                                                  "get_seq.py --pdb 2j88_A.pdb --format fasta --outpath test.txt")
 
@@ -25,10 +58,10 @@ if __name__ == "__main__":
                         help = "A specific chain to output",
                         default = "")
 
-    parser.add_argument("--format", "-f",
+    parser.add_argument("--format",
                         help = "The output format requried.",
                         default = "fasta",
-                        choices = ["basic", "fasta", "ab_order"])
+                        choices = format_types)
 
     parser.add_argument("--outpath", "-o",
                         help = "Output path.  If none is specified it will write to screen.")
@@ -40,12 +73,38 @@ if __name__ == "__main__":
     parser.add_argument("--region",
                         help = "specify a particular region, start:end:chain")
 
+    #parser.add_argument("--strip_n_term",
+    #                    help = "Strip this sequence off the N-term of resulting sequences. (Useful for antibodies")
+
+    parser.add_argument("--strip_c_term",
+                        help = "Strip this sequence off the C-term of resulting sequences. (Useful for antibodies")
+
+    parser.add_argument("--pad_c_term",
+                        help = "Pad this sequence with some C-term (Useful for antibodies")
+
+    parser.add_argument("--output_original_seq",
+                        default = False,
+                        action = "store_true",
+                        help = "Output the original sequence and the striped seqeunce if stripped.  Default FALSE.")
+
     options = parser.parse_args()
+
+    if options.format in igg_types:
+        igg_type_format = True
+    else:
+        igg_type_format = False
+
+
+    options.format = options.format.lower()
 
     #if not options.pdb:
     #    options.pdb = sys.argv[1]
 
+    if (options.format == "igg_order_lambda" or options.format == "igg_order_kappa") and not options.chain:
+        options.chain = "L"
 
+    if options.format == "igg_order_heavy" and not options.chain:
+        options.chain = "H"
 
 
     sequences = defaultdict()
@@ -88,19 +147,72 @@ if __name__ == "__main__":
     outlines = []
     i = 1
 
+    if options.format == "general_order" or igg_type_format:
+        outlines.append(begin_schief_order)
 
+    if options.format == "igg_order_heavy":
+        outlines.append("###################################################################################################################################################")
+        outlines.append("Use pFUSEss-CHIg-hG1 (human heavy) vector and clone between the two flanking regions: "
+                        "GCACTTGTCACGAATTCG--[Antibody-Heavy-FV]--GCTAGCACCAAGGGCCCATC")
+        outlines.append("###################################################################################################################################################\n")
+
+        print "Sequence should flank: ANY - WGqgtlVtvss\n"
+        print ">Heavy example:\nEVQLVESGGGLVKPGGSLRLSCSASGFDFDNAAMSWVRQPPGKGLEWVGTITGPGEGWSVDYAAPVEGRFTISRLNSINFLYLEMNNLRMEDSGLYFCARGEWEFRNGETYSALTYWGRGTLVTVSS"
+
+    elif options.format == "igg_order_lambda":
+        outlines.append("#################################################################################################################################################")
+        outlines.append("Use pFUSEss-CLIg-hL2 (human lambda) vector and clone between the two flanking regions: "
+                        "GCACTTGTCACGAATTCG [Antibody-Lambda-Fv] CTAGGTCAGCCCAAGGCT")
+        outlines.append("#################################################################################################################################################\n")
+
+        print "Sequence should flank: ANY - gsgtqvTV\n"
+        print ">Lambda example:\nSYELTQETGVSVALGRTVTITCRGDSLRYHYASWYQKKPGQAPILLFYGKNNRPSGVPDRFSGSASGNRASLTISGAQAEDDAEYYCMSAAKPGSWTRTFGGGTKLTVL"
+
+    elif options.format == "igg_order_kappa":
+        outlines.append("##########################################################################################################################################################")
+        outlines.append("Use pFUSEss-CLIg-hk (human kappa) vector and clone between the two flanking regions: "
+                        "GCACTTGTCACGAATTCA--[Antibody-Kappa-Fv]--CGTACGGTGGCTGCACCA")
+        outlines.append("##########################################################################################################################################################\n")
+
+        print "Sequence should flank: ANY - FGGGtkveik\n"
+        print ">Kappa example:\nDIQMTQSPASLSASVGETVTITCRASENIYSYLTWYQQKQGKSPQLLVYNAKTLAEGVPSRFSGSGSGTQFSLKISSLQPEDFGNYYCQHHYGTRTFGGGTRLEIK"
+
+    print "\n"
     for name_chain in ordered_ids:
+        original_seq = sequences[name_chain]
+        seq = sequences[name_chain]
+
+        if options.strip_c_term:
+            seq = general.strip_right(seq, options.strip_c_term)
+
+        if options.pad_c_term:
+            seq = seq+options.pad_c_term
 
         if options.format == "basic":
-            outlines.append( options.prefix+name_chain+" : "+sequences[name_chain]+"\n")
+            if options.output_original_seq:
+                outlines.append(options.prefix+name_chain+" : "+original_seq)
+            outlines.append( options.prefix+name_chain+" : "+seq+"\n")
+
         elif options.format == "fasta":
             outlines.append("> "+options.prefix+name_chain)
-            outlines.append(sequences[name_chain]+"\n")
-        elif options.format == "ab_order":
+            if options.output_original_seq:
+                outlines.append(original_seq+"\n")
+
+            outlines.append(seq+"\n")
+
+        elif igg_type_format:
             name = "IgG_"+name_chain+"_pFUSE"
-            outlines.append(str(i)+". "+name+ " "+sequences[name_chain]+"\n")
+            if options.output_original_seq:
+                outlines.append(str(i)+". "+name+ " "+original_seq+"\n")
+            outlines.append(str(i)+". "+name+ " "+seq+"\n")
+
+        elif options.format == "general_order":
+            outlines.append(str(i)+". "+"vec"+ " "+seq+"\n")
 
         i+=1
+
+    if igg_type_format:
+        outlines.append(end_schief_ab_order)
 
     if options.outpath:
         OUT = open(options.outpath, "w")

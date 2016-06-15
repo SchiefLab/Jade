@@ -14,7 +14,7 @@ from basic import path
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser("Renames original files to new names for design ordering.  Run from directory with pdb files already copied in!")
+    parser = ArgumentParser("Renames original files to new names for design ordering.  Copy all models going to be ordered into a single directory first. Run from directory with pdb files already copied in!")
     parser.add_argument("-i", "--new_names",
                         help = "File with new to old names.  Example: new_name  *  filename.  Can have lines that don't have all three.  Will only rename if it has a start in it.",
                         required = True)
