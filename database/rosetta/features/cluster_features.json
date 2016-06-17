@@ -1,0 +1,7 @@
+{
+    "output_dir" : "/home/jadolfbr/Documents/modeling/rosetta/projects/antibody_design/benchmarks/recovery/baseline_natives",
+    "analysis_scripts" : [
+            "scripts/analysis/statistics/antibodies/cdr_cluster_recovery.R"
+    ]
+
+}

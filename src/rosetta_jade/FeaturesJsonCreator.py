@@ -13,34 +13,92 @@ from collections import defaultdict
 from basic.path import *
 from basic.threading.Threader import *
 
+########################################################################################################################
+####### Class based implementation
+########################################################################################################################
+
+class JsonCreator:
+    """
+    Basic implementation of a simple JsonCreator to create Jsons.  Could be expanded to not load jsons with pre-set scripts.
+    A nicer implementation would be a GUI for running the FeaturesReporter scripts.
+    """
+    def __init__(self, out_path, script_type):
+        self.out_path = out_path
+        self.script_types = ["antibody", "interface", "cluster", "antibody_minimal","antibody_minimal_hbond_analysis", "antibody_minimal_no_hbond_analysis"]
+        if not script_type in self.script_types:
+            sys.exit(script_type +" unrecognized.  Available JSON script types are: "+repr(self.script_types))
+
+        self.json_dict = initialize_json_dict(out_path)
+        setup_baseline_scripts_and_formats(self.json_dict, script_type)
+
+    def add_sample_source_info(self, db_path, id, ref = False):
+        info = _create_json_info_dic(db_path, id, ref)
+        add_sample_source(self.json_dict, info)
+
+    def add_features_script(self, rel_script_path):
+        """
+        Add a features script to run.
+        """
+        self.json_dict["analysis_scripts"].append(rel_script_path)
+
+    def add_output_method(self, output_method):
+        """
+        Add an output method
+        """
+        self.json_dict["output_formats"].append(output_method)
+
+
+
+
+    def save_json(self, out_path = "local_json.txt"):
+        OUTFILE = open(out_path, 'w')
+
+
+        json.dump(self.json_dict, OUTFILE, indent=1)
+        OUTFILE.close()
+        self.json_path = out_path
+
+        print "Json written to: "+out_path
+        print "Json path set to JsonCreator"
+
+    def run_json(self, backround = False):
+        run_features_json(self.json_path, backround, self.out_path)
+
+
+
+###################################################################################################################
+
 
 def setup_baseline_scripts_and_formats(json_dict, type):
-    db_path = get_database_path()
+    feat_path = get_rosetta_features_json_path()
 
-    FILE = open(db_path+"/"+type+"_features.json")
+    FILE = open(feat_path+"/"+type+"_features.json")
     data = json.load(FILE)
     FILE.close()
     append_scripts_formats_to_json_dict(data, json_dict)
 
+    FILE = open(feat_path+"/output_formats.json")
+    data = json.load(FILE)
+    FILE.close()
+    json_dict["output_formats"] = data["output_formats"]
+
 def append_scripts_formats_to_json_dict(data, json_dict):
-    json_dict["sample_source_comparisons"][0]["output_formats"].extend(data["sample_source_comparisons"][0]["output_formats"])
-    json_dict["sample_source_comparisons"][0]["analysis_scripts"].extend(data["sample_source_comparisons"][0]["analysis_scripts"])
+    if data.has_key("output_formats"):
+        json_dict["output_formats"].extend(data["output_formats"])
+    if data.has_key("analysis_scripts"):
+        json_dict["analysis_scripts"].extend(data["analysis_scripts"])
 
 def initialize_json_dict(out_dir):
 
-    formats = defaultdict()
-    formats["output_formats"] = []
-    formats["analysis_scripts"] = []
-    formats["sample_sources"] = []
-
     json_dict = defaultdict()
-    json_dict["sample_source_comparisons"] = []
-    json_dict["sample_source_comparisons"].append(formats)
+    json_dict["output_formats"] = []
+    json_dict["analysis_scripts"] = []
+    json_dict["sample_sources"] = []
     json_dict["output_dir"] = out_dir
 
     return json_dict
 
-
+'''
 def add_sample_source_comparisons(current_json_dict, json_file_path = None):
     if json_file_path:
         if not os.path.exists(json_file_path):
@@ -49,9 +107,10 @@ def add_sample_source_comparisons(current_json_dict, json_file_path = None):
         json_dict = json.load(FILE)
         FILE.close()
         current_json_dict["sample_source_comparisons"].extend(json_dict["sample_source_comparisons"])
+'''
 
 def add_sample_source(json_dict, sample_source_dict):
-    json_dict["sample_source_comparisons"][0]["sample_sources"].append(sample_source_dict)
+    json_dict["sample_sources"].append(sample_source_dict)
 
 
 def write_json_for_single_recovery_experiment(db_path_exp, db_path_natives, exp_id, out_path):
@@ -94,48 +153,6 @@ def _create_json_info_dic(db_path, id, ref=False):
 
 
 
-########################################################################################################################
-####### Class based implementation
-########################################################################################################################
-
-class JsonCreator:
-    """
-    Basic implementation of a simple JsonCreator to create Jsons.  Could be expanded to not load jsons with pre-set scripts.
-    A nicer implementation would be a GUI for running the FeaturesReporter scripts.
-    """
-    def __init__(self, out_path, script_type):
-        self.out_path = out_path
-        self.script_types = ["antibody", "interface", "cluster", "antibody_minimal","antibody_minimal_hbond_analysis", "antibody_minimal_no_hbond_analysis"]
-        if not script_type in self.script_types:
-            sys.exit(script_type +" unrecognized.  Available JSON script types are: "+repr(self.script_types))
-
-        self.json_dict = initialize_json_dict(out_path)
-        setup_baseline_scripts_and_formats(self.json_dict, script_type)
-
-    def add_sample_source_info(self, db_path, id, ref = False):
-        info = _create_json_info_dic(db_path, id, ref)
-        add_sample_source(self.json_dict, info)
-
-    def add_current_sample_sources_to_json_dict(self, json_file_path):
-        """
-        Combine a JSON with data held in this class
-        """
-        if os.path.exists(json_file_path):
-            add_sample_source_comparisons(self.json_dict, json_file_path)
-
-    def save_json(self, out_path = "local_json.txt"):
-        OUTFILE = open(out_path, 'w')
-
-
-        json.dump(self.json_dict, OUTFILE, indent=1)
-        OUTFILE.close()
-        self.json_path = out_path
-
-        print "Json written to: "+out_path
-        print "Json path set to JsonCreator"
-
-    def run_json(self, backround = False):
-        run_features_json(self.json_path, backround, self.out_path)
 
 def run_features_json(json_path, backround = False, outpath = ""):
     """
@@ -145,7 +162,7 @@ def run_features_json(json_path, backround = False, outpath = ""):
     """
     def move_delete_build():
         """
-        Only used because the outpath STILL doesn't work in RosettaFeatures even though I've fixed it like 5 times already!
+        Used if outpath is not set in the json.
         :return:
         """
         if os.path.exists("build"):

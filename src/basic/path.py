@@ -74,6 +74,9 @@ def get_rosetta_flags_path():
 def get_rosetta_json_run_path():
     return get_database_path()+"/rosetta/jsons"
 
+def get_rosetta_features_json_path():
+    return get_database_path()+"/rosetta/features"
+
 ###########################################################################
 
 

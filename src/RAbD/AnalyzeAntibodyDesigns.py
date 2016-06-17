@@ -450,6 +450,7 @@ class CompareAntibodyDesignStrategies:
             creator.add_sample_source_info(db_path, id)
 
         creator.save_json(outdir + "/" + type + "_" + plot_name + ".json")
+        print "Creating: "+outdir + "/" + type + "_" + plot_name + ".json"
         creator.run_json(self.backround_features.get())
 
         # pwd = os.getcwd()

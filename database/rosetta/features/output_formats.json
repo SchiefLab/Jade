@@ -1,0 +1,9 @@
+{
+  "output_formats" : [
+    "output_tab_delimited_table",
+    "output_html",
+    "output_csv",
+    "output_print_pdf",
+    "output_slide_rastor"
+  ]
+}
