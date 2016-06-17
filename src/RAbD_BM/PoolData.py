@@ -7,9 +7,10 @@
 
 #exp_list is the same thing we will use for Json skipping ref.  full names on left, reference name on right.
 
+import gzip
 import os
 import sys
-import gzip
+
 try:
     import sqlite3
     import numpy
@@ -24,21 +25,35 @@ import glob
 import math
 
 import RAbD_BM.tools as tools
-import RAbD_BM.BenchmarkInfo as bm_info
+from rosetta_jade.BenchmarkInfo import BenchmarkInfo
 
 class PoolData:
     """
     Pools Recovery and RR data, outputs to DB
     """
-    def __init__(self, lambda_db, kappa_db, ab_db, features_base_dir, db_info_array):
+    def __init__(self, lambda_db, kappa_db, ab_db, features_base_dir, benchmark_info):
+        """
+
+        :param lambda_db: str
+        :param kappa_db: str
+        :param ab_db: str
+        :param features_base_dir: str
+        :param benchmark_info: BenchmarkInfo
+        """
 
         self.recovery_parser = RecoveryParser()
         self.features_base_dir = features_base_dir
         self.recovery_base_dir = self.features_base_dir+"/recovery"
 
-        self.db_info_array = db_info_array
+        if not isinstance(benchmark_info, BenchmarkInfo):sys.exit()
 
-        self.cdrs = ["L1", "L2", "L3", "H1", "H2", "H3"]
+        self.benchmark_info = benchmark_info
+
+        if self.benchmark_info.settings["CDR"] == "ALL":
+            self.cdrs = ["L1", "L2", "L3", "H1", "H2", "H3"]
+        else:
+            self.cdrs = [self.benchmark_info.settings["CDR"]]
+
         self.heavy = ["H1", "H2", "H3"]
         self.types = ["length", "cluster"]
 
@@ -57,9 +72,9 @@ class PoolData:
 
         print "LAMBDA:" +lambda_db+" KAPPA: "+kappa_db
         self._parse_recovery_tables()
-        self._parse_native_db(lambda_db, "lambda");
+        self._parse_native_db(lambda_db, "lambda")
         self._parse_native_db(kappa_db, "kappa")
-        self._parse_ab_design_db(ab_db);
+        self._parse_ab_design_db(ab_db)
 
     def apply(self, db_out_dir, db_out_name, append_database, old_style = False):
         """
@@ -71,34 +86,31 @@ class PoolData:
         If the DatabaseInfo object has a log dir, use that.  Else, we parse it from the PDB files.
         """
 
-        for db in self.db_info_array:
-            if isinstance(db, bm_info.BenchmarkInfo): pass
 
-            exp_path = db.full_name
-            if db.has_log_path():
-                filenames = self.get_filenames(db.log_dir, exp_path)
+        exp_path = self.benchmark_info.full_name
+        if self.benchmark_info.has_log_path():
+            filenames = self.get_filenames(self.benchmark_info.log_dir, exp_path)
+        else:
+            filenames = self.get_filenames(self.benchmark_info.decoy_dir, exp_path)
+
+        if len(filenames) == 0:
+            sys.exit("No MPI Log filenames were found!")
+        for name in filenames:
+            #print name
+            print "Parsing "+name
+            if old_style:
+                self.parse_single_file_old_style(name, self.benchmark_info.final_name)
             else:
-                filenames = self.get_filenames(db.decoy_dir, exp_path)
-
-            if len(filenames) == 0:
-                sys.exit("No MPI Log filenames were found!")
-            for name in filenames:
-                #print name
-                print "Parsing "+name
-                if old_style:
-                    self.parse_single_file_old_style(name, db.final_name)
-                else:
-                    self.parse_single_file_new_style(name, db.final_name)
+                self.parse_single_file_new_style(name, self.benchmark_info.final_name)
 
         self.output_data(append_database, db_out_dir, db_out_name)
 
     def _parse_recovery_tables(self):
         #print repr(self.db_info_array)
-        for db in self.db_info_array:
-            print repr(db)
-            final_name = db.final_name
-            features_path = self.recovery_base_dir+"/"+final_name+"/output_tab_delimited_table"
-            self.recovery_parser.parse_data(features_path)
+        print repr(self.benchmark_info)
+        final_name = self.benchmark_info.final_name
+        features_path = self.recovery_base_dir+"/"+final_name+"/output_tab_delimited_table"
+        self.recovery_parser.parse_data(features_path)
 
     def _check_data(self):
         print "EXP LENGTHS"
@@ -121,25 +133,23 @@ class PoolData:
 
     def _initialize_data(self, structures):
 
-        for db in self.db_info_array:
-            exp = db.final_name
-            for structure in structures:
-                for cdr in self.cdrs:
-                    self.exp_totals[exp][structure][cdr] = 0
-                    #self.exp_clusters[exp][structure][cdr] = 0
-                    #self.exp_lengths[exp][structure][cdr] = 0
+        exp = self.benchmark_info.final_name
+        for structure in structures:
+            for cdr in self.cdrs:
+                self.exp_totals[exp][structure][cdr] = 0
+                #self.exp_clusters[exp][structure][cdr] = 0
+                #self.exp_lengths[exp][structure][cdr] = 0
 
-                    self.ab_db_cdr_totals[exp][structure][cdr] = 0
-                    #self.ab_db_totals_cluster[exp][structure][cdr] = 0
-                    #self.ab_db_totals_length[exp][structure][cdr] = 0
+                self.ab_db_cdr_totals[exp][structure][cdr] = 0
+                #self.ab_db_totals_cluster[exp][structure][cdr] = 0
+                #self.ab_db_totals_length[exp][structure][cdr] = 0
 
         for type in self.types:
-            for db in self.db_info_array:
-                exp = db.final_name
-                for structure in structures:
-                    for cdr in self.cdrs:
-                        self.exp_data[type][exp][structure][cdr] = 0
-                        self.ab_db_data[type][exp][structure][cdr] = 0
+            exp = self.benchmark_info.final_name
+            for structure in structures:
+                for cdr in self.cdrs:
+                    self.exp_data[type][exp][structure][cdr] = 0
+                    self.ab_db_data[type][exp][structure][cdr] = 0
 
     def _parse_native_db(self, native_db, lam_kap_type):
         if not os.path.exists(native_db):
@@ -182,9 +192,8 @@ class PoolData:
 
     def __parse_ab_design_db(self, ab_db, lam_kap_type):
         def __add_data(data_dict, structure, cdr, n):
-            for db in self.db_info_array:
-                exp = db.final_name
-                data_dict[exp][structure][cdr] = n
+            exp = self.benchmark_info.final_name
+            data_dict[exp][structure][cdr] = n
 
         con = sqlite3.connect(ab_db)
         for structure in self.structures_lam_kap.keys():
@@ -220,11 +229,10 @@ class PoolData:
             if cdr in self.heavy:
                 gene = "heavy"
             for row in con.execute("SELECT * from cdr_data WHERE CDR=? AND gene=? AND datatag != ?",(cdr, gene, 'loopKeyNotInPaper')):
-                for db in self.db_info_array:
-                    exp = db.final_name
-                    for structure in self.structures_lam_kap.keys():
-                        if not self.structures_lam_kap[structure] == lam_kap_type: continue
-                        self.ab_db_cdr_totals[exp][structure][cdr]+=1
+                exp = self.benchmark_info.final_name
+                for structure in self.structures_lam_kap.keys():
+                    if not self.structures_lam_kap[structure] == lam_kap_type: continue
+                    self.ab_db_cdr_totals[exp][structure][cdr]+=1
             #print cdr+" "+" "+gene+" "+repr(self.ab_db_cdr_totals[exp][structure][cdr])
         con.close()
 
@@ -407,49 +415,48 @@ class PoolData:
         i = 0
         for structure in sorted(self.native_clusters.keys()):
             for cdr in self.cdrs:
-                for db in self.db_info_array:
 
-                    exp = db.final_name
-                    exp_freq = data_dict[exp][structure][cdr]
-                    exp_total= self.exp_totals[exp][structure][cdr]
-                    if exp_total == 0:
+                exp = self.benchmark_info.final_name
+                exp_freq = data_dict[exp][structure][cdr]
+                exp_total= self.exp_totals[exp][structure][cdr]
+                if exp_total == 0:
 
-                        print("CDR Not present in data!!!??")
-                        MISSING.write(name+" "+exp+" "+structure+" "+cdr+"\n")
-                        #sys.exit("")
-                        continue
+                    print("CDR Not present in data!!!??")
+                    MISSING.write(name+" "+exp+" "+structure+" "+cdr+"\n")
+                    #sys.exit("")
+                    continue
 
-                    i+=1
-                    exp_perc = self._get_perc(exp_freq, exp_total)
-                    ab_db_freq = ab_db_dict[exp][structure][cdr]
-                    ab_db_total = self.ab_db_cdr_totals[exp][structure][cdr]
-                    ab_db_perc = self._get_perc(ab_db_freq, ab_db_total)
+                i+=1
+                exp_perc = self._get_perc(exp_freq, exp_total)
+                ab_db_freq = ab_db_dict[exp][structure][cdr]
+                ab_db_total = self.ab_db_cdr_totals[exp][structure][cdr]
+                ab_db_perc = self._get_perc(ab_db_freq, ab_db_total)
 
-                    self.exp_avgs[exp][structure][cdr] = exp_perc
-                    self.ab_db_avgs[exp][structure][cdr] = ab_db_perc
-
-
-                    native = native_dict[structure][cdr]
-                    if name == 'length':
-                        native = int(native)
-
-                    exp_type, exp_group = self.get_exp_split(exp)
-
-                    data = [i, structure, cdr, exp, exp_group, exp_type, native, exp_perc, ab_db_perc, exp_freq, exp_total, ab_db_freq, ab_db_total]
-                    rec_data = self._get_recoveries(rec_freq, rec_totals, exp_perc, exp, structure, cdr)
-                    data.extend(rec_data)
+                self.exp_avgs[exp][structure][cdr] = exp_perc
+                self.ab_db_avgs[exp][structure][cdr] = ab_db_perc
 
 
+                native = native_dict[structure][cdr]
+                if name == 'length':
+                    native = int(native)
 
-                    #print line
+                exp_type, exp_group = self.get_exp_split(exp)
 
-                    #OUT.write(self._convert_types_to_line(data, "")+"\n")
+                data = [i, structure, cdr, exp, exp_group, exp_type, native, exp_perc, ab_db_perc, exp_freq, exp_total, ab_db_freq, ab_db_total]
+                rec_data = self._get_recoveries(rec_freq, rec_totals, exp_perc, exp, structure, cdr)
+                data.extend(rec_data)
 
-                    exec_string = "INSERT INTO all_"+name+" VALUES "+self._get_question_mark_str(len(data) )
-                    #print repr(exec_string)
-                    #print repr(data)
-                    self.db.execute(exec_string, data)
-                    self.db.commit()
+
+
+                #print line
+
+                #OUT.write(self._convert_types_to_line(data, "")+"\n")
+
+                exec_string = "INSERT INTO all_"+name+" VALUES "+self._get_question_mark_str(len(data) )
+                #print repr(exec_string)
+                #print repr(data)
+                self.db.execute(exec_string, data)
+                self.db.commit()
 
 
         #OUT.close()
@@ -864,133 +871,6 @@ def run_R_scripts(db_path, out_path, db_info_array):
     cmd = base_cmd+" cluster "+exp_str
     print cmd
     os.system(cmd)
-
-if __name__ == "__main__":
-
-    """
-    Example command line:
-
-    python PoolData.py --log_dir pooled_data/logs/baseline --benchmark_list_file local_benchmark_list.txt --run_R_scripts False
-
-    python PoolData.py --benchmark_list_file local_benchmark_list.txt --only_run_R_scripts
-
-    --MAIN is Deprecated in favor of analyze_benchmark and compare_benchmarks scripts.
-    """
-
-    ####################################################################################################################
-    ##                                                  OPTIONS
-    ####################################################################################################################
-
-
-
-
-    parser = OptionParser()
-
-    ############################################
-    ## Required Options with reasonable defaults
-    ############################################
-    parser.add_option("--benchmark_list_file", "-e",
-        help= "File that lists benchmarks and data needed to run features.  Ignores #" +
-              "FORMAT: #date full_name final_name scorefunction expected_nstruct exp_batch rel_decoy_path rel_log_path",
-
-        default = "benchmark_list_local.txt")
-
-    parser.add_option("--features_base_dir", "-f",
-        help = "Main features directory.  Must have tab-delimited table directory within.",
-        default = "features/recovery")
-
-    parser.add_option("--log_dir", "-d",
-        help = "Input data for DIR for MPI log outputs",
-        default = os.getcwd()+"/pooled_data/logs")
-
-    parser.add_option("--db_dir", "-a",
-        help = "Directory of native databases",
-        default = os.getcwd()+'/features/databases')
-
-    #These need to be split by lambda and kappa for cdr recovery.
-    parser.add_option("--lambda_db", "-l",
-        help = "Native Lambda DB name", default = "natives_baseline.native.lambda.db3")
-
-    parser.add_option("--kappa_db", "-k",
-        help = "Native Kappa DB name", default = "natives_baseline.native.kappa.db3")
-
-    parser.add_option("--add_data_to_original_features_db",
-        help = "Add the recovery data to the original features database?", default = True)
-
-
-    ###############################
-    ## Output names and Directories
-    ###############################
-    parser.add_option("--db_out_name",
-        help = "Name of the database results will go into", default = "benchmark_results.db3" )
-
-    parser.add_option("--db_out_dir", "-o",
-        help = "", default = os.getcwd()+'/pooled_data/databases')
-
-    parser.add_option("--r_plot_out_dir",
-        help = "Place to write R script plots/data", default = os.getcwd()+'/pooled_data/plots')
-
-
-    ####################
-    ## R Plotting Options
-    ####################
-    parser.add_option("--run_R_scripts",
-        help = "Run R script on the database to plot data", default = False)
-
-    parser.add_option("--only_run_R_scripts",
-        help = "Only run the R scripts for analysis of the database.", default = False, action = "store_true")
-
-
-
-    ####################
-    ## Additional Options
-    ####################
-    parser.add_option("--append_database",
-        help = "Append the output database?", default=True, action="store_true")
-
-    parser.add_option("--ab_db", "-c",
-        default = os.getenv("ROSETTA3_DB")+"/sampling/antibodies/antibody_database_rosetta_design.db")
-
-    parser.add_option("--old_style", "-s",
-        help = "Use the old style of output?",
-        default = False, action="store_true")
-
-
-    (options, args) = parser.parse_args(sys.argv)
-
-
-
-    ####################################################################################################################
-    ##                                                  MAIN
-    ####################################################################################################################
-
-
-
-    if not os.path.exists(options.db_out_dir):
-        os.mkdir(options.db_out_dir)
-
-    if (not os.path.exists(options.features_base_dir)) and (not options.only_run_R_scripts):
-        sys.exit("Features output tab delimited table required for parsing and log-odds ratios")
-
-    ##Change DIR for relative paths:
-    base_dir = os.path.split(os.path.abspath(__file__))[0]
-    os.chdir(base_dir) #Allow relative running of Rosetta.  Much easier.
-
-
-    db_info_array = tools.parse_benchmark_list(options.benchmark_list_file)
-
-    if options.only_run_R_scripts:
-        options.run_R_scripts = True; #Implicitly
-
-    if not options.only_run_R_scripts:
-        pool_data = PoolData(options.db_dir+"/"+options.lambda_db, options.db_dir+"/"+options.kappa_db, options.ab_db, options.features_base_dir,  db_info_array)
-        pool_data.apply(options.db_out_dir, options.db_out_name, bool(options.append_database), bool(options.add_data_to_original_features_db), bool(options.options.old_style))
-
-    if options.run_R_scripts:
-
-        run_R_scripts(options.db_out_dir+"/"+options.db_out_name, options.r_plot_out_dir, db_info_array)
-
-    print "Complete"
 
 
 

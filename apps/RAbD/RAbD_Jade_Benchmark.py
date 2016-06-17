@@ -1,23 +1,16 @@
 #!/usr/bin/env python
 
-from Tkinter import *
-from tkFont import *
+import glob
+import sqlite3
 import tkFileDialog
 import tkSimpleDialog
-import tkMessageBox
-
-import os
-import sys
-import re
-from collections import defaultdict
-import sqlite3
+from Tkinter import *
+from tkFont import *
 
 import create_features_json as json_creator
-from RAbD_BM.BenchmarkInfo import *
-import RAbD_BM.tools as tools
 
-import create_features_json as create_json
-import glob
+import RAbD_BM.tools as tools
+from rosetta_jade.BenchmarkInfo import *
 
 p = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append(p); #Allows all modules to use all other modules, without needing to update pythonpath

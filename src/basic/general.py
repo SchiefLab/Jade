@@ -1,7 +1,8 @@
 import sys
-import re
 import itertools
 import re
+import datetime
+
 
 def get_rosetta_program(program, mpi = True, compiler = 'gcc'):
     """
@@ -119,3 +120,6 @@ def strip_left(s, pattern):
         return s[len(pattern):-1]
     else:
         return s
+
+def get_today():
+    return datetime.date.today().strftime("%Y/%m/%d")

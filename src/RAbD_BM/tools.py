@@ -3,9 +3,6 @@ import glob
 import re
 import os
 
-def get_today():
-    return datetime.date.today().strftime("%Y/%m/%d")
-
 
 def get_pdb_paths(in_dir, exp_name, match_name = None, use_ensemble = False):
     exp_name = os.path.basename(in_dir)

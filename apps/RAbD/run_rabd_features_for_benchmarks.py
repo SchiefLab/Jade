@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 
 
+import copy
 from argparse import ArgumentParser
-from glob import glob
-
-from RAbD_BM.BenchmarkInfo import *
-from basic.general import *
-from rosetta_jade.RunRosetta import *
-from rosetta_jade import FeaturesJsonCreator as create_json
 
 import RAbD_BM.PoolData as pool
 import RAbD_BM.tools as tools
+from basic.general import *
+from rosetta_jade import FeaturesJsonCreator as create_json
+from rosetta_jade.BenchmarkInfo import *
+from rosetta_jade.RunRosetta import *
 
 
 ##This was definitely not the best way to do this, but its here and its too late to reimagine.
@@ -25,24 +24,14 @@ class AnalyzeBenchmarks:
         self.base_dir = os.getcwd()
         self._parse_options()
 
-        self.native_db = self.base_dir+"/"+self.options.bm_set_db_dir+"/"+"natives."+self.options.bm_set+"."+ "all"+"."+self.options.scorefunction+".db3"
-        self.lambda_db = self.base_dir+"/"+self.options.bm_set_db_dir+"/"+"natives."+self.options.bm_set+"."+ "lambda"+"."+self.options.scorefunction+".db3"
-        self.kappa_db = self.base_dir+"/"+self.options.bm_set_db_dir+"/"+"natives."+self.options.bm_set+"."+ "kappa"+"."+self.options.scorefunction+".db3"
-
         self.recovery_base = self.base_dir+"/features/recovery"
 
-        if not self.options.paper_ab_db:
-            self.ab_db = os.getenv("ROSETTA3_DB")+"/sampling/antibodies/antibody_database_rosetta_design.db"
-        else:
-            self.ab_db = os.getenv("ROSETTA3_DB") +"/sampling/antibodies/antibody_database_rosetta_design_north_paper.db"
 
-        if not os.path.exists(self.native_db):
-            sys.exit("Native DB path does not exist: "+self.native_db)
 
-        self.date = tools.get_today()
+        self.date = get_today()
         self.extension = get_rosetta_program("", False, self.options.compiler)
-
         self._setup_benchmark_from_options()
+
 
     def _parse_options(self):
         ####################################################################################################################
@@ -58,7 +47,8 @@ class AnalyzeBenchmarks:
         ############################
         general_opts = parser.add_argument_group("General RAbD BM Options")
         general_opts.add_argument("--decoy_dir",
-                          help = "rel path to where decoys exist for benchmark")
+                          help = "rel path to where decoys exist for benchmark",
+                          required = True)
     
 
         general_opts.add_argument("--skip_antibody_features",
@@ -70,46 +60,38 @@ class AnalyzeBenchmarks:
                           help = "Skip output of the cluster features db (which includes calculating recoveries)",
                           default = False,
                           action = "store_true")
-    
-        general_opts.add_argument("--paper_ab_db",
-                          help = "Used paper ab db for analysis",
-                          default = True)
-    
-        #######################
-        ## DB input options
-        #######################
-
-        general_opts.add_argument("--bm_set",
-                          default="new_20",
-                          help = "The benchmark set of the input databases.  Will use this native to fine the correct input databases for recovery comparisons.")
-    
-        general_opts.add_argument("--bm_set_db_dir",
-                          default="databases/natives",
-                          help = "Path to the set of native databases for recovery.")
 
 
         ############################
         ## Single experiment options
         ############################
-        general_opts.add_argument("--full_name",
-                          help = "Full name of the experiment: $exp.$pdbs.$type.$benchmark")
 
         general_opts.add_argument("--final_name",
-                          help = "Final name used to report data: docked_relax_top")
+                          help = "Final name used to report data: docked_relax_top",
+                          required = True)
 
 
-    
-    
+        #######################
+        ## DB input options
+        #######################
+
+        general_opts.add_argument("--bm_set_db_dir",
+                          default="databases/natives",
+                          help = "Path to the set of native databases for recovery.",
+                          required = True)
+
+
+
         #######################
         ## Not Required options
         #######################
         general_opts.add_argument("--scorefunction",
                           help = "The scorefunction used for features reporters and analysis",
-                          default = "talaris2013")
+                          default = "talaris2014")
     
         general_opts.add_argument("--exp_batch",
                           help = "Name of the batch to use for databases",
-                          default = "FinalPaperBM.8.2015")
+                          default = "FinalPaperBM.6.2016")
 
     
         general_opts.add_argument("--get_ensemble_data",
@@ -144,33 +126,22 @@ class AnalyzeBenchmarks:
         return "rosetta_scripts.mpi."+get_platform() + self.options.compiler+"release"
 
     def _setup_benchmark_from_options(self):
-        BM_info = BenchmarkInfo()
-        BM_info.set_data(self.options.full_name,
-                         self.options.final_name,
-                         self.options.scorefunction,
-                         self.options.decoy_dir,
-                         self.options.exp_batch)
+
+        self.full_name = self.options.decoy_dir.split("/")[-1]
+
+        BM_info = BenchmarkInfo(
+            self.options.decoy_dir,
+            self.full_name,
+            self.options.final_name,
+            rel_log_path=None,
+            scorefunction=self.options.scorefunction)
 
         self.set_benchmarks([BM_info])
 
+        self.native_db = self.base_dir+"/"+self.options.bm_set_db_dir+"/"+"natives."+self.options.bm_set+"."+ "all"+"."+self.options.scorefunction+".db3"
 
-
-    def _setup_benchmarks(self):
-        """
-        Checks benchmarks for expected and found decoys.  Returns ones that pass cutoffs if we are checking nstruct.
-        """
-        final_benchmarks = []
-        for benchmark in self.benchmarks:
-            if isinstance(benchmark, BenchmarkInfo):pass
-
-            if self._benchmark_ok(benchmark):
-                final_benchmarks.append(benchmark)
-            else:
-                print "Something is wrong with benchmark.  Either not enough structures or paths do not match!  Skipping..."
-                print benchmark.final_name+" "+benchmark.full_name
-                continue
-
-        return final_benchmarks
+        if not os.path.exists(self.native_db):
+            sys.exit("Native DB path does not exist: "+self.native_db)
 
     def _benchmark_ok(self, benchmark):
         """
@@ -205,9 +176,7 @@ class AnalyzeBenchmarks:
         """
         Runs the FUll analysis
         """
-        benchmarks = self._setup_benchmarks()
-
-        for benchmark in benchmarks:
+        for benchmark in self.benchmarks:
             self._run_analysis(benchmark, self.options.get_ensemble_data, self.options.skip_antibody_features, self.options.skip_cluster_features)
 
     def _run_analysis(self, benchmark, get_ensemble_data = False, skip_antibody_features = False, skip_cluster_features = False):
@@ -284,8 +253,6 @@ class AnalyzeBenchmarks:
 
         if isinstance(benchmark, BenchmarkInfo): pass
 
-        add_rec_data_to_current_db = True
-
         if not skip_cluster_features:
             run_features("cluster_features")
 
@@ -305,14 +272,14 @@ class AnalyzeBenchmarks:
         create_json.write_json_for_single_recovery_experiment(db_path, self.native_db, benchmark.final_name, self.base_dir+"/features")
         json_file = self.base_dir+"/features/jsons/cluster_features."+benchmark.final_name+".json"
 
-        r_cmd = get_rosetta_features_root()+"/compare_sample_sources.R --config "+json_file
-        print r_cmd
+
 
         new_recovery_path = self.recovery_base+"/"+benchmark.final_name
         if os.path.exists(new_recovery_path):
             os.system("rm -r "+new_recovery_path)
 
-        os.system(r_cmd)
+        create_json.run_features_json(json_file, outpath=new_recovery_path)
+
         os.system("mkdir "+new_recovery_path)
         #os.system(r_cmd)
 
@@ -321,12 +288,14 @@ class AnalyzeBenchmarks:
 
         print "Moving recovery tables to final directory"
 
-        dirs = ["output_csv", "output_html", "output_tab_delimited_table"]
-        for d in dirs:
-            print("cp -r"+self.base_dir+"/build/cdr_cluster_recovery/"+d+" "+new_recovery_path)
-            os.system("cp -r "+self.base_dir+"/build/cdr_cluster_recovery/"+d+" "+new_recovery_path)
 
-        os.system("rm -r "+self.base_dir+"/build")
+        if os.path.exists(self.base_dir+"/build"):
+            dirs = ["output_csv", "output_html", "output_tab_delimited_table"]
+            for d in dirs:
+                print("cp -r"+self.base_dir+"/build/cdr_cluster_recovery/"+d+" "+new_recovery_path)
+                os.system("cp -r "+self.base_dir+"/build/cdr_cluster_recovery/"+d+" "+new_recovery_path)
+
+            os.system("rm -r "+self.base_dir+"/build")
 
     def _pool_data(self, db_path, benchmark, top = True):
         """
@@ -334,10 +303,11 @@ class AnalyzeBenchmarks:
         """
         print "Pooling Data"
 
+        recovery_db_name = ""
         if top:
             recovery_db_name = benchmark.full_name+".top.recoveries."+benchmark.scorefunction+".db3"
 
-        pool_data = pool.PoolData(self.lambda_db, self.kappa_db, self.ab_db, self.base_dir+"/features", [benchmark])
+        pool_data = pool.PoolData(self.lambda_db, self.kappa_db, self._get_ab_dir(benchmark), self.base_dir+"/features", benchmark)
         pool_data.apply(self.base_dir+"/databases", recovery_db_name,  True)
 
         #Add to current db:
@@ -363,6 +333,12 @@ class AnalyzeBenchmarks:
 
         FILE.close()
 
+    def _get_ab_dir(self, benchmark_info):
+
+        if not benchmark_info.settings["paper_ab_db"]:
+            return os.getenv("ROSETTA3_DB")+"/sampling/antibodies/antibody_database_rosetta_design.db"
+        else:
+            return os.getenv("ROSETTA3_DB") +"/sampling/antibodies/antibody_database_rosetta_design_north_paper.db"
 
 #############################################
 ### Controls ALL analysis of decoys and data.
