@@ -6,8 +6,9 @@ import tkFileDialog
 import tkSimpleDialog
 from Tkinter import *
 from tkFont import *
+from argparse import ArgumentParser
 
-import create_features_json as json_creator
+import rosetta_jade.FeaturesJsonCreator as json_creator
 
 import RAbD_BM.tools as tools
 from rosetta_jade.BenchmarkInfo import *
@@ -18,16 +19,25 @@ sys.path.append(p); #Allows all modules to use all other modules, without needin
 #Runs all analysis of a particular benchmarking experiment.
 
 def main():
-    main_dir = os.getcwd()
-    out_dir_name = "pooled_data"
-    benchmarks = []
+    parser = ArgumentParser("This program is a GUI used for benchmarking Rosetta Antibody Design."
+                            "Before running this application, you will probably want to run 'run_rabd_features_for_benchmarks.py to create the databases required.")
 
-    if len(sys.argv) >= 2: main_dir      =  sys.argv[1]
-    if len(sys.argv) >= 3: out_dir_name  =  sys.argv[2]
-    if len(sys.argv) >= 4: benchmarks   =  sys.argv[3:]
+    parser.add_argument("--main_dir",
+                        help = "Main working directory. Not Required.  Default = PWD",
+                        default = os.getcwd())
 
+    parser.add_argument("--out_dir",
+                        help = "Output data directory.  Not Required.  Default = pooled_data",
+                        default = "pooled_data")
 
-    GUI = CompareBenchmarks_GUI(Tk(), main_dir, out_dir_name, benchmarks)
+    parser.add_argument("--benchmarks",
+                        help = "Particular benchmarks to use.  Deprecated.  Not Required",
+                        nargs = "*",
+                        default = [])
+
+    options = parser.parse_args()
+
+    GUI = CompareBenchmarks_GUI(Tk(), options.main_dir, options.out_dir, options.benchmarks)
     GUI.run()
 
 class Listbox(Listbox):

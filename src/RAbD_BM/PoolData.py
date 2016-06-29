@@ -31,7 +31,7 @@ class PoolData:
     """
     Pools Recovery and RR data, outputs to DB
     """
-    def __init__(self, lambda_db, kappa_db, ab_db, features_base_dir, benchmark_info):
+    def __init__(self, native_db, ab_db, features_base_dir, benchmark_info):
         """
 
         :param lambda_db: str
@@ -72,8 +72,7 @@ class PoolData:
 
         print "LAMBDA:" +lambda_db+" KAPPA: "+kappa_db
         self._parse_recovery_tables()
-        self._parse_native_db(lambda_db, "lambda")
-        self._parse_native_db(kappa_db, "kappa")
+        self._parse_native_db(native_db)
         self._parse_ab_design_db(ab_db)
 
     def apply(self, db_out_dir, db_out_name, append_database, old_style = False):
@@ -89,7 +88,7 @@ class PoolData:
 
         exp_path = self.benchmark_info.full_name
         if self.benchmark_info.has_log_path():
-            filenames = self.get_filenames(self.benchmark_info.log_dir, exp_path)
+            filenames = self.get_filenames(self.benchmark_info.rel_log_path, exp_path)
         else:
             filenames = self.get_filenames(self.benchmark_info.decoy_dir, exp_path)
 
