@@ -66,7 +66,7 @@ class NativeInfo:
         self.lambda_pdbids = self.pdbids = load_pdbids(os.path.join(root_dataset_dir, ".".join([self.dataset, self.input_pdb_type, "lambda.PDBLIST.txt"])))
         self.kappa_pdbids = self.pdbids = load_pdbids(os.path.join(root_dataset_dir, ".".join([self.dataset, self.input_pdb_type, "kappa.PDBLIST.txt"])))
 
-        self.db_path = os.path.join(self.root_dataset_dir, ".".join([self.dataset, self.input_pdb_type, "norm_ab_features.db"]))
+        self.db_path = os.path.join(self.root_dataset_dir, ".".join([self.input_pdb_type, "norm_ab_features.db"]))
         self.decoy_path = os.path.join(self.root_dataset_dir, self.input_pdb_type)
 
     def get_features_db(self):

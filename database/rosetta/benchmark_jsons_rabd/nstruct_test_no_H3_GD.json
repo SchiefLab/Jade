@@ -1,5 +1,5 @@
 { "exp": "nstruct_test_no_H3_GD",
-  "nstruct":1000,
+  "nstruct":500,
   "dataset": {
     "benchmarks":[
       "bm2_five"

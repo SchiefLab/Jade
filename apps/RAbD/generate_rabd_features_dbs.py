@@ -98,7 +98,7 @@ def main():
 
 
     for pdb_list in pdb_lists:
-        if not os.path.exists(pdb_list[1]): sys.exit(pdb_list+" does not exist!")
+        if not os.path.exists(pdb_list[1]): sys.exit(pdb_list[1]+" does not exist!")
 
 
     ####################################################################################################################
@@ -153,7 +153,14 @@ def main():
 
 
 def make_pdblists_non_native(in_dir):
+    """
+    Make PDBLISTS for relaxed and non-relaxed models output by Rosetta Antibody Design.
 
+    Returns list of [Name, path_to_pdblist]
+
+    :param in_dir:
+    :rtype:[[str, str],]
+    """
     pdblists = [] #List of PDBLists.
 
     pdb_list = []
@@ -202,12 +209,21 @@ def make_pdblists_non_native(in_dir):
     return pdblists
 
 def make_pdblists_native(in_dir):
+    """
+    Returns list of [Name, path_to_pdblist]
+
+    :param in_dir:
+    :rtype:[[str, str],]
+
+    """
+    pdblists = []
     pdbs = glob.glob(in_dir+"/*.pdb*")
     OUTFILE = open(in_dir+"/PDBLIST.txt", 'w')
     for pdb in pdbs:
         OUTFILE.write(pdb+"\n")
     OUTFILE.close()
-    return [in_dir+"/PDBLIST.txt"]
+    pdblists.append(["native_",in_dir+"/PDBLIST.txt"])
+    return pdblists
 
 if __name__ == "__main__":
     main()
