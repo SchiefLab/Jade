@@ -53,6 +53,11 @@ def main():
                       help = "Prefix to use for output databases.  Recommended to use the design and strategy name",
                       required = True)
 
+    analysis_options.add_argument("--native",
+                      help = "Indicate that this is a set of native structures",
+                      default = False,
+                      action = "store_true")
+
     run_mpi_rosetta = RunRosetta(program = "rosetta_scripts", parser = parser, db_mode=True)
 
     options = parser.parse_args()
@@ -70,7 +75,10 @@ def main():
 
     pdb_lists = []
     if not options.l and options.indir:
-        pdb_lists = make_pdblists(options.indir)
+        if not options.native:
+            pdb_lists = make_pdblists_non_native(options.indir)
+        else:
+            pdb_lists = make_pdblists_native(options.indir)
     elif options.l and options.indir:
         PDBLIST = open(options.l, 'r')
         NEW_PDBLIST = open(options.indir+"/FULLPATH_PDBLIST.txt", 'w')
@@ -144,7 +152,7 @@ def main():
 
 
 
-def make_pdblists(in_dir):
+def make_pdblists_non_native(in_dir):
 
     pdblists = [] #List of PDBLists.
 
@@ -193,6 +201,13 @@ def make_pdblists(in_dir):
 
     return pdblists
 
+def make_pdblists_native(in_dir):
+    pdbs = glob.glob(in_dir+"/*.pdb*")
+    OUTFILE = open(in_dir+"/PDBLIST.txt", 'w')
+    for pdb in pdbs:
+        OUTFILE.write(pdb+"\n")
+    OUTFILE.close()
+    return [in_dir+"/PDBLIST.txt"]
 
 if __name__ == "__main__":
     main()
