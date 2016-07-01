@@ -73,7 +73,7 @@ def main():
         pdb_lists = make_pdblists(options.indir)
     elif options.l and options.indir:
         PDBLIST = open(options.l, 'r')
-        NEW_PDBLIST = open(options.indir+"/FULLPATH_PDBLIST.txt")
+        NEW_PDBLIST = open(options.indir+"/FULLPATH_PDBLIST.txt", 'w')
 
         for line in PDBLIST:
             new_line = options.indir+"/"+line.strip()

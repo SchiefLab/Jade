@@ -4,8 +4,9 @@ import os
 import sys
 from collections import defaultdict
 from RAbD_BM import tools as bm_tools
+from RAbD_BM.AnalysisInfo import AnalysisInfo
+
 from basic import path as path_tools
-import json
 import re
 import numpy
 from basic.plotting.MakeFigure import MakeFigure
@@ -16,69 +17,63 @@ from matplotlib.dates import YearLocator, MonthLocator, DateFormatter, WeekdayLo
 
 import argparse
 
-class BMInfo:
-    def __init__(self, json_path):
-        self.json_path = json_path
-        JSON_FILE = open(self.json_path, 'r')
-        self.data = json.load(JSON_FILE)
-        JSON_FILE.close()
+def main():
+    parser = argparse.ArgumentParser(description= "Calculates and plots monte carlo acceptance values for antibody design benchmarking.")
 
-    def get_exp(self):
-        return self.data["exp"]
 
-    def get_dir(self):
-        return self.data["dir"]
+    ############################
+    ## Required Options
+    ############################
+    parser.add_argument("--jsons","-j",
+                        help = "Analysis JSONs to use.  See RAbD_MB.AnalysisInfo for more on what is in the JSON."
+                               "The JSON allows us to specify the final name, decoy directory, and features db associated with the benchmark as well as all options that went into it.",
+                        nargs = "*",
+                        required = True)
 
-    def get_name_match(self):
-        return self.data["name_match"]
+    parser.add_argument("--data_outdir","-o",
+                        help = "Path to outfile. DEFAULT = data",
+                        default = "data")
 
-    def get_dataset(self):
-        return self.data["dataset"]
+    parser.add_argument("--plot_outdir", "-p",
+                        help = "DIR for plots. DEFAULT = plots/mc_benchmarks",
+                        default = "plots/mc_benchmarks")
+
+    parser.add_argument("--root_dataset_dir",
+                        help = "List of PDBIds to use for individual PDB output. DEFAULT = datasets/pdblists",
+                        default = "datasets/pdblists")
+
+    options = parser.parse_args()
+    analysis_infos = [AnalysisInfo(json_path) for json_path in options.jsons]
+
+    analyzer = AnalyzeMCAcceptance(analysis_infos, options.root_dataset_dir, options.data_outdir, options.plot_outdir)
+    analyzer.analyze()
+
 
 class AnalyzeMCAcceptance:
-    def __init__(self):
-        self.parse_args()
-        self.bm_info = []
-        if not self.options.jsons:
-            sys.exit("JSON files need to be set for analysis to occur")
+    """
+    Calculates Monte Carlo acceptance and plots data by reading PDB files.
+    """
+    def __init__(self, analysis_infos, root_dataset_dir="datasets/pdblists",data_outdir="data", plot_outdir="plots/mc_benchmarks"):
 
-        for js in self.options.jsons:
-            self.bm_info.append(BMInfo(js))
+        #Main Analysis classes that store paths to what we need
+        self.analysis_infos = analysis_infos
 
+        #Main paths for outputing and inputting outside of the analysis classes
+        self.root_dataset_dir = root_dataset_dir
+        self.data_outdir = data_outdir
+        self.plot_outdir = plot_outdir
+
+        #All of our resultant data.
         self.all_data = defaultdict()
 
     def analyze(self):
-        for bm_info in self.bm_info:
-            bm_data = MCData(self.options.dataset_dir, bm_info)
+        for bm_info in self.analysis_infos:
+            bm_data = MCData(self.root_dataset_dir, bm_info)
             self.all_data[bm_info.get_exp()] = bm_data
 
         self.plot_cum_acceptance()
         self.plot_cycle_by_e()
 
-    def parse_args(self):
-        parser = argparse.ArgumentParser(description= "Calculates and plots monte carlo acceptance values for antibody design benchmarking.")
-
-
-        ############################
-        ## Required Options
-        ############################
-        parser.add_argument("--jsons","-j",
-                            help = "Analysis JSONs to use",
-                            nargs = "*")
-
-        parser.add_argument("--data_outdir","-o",
-                            help = "Path to outfile",
-                            default = "data")
-
-        parser.add_argument("--plot_outdir", "-p",
-                            help = "DIR for plots",
-                            default = "plots/mc_benchmarks")
-
-        parser.add_argument("--dataset_dir",
-                            help = "List of PDBIds to use for individual PDB output.",
-                            default = "datasets/all")
-
-        self.options = parser.parse_args()
 
 
     def plot_cycle_by_e(self):
@@ -122,7 +117,7 @@ class AnalyzeMCAcceptance:
                     maker.add_data(x, y, "model_"+repr(i))
 
         for exp in self.all_data:
-            root_exp_dir = path_tools.get_make_get_dirs(self.options.plot_outdir, [exp, "bm_pdbs"])
+            root_exp_dir = path_tools.get_make_get_dirs(self.plot_outdir, [exp, "bm_pdbs"])
             mc_data = self.all_data[exp]
             assert isinstance(mc_data, MCData)
 
@@ -203,11 +198,11 @@ class AnalyzeMCAcceptance:
 
 
         x_values = None
-        for bm_info in self.bm_info:
+        for bm_info in self.analysis_infos:
             exp = bm_info.get_exp()
 
             make_all_pdbids_figure = MakeFigure(1, 1)
-            root_exp_dir = path_tools.get_make_get_dirs(self.options.plot_outdir, [exp, "bm_pdbs"])
+            root_exp_dir = path_tools.get_make_get_dirs(self.plot_outdir, [exp, "bm_pdbs"])
             mc_data = self.all_data[exp]
             all_y_values = []
 
@@ -229,21 +224,28 @@ class AnalyzeMCAcceptance:
             make_exp_figure.add_data(x_values, numpy.mean(all_y_values, axis=0), exp)
 
             make_all_pdbids_figure.fill_subplot("Cumulative MC Acceptance", make_all_pdbids_figure.labels, x_axis_label="Cycle", y_axis_label="Avg Cumulative Accepts")
-            make_all_pdbids_figure.save_plot(self.options.plot_outdir+"/"+"all_pdbs_avg_cumulative_acceptance_"+exp+".pdf")
+            make_all_pdbids_figure.save_plot(self.plot_outdir+"/"+"all_pdbs_avg_cumulative_acceptance_"+exp+".pdf")
 
         make_exp_figure.fill_subplot("Cumulative MC Acceptance", make_exp_figure.labels, x_axis_label="Cycle", y_axis_label="Avg Cumulative Accepts", add_legend=True)
-        make_exp_figure.save_plot(self.options.plot_outdir+"/"+"avg_cumulative_acceptance_"+"_".join([exp for exp in self.all_data])+".pdf")
+        make_exp_figure.save_plot(self.plot_outdir+"/"+"avg_cumulative_acceptance_"+"_".join([exp for exp in self.all_data])+".pdf")
 
 class MCData:
-    def __init__(self, dataset_dir, bm_info):
-        if isinstance(bm_info, BMInfo): pass
+    def __init__(self, dataset_dir, analysis_info):
+        """
+
+        :param dataset_dir: str
+        :param analysis_info: AnalysisInfo
+        :return:
+        """
+
+        if isinstance(analysis_info, AnalysisInfo): pass
         self.dataset_dir = dataset_dir
         self.data = defaultdict(lambda: [])
-        self.bm_info = bm_info
+        self.analysis_info = analysis_info
 
         self.data = defaultdict()
 
-        self.native_pdblist = self.dataset_dir+"/"+self.bm_info.get_dataset()+".PDBLIST.txt"
+        self.native_pdblist = self.dataset_dir+"/"+self.analysis_info.bm_info.get_dataset()+".PDBLIST.txt"
 
 
         if not os.path.exists(self.native_pdblist):
@@ -297,7 +299,7 @@ class MCData:
                         cy_data.set_delta_e(n, cy_data.get_final_e(n) - cy_data.get_final_e(n-1))
 
     def _read_pdb_files(self):
-        file_paths = bm_tools.get_pdb_paths("decoys/"+self.bm_info.get_dir(), self.bm_info.get_exp(), self.bm_info.get_name_match())
+        file_paths = bm_tools.get_pdb_paths("decoys/"+self.analysis_info.get_dir(), self.analysis_info.get_exp(), self.analysis_info.get_name_match())
         for file_path in file_paths:
             self._parse_file_data(file_path)
 
@@ -409,7 +411,6 @@ class CycleData:
 
 if __name__ == "__main__":
 
-    analyzer = AnalyzeMCAcceptance()
-    analyzer.analyze()
+    main()
 
 

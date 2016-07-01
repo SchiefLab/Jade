@@ -25,16 +25,15 @@ class BenchmarkInfo:
 
 
     """
-    def __init__(self, decoy_path, full_name, final_name, rel_log_path = None, scorefunction = "talaris2014"):
-        self._initialize_data(decoy_path, full_name, final_name,  scorefunction, rel_log_path)
+    def __init__(self, decoy_path, full_name, final_name, scorefunction = "talaris2014"):
+        self._initialize_data(decoy_path, full_name, final_name,  scorefunction)
 
-    def _initialize_data(self, decoy_path, full_name, final_name, scorefunction, rel_log_path = None):
+    def _initialize_data(self, decoy_path, full_name, final_name, scorefunction):
 
         self.decoy_dir = decoy_path
         self.full_name = full_name
         self.final_name = final_name
         self.scorefunction = scorefunction
-        self.rel_log_path = rel_log_path
 
         self.settings = get_run_settings(self.decoy_dir)
 
@@ -53,12 +52,19 @@ class BenchmarkInfo:
         """
         return self.final_name
 
-    def get_exp_batch(self):
+    def get_dataset(self):
         """
         Get the dataset used for benchmarking.
         :rtype: str
         """
         return self.settings["dataset"]
+
+    def get_input_pdb_type(self):
+        """
+        Get the input pdb type used, ex: native vs pareto
+        :rtype: str
+        """
+        return self.settings["input_pdb_type"]
 
     def get_scorefunction_name(self):
         """
@@ -76,10 +82,7 @@ class BenchmarkInfo:
 
     ### RAbD ###
     def has_log_path(self):
-        if self.rel_log_path:
-            return True
-        else:
-            return False
+        return False
 
 
 
