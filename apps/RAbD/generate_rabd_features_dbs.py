@@ -53,7 +53,7 @@ def main():
                       help = "Prefix to use for output databases.  Recommended to use the design and strategy name",
                       required = True)
 
-    run_mpi_rosetta = RunRosetta(program = "rosetta_scripts", parser = parser)
+    run_mpi_rosetta = RunRosetta(program = "rosetta_scripts", parser = parser, db_mode=True)
 
     options = parser.parse_args()
 
