@@ -1,4 +1,4 @@
-{ "exp": "nstruct_test_no_H3_GD",
+{ "exp": "nstruct_no_H3_GD",
   "nstruct":500,
   "dataset": {
     "benchmarks":[
