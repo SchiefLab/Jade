@@ -1,8 +1,7 @@
-import json
-import os
+import json, os, sys
 
 import rosetta_jade.BenchmarkInfo as rosetta_bms
-
+from basic.path import get_decoy_name
 class AnalysisInfo:
     """
     Simple class that parses a json file which defines (USING RELATIVE PATHS):
@@ -15,6 +14,7 @@ class AnalysisInfo:
     Benchmark classes and scripts will take lists to these analysis files and use them to generate plots and data.
     """
     def __init__(self, json_path):
+        print "Loading "+json_path
         self.json_path = json_path
         JSON_FILE = open(self.json_path, 'r')
         self.data = json.load(JSON_FILE)
@@ -30,7 +30,7 @@ class AnalysisInfo:
         return self.bm_info
 
     def get_exp(self):
-        return self.data["exp"]
+        return self.data["short_name"]
 
     def get_decoy_dir(self):
         return self.data["decoy_dir"]
@@ -50,11 +50,12 @@ class NativeInfo:
             :rtype: [str]
             """
             pdbids = []
+            print "reading from "+path
             INFILE = open(path, 'r')
             for line in INFILE:
                 line = line.strip()
-                if not line or not line.startswith("#"):continue
-                pdbids.append(line)
+                if not line or line.startswith("#"):continue
+                pdbids.append(get_decoy_name(line))
             INFILE.close()
             return pdbids
 
@@ -62,11 +63,16 @@ class NativeInfo:
         self.input_pdb_type = input_pdb_type
         self.root_dataset_dir = root_dataset_dir
 
-        self.pdbids = load_pdbids(os.path.join(root_dataset_dir, ".".join([self.dataset, self.input_pdb_type, "PDBLIST.txt"])))
-        self.lambda_pdbids = self.pdbids = load_pdbids(os.path.join(root_dataset_dir, ".".join([self.dataset, self.input_pdb_type, "lambda.PDBLIST.txt"])))
-        self.kappa_pdbids = self.pdbids = load_pdbids(os.path.join(root_dataset_dir, ".".join([self.dataset, self.input_pdb_type, "kappa.PDBLIST.txt"])))
+        self.lambda_pdbids = self.pdbids = load_pdbids(os.path.join(root_dataset_dir, "pdblists",".".join([self.dataset, "lambda.PDBLIST.txt"])))
+        self.kappa_pdbids = self.pdbids = load_pdbids(os.path.join(root_dataset_dir, "pdblists", ".".join([self.dataset, "kappa.PDBLIST.txt"])))
 
-        self.db_path = os.path.join(self.root_dataset_dir, ".".join([self.input_pdb_type, "norm_ab_features.db"]))
+        self.pdbids = self.lambda_pdbids
+        self.pdbids.extend(self.kappa_pdbids)
+
+
+        self.db_path = os.path.join(self.root_dataset_dir, "databases", ".".join([self.input_pdb_type, "native_ab_features.db"]))
+        if not os.path.exists(self.db_path):
+            sys.exit("DB Path, "+self.db_path+" , does not exist. Please use the generate_rabd_features_dbs script to generate.")
         self.decoy_path = os.path.join(self.root_dataset_dir, self.input_pdb_type)
 
     def get_features_db(self):

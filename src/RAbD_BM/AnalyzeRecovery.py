@@ -8,6 +8,8 @@
 #exp_list is the same thing we will use for Json skipping ref.  full names on left, reference name on right.
 
 #This was also written way before pandas was even on the radar, and all the plotting functionality within Python was laughable.
+#The RecoveryCalculator was rewritten from R into python using proper pandas DataFrames and it shows.
+
 
 import gzip
 import os
@@ -24,12 +26,16 @@ from optparse import OptionParser
 import re
 import glob
 
-import math
+import pandas
 
 import RAbD_BM.tools as tools
+import RAbD_BM.tools_features_db as feat_tools
 from rosetta_jade.BenchmarkInfo import BenchmarkInfo
 from RAbD_BM.AnalysisInfo import AnalysisInfo
 from RAbD_BM.AnalysisInfo import NativeInfo
+from basic.structure.Structure import AntibodyStructure
+from basic.structure.Structure import cdr_names
+
 from basic.numeric import *
 
 class AnalyzeRecovery:
@@ -55,13 +61,13 @@ class AnalyzeRecovery:
         self.native_info = native_info
         self.structures_lam_kap = defaultdict()
 
-        self.structures_lam_kap["lambda"], self.structures_lam_kap["kappa"] = tools.get_lambda_kappa_pdb_ids(self.analysis_info.bm_info.get_dataset(),
-                                                                                               self.analysis_info.bm_info.get_input_pdb_type())
+        self.structures_lam_kap["lambda"] = native_info.lambda_pdbids
+        self.structures_lam_kap["kappa"] = native_info.kappa_pdbids
 
-        self.recovery_calculator = RecoveryCalculator(self.native_info.get_features_db(), self.analysis_info.get_features_db())
+        self.recovery_calculator = RecoveryCalculator()
 
         if self.analysis_info.bm_info.settings["CDR"] == "ALL":
-            self.cdrs = ["L1", "L2", "L3", "H1", "H2", "H3"]
+            self.cdrs = cdr_names
         else:
             self.cdrs = [self.analysis_info.bm_info.settings["CDR"]]
 
@@ -77,28 +83,29 @@ class AnalyzeRecovery:
 
         self.exp_data = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
         self.ab_db_data = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+
+        # Native Data
         self.natives = defaultdict(lambda: defaultdict(dict))
 
         self.initialize()
 
     def initialize(self):
+        """
+        Initialize ALL data before outputing everything.
+        :return:
+        """
         native_db = self.native_info.get_features_db()
 
         if not os.path.exists(native_db):
             sys.exit("native_db path not good: "+native_db)
 
 
-        con = sqlite3.connect(native_db)
-        structures = []
-        for row in con.execute("SELECT input_tag from structures"):
-            structures.append(str(row[0]))
-
         """
         Initializes all data dictionaries to zero
 
         """
         exp = self.analysis_info.get_exp()
-        for structure in structures:
+        for structure in self.native_info.pdbids:
             for cdr in self.cdrs:
                 self.exp_totals[exp][structure][cdr] = 0
                 self.ab_db_cdr_totals[exp][structure][cdr] = 0
@@ -106,35 +113,19 @@ class AnalyzeRecovery:
 
         for type in self.recovery_types:
             exp = self.analysis_info.get_exp()
-            for structure in structures:
+            for structure in self.native_info.pdbids:
                 for cdr in self.cdrs:
                     self.exp_data[type][exp][structure][cdr] = 0
                     self.ab_db_data[type][exp][structure][cdr] = 0
 
         """
-        Calculates Native totals
-
+        Initialize natives and calculate recoveries.
         """
-        for structure in structures:
+        self.recovery_calculator.apply(self.analysis_info.get_exp(), self.native_info.pdbids, self.native_info.get_features_db(), self.analysis_info.get_features_db())
+        for pdbid in self.native_info.pdbids:
             for cdr in self.cdrs:
-
-                for row in con.execute("SELECT cdr_clusters.length " +
-                                     "FROM cdr_clusters, structures " +
-                                     "WHERE structures.input_tag = ? AND " +
-                                     "structures.struct_id == cdr_clusters.struct_id AND " +
-                                     "cdr_clusters.CDR=?", (structure, cdr)):
-                    self.native_lengths[structure][cdr] = str(row[0])
-                    self.natives["length"][structure][cdr] = str(row[0])
-
-                for row in con.execute("SELECT cdr_clusters.fullcluster " +
-                                     "FROM cdr_clusters, structures " +
-                                     "WHERE structures.input_tag = ? AND " +
-                                     "structures.struct_id == cdr_clusters.struct_id AND " +
-                                     "cdr_clusters.CDR=?", (structure, cdr)):
-                    self.native_clusters[structure][cdr] = str(row[0])
-                    self.natives["cluster"][structure][cdr] = str(row[0])
-
-        con.close()
+                self.native_lengths[pdbid][cdr] = self.natives["length"][pdbid][cdr] = feat_tools.get_length(self.recovery_calculator.native_df, pdbid, cdr)
+                self.native_clusters[pdbid][cdr] = self.natives["cluster"][pdbid][cdr] = feat_tools.get_cluster(self.recovery_calculator.native_df, pdbid, cdr)
 
 
         """
@@ -142,6 +133,7 @@ class AnalyzeRecovery:
         This data goes into the self.ab_db_data dictionary.
 
         This is what we will use to calculate the Risk Ratios, as this is what we are sampling on.
+        I truly hate most of this code.
         """
         con = self.pyig_design_db
         def __add_data(data_dict, structure, cdr, n):
@@ -163,7 +155,6 @@ class AnalyzeRecovery:
                     #TOTAL of NATIVE CLUSTER in PyIgClassify DB
                     for row in con.execute("SELECT * from cdr_data WHERE CDR=? AND fullcluster=? AND gene = ? AND datatag != ?", (cdr, cluster, gene, 'loopKeyNotInPaper')):
                         n_clusters+=1
-                    #__add_data(self.ab_db_totals_cluster, structure, cdr, n_clusters)
                     __add_data(self.ab_db_data["cluster"], structure, cdr, n_clusters)
 
 
@@ -183,12 +174,13 @@ class AnalyzeRecovery:
                     for structure in self.structures_lam_kap[lam_kap_type]:
                         self.ab_db_cdr_totals[exp][structure][cdr]+=1 #TOTAL NUMBER OF CDR ENTRIES IN DATABASE
 
+
         con.close()
 
 
     def apply(self, db_path, drop_tables = False):
         """
-        Calculate and Output all the data
+        Calculate and Output all the data to the given database.
 
         :param db_path: str
         :param drop_tables: bool
@@ -196,6 +188,11 @@ class AnalyzeRecovery:
         """
         db_dir = os.path.dirname(db_path)
         db_name = os.path.basename(db_path)
+
+
+        if not os.path.exists(db_dir):
+            os.mkdir(db_dir)
+
         filenames = get_filenames(self.analysis_info.get_decoy_dir(), os.path.basename(self.analysis_info.get_decoy_dir()))
 
         if len(filenames) == 0:
@@ -204,8 +201,6 @@ class AnalyzeRecovery:
             #print name
             print "Parsing "+name
             self.read_pdb_graft_log_data(name, self.analysis_info.get_exp())
-
-
 
         def _setup_output_db(drop_tables = False):
 
@@ -218,13 +213,13 @@ class AnalyzeRecovery:
 
                 if type == "length":
                     self.db.execute("CREATE TABLE IF NOT EXISTS "+table+"(" +
-                                        "id INT, native TEXT, CDR TEXT, exp TEXT, exp_group TEXT, exp_type TEXT, length INT," +
+                                        "id INT, native TEXT, CDR TEXT, exp TEXT, length INT," +
                                         "chosen_perc REAL, db_perc REAL," +
                                         "chosen_freq INT, graft_total INT, db_freq INT, db_total INT," +
                                         "top_rec REAL, top_rr REAL, topx_rec REAL, topx_rr REAL, x INT)")
                 if type == "cluster":
                     self.db.execute("CREATE TABLE IF NOT EXISTS "+table+"(" +
-                                        "id INT, native TEXT, CDR TEXT, exp TEXT, exp_group TEXT, exp_type TEXT, cluster TEXT," +
+                                        "id INT, native TEXT, CDR TEXT, exp TEXT, cluster TEXT," +
                                         "chosen_perc REAL, db_perc REAL," +
                                         "chosen_freq INT, graft_total INT, db_freq INT, db_total INT," +
                                         "top_rec REAL, top_rr REAL, topx_rec REAL, topx_rr REAL, x INT)")
@@ -237,7 +232,7 @@ class AnalyzeRecovery:
 
 
                 self.db.execute("CREATE TABLE IF NOT EXISTS "+table+"(" +
-                                        "id INT, CDR TEXT, exp TEXT, exp_group TEXT, exp_type TEXT," +
+                                        "id INT, CDR TEXT, exp TEXT," +
                                         "chosen_perc REAL, db_perc REAL, avg_chosen_perc REAL, avg_db_perc REAL, "+
                                         "chosen_freq INT, graft_total INT, db_freq INT, db_total INT, " +
                                         "top_rec REAL, top_rr REAL, top_rr_avg REAL, top_rr_log REAL, "+
@@ -249,11 +244,12 @@ class AnalyzeRecovery:
 
 
                 self.db.execute("CREATE TABLE IF NOT EXISTS "+table+"(" +
-                                        "id INT, exp TEXT, exp_group TEXT, exp_type TEXT, h3_present INT, " +
+                                        "id INT, exp TEXT, h3_present INT, " +
                                         "chosen_perc REAL, db_perc REAL, avg_chosen_perc REAL, avg_db_perc REAL, "+
                                         "chosen_freq INT, graft_total INT, db_freq INT, db_total INT, " +
                                         "top_rec REAL, top_rr REAL, top_rr_avg REAL, top_rr_log REAL, "+
                                         "topx_rec REAL, topx_rr REAL, topx_rr_avg REAL, topx_rr_log REAL, x INT)")
+
         ####################################
 
         def _output_data(db_dir, name):
@@ -310,9 +306,7 @@ class AnalyzeRecovery:
                     if name == 'length':
                         native = int(native)
 
-                    exp_type, exp_group = self.get_exp_split(exp)
-
-                    data = [i, structure, cdr, exp, exp_group, exp_type, native, exp_perc, ab_db_perc, exp_freq, exp_total, ab_db_freq, ab_db_total]
+                    data = [i, structure, cdr, exp, native, exp_perc, ab_db_perc, exp_freq, exp_total, ab_db_freq, ab_db_total]
                     rec_data = self.get_recoveries(rec_freq, rec_totals, exp_perc, exp, structure, cdr)
                     data.extend(rec_data)
 
@@ -336,13 +330,12 @@ class AnalyzeRecovery:
             ###### Per Exp ############
             self.output_exp_data(name, self.cdrs)
             print "Complete"
+
+
         ###############################################################################################################
-        db_path = db_dir+"/"+db_name
-        if not os.path.exists(db_dir):
-            os.mkdir(db_dir)
 
         #self._check_data()
-        self.db = sqlite3.connect(db_path)
+        self.db = sqlite3.connect(db_path) #This HAS to be self, unfortunately, as other functions will rely on self holding the db.
         _setup_output_db(drop_tables)
         _output_data(db_dir, "length")
         _output_data(db_dir, "cluster")
@@ -665,27 +658,124 @@ class AnalyzeRecovery:
 
 
 class RecoveryCalculator:
-    def __init__(self, native_db_path,bm_db_path ):
-        self.native_db = sqlite3.connect(native_db_path)
-        self.bm_db = sqlite3.connect(bm_db_path)
+    def __init__(self):
+        """
+        Calculate length and cluster recovery from the features database and native database,
+         which has the cluster and length info.
+        """
 
+        length = "length"
+        cluster = "cluster"
+
+        #All Data: Ex: [recovery_type]["freq"][exp][structure][cdr]
         self.all_data = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict))))
+        self.all_data2 = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(dict))))
 
-    def get_all_freq(self, type):
+        self.cdrs = cdr_names
+        self.Antibody = AntibodyStructure()
 
-        return self.all_data[type]["freq"]
+    def get_all_freq(self, recovery_type):
+        """
+        Get A dictionary of all of the data of the given recovery type
 
-    def get_all_totals(self, type):
+        dict[exp][structure][cdr]
+        :param recovery_type: str
+        :rtype: defaultdict
+        """
 
-        return self.all_data[type]["total"]
+        return self.all_data[recovery_type]["freq"]
 
-    def apply(self):
+    def get_all_totals(self, recovery_type):
+        """
+        Get A dictionary of all of the data of the given type
+
+        dict[exp][structure][cdr]
+        :param recovery_type:
+        :rtype: defaultdict
+        """
+        return self.all_data[recovery_type]["total"]
+
+    def apply(self, exp_name, pdbids, native_db_path, bm_db_path, output_dir = "data" ):
         """
         Calculate length and cluster recoveries.  Store them the same way we used to for the recovery parser.
-        :return:
         """
-        pass
+        native_db = sqlite3.connect(native_db_path)
+        bm_db = sqlite3.connect(bm_db_path)
+        exp_name = exp_name
 
+        #Get all native data as a pandas DataFrame.
+        native_df = feat_tools.get_cdr_cluster_df(native_db)
+        bm_df = feat_tools.get_cdr_cluster_df(bm_db)
+
+
+
+        native_structures = pandas.read_sql_query("SELECT input_tag from structures", native_db)['input_tag']
+        flat_dict = defaultdict(list)
+        for pdbid in pdbids:
+            for cdr in self.cdrs:
+                print pdbid+" "+cdr
+
+                native_length = feat_tools.get_length(native_df, pdbid, cdr)
+                native_cluster = feat_tools.get_cluster(native_df, pdbid, cdr)
+
+                print "Native: "+repr(native_length)
+                print "Cluster: "+repr(native_cluster)
+
+                total_entries = feat_tools.get_total_entries(bm_df, pdbid, cdr)
+
+                length_recovery = feat_tools.get_length_recovery(bm_df, pdbid, cdr, native_length)
+                cluster_recovery = feat_tools.get_cluster_recovery(bm_df, pdbid, cdr, native_cluster)
+
+                print "length_recovery: "+str(length_recovery)
+                print "cluster_recovery: "+str(cluster_recovery)
+
+                self.all_data["length"]["freq"][exp_name][pdbid][cdr] = length_recovery
+                self.all_data["length"]["total"][exp_name][pdbid][cdr] = total_entries
+
+                self.all_data["cluster"]["freq"][exp_name][pdbid][cdr] = cluster_recovery
+                self.all_data["cluster"]["total"][exp_name][pdbid][cdr] = total_entries
+
+                #Length
+
+
+                flat_dict['length_recovery'].append(length_recovery)
+                flat_dict['cluster_recovery'].append(cluster_recovery)
+                flat_dict['total_entries'].append(total_entries)
+                flat_dict['pdbid'].append(pdbid)
+                flat_dict['cdr'].append(cdr)
+                flat_dict['exp'].append(exp_name)
+
+        self.native_df = native_df
+        self.bm_df = bm_df
+
+        ##Convert into something easily converted to pandas and output CSV.
+
+        all_df = pandas.DataFrame.from_dict(flat_dict)
+
+
+        print "Recoveries calculated."
+
+        self.native_df.to_csv(output_dir+"/native_clusters.csv")
+
+        columns = ['exp', 'pdbid', 'cdr', 'length_recovery', 'cluster_recovery', 'total_entries']
+
+        out = output_dir+"/all_recoveries.txt"
+        if os.path.exists(out):
+            ftype = 'a'
+            header = False
+        else:
+            ftype = 'w'
+            header = True
+
+        OUTFILE = open(out, ftype)
+        all_df.to_csv(OUTFILE, columns=columns, header=header)
+
+        #sys.exit("Checking recovery first.")
+
+
+
+
+#RecoveryParser -
 """
 class RecoveryParser:
     def __init__(self):
@@ -778,7 +868,7 @@ def get_filenames(input_dir, tag):
     """
     if not os.path.exists(input_dir):
         sys.exit("MPI Log Dir does not exist!")
-    search_name = input_dir+"/"+tag+"*"
+    search_name = input_dir+"/"+tag+"*.pdb*"
     #print search_name
     return glob.glob(search_name)
 
@@ -850,6 +940,24 @@ def get_recoveries_avg(rec_data, exp, exp_perc, cdr=None):
     rec_array.append(x)
     return rec_array
 
+
+if __name__ == "__main__":
+    help = "Testing uses these three positional arguments:" \
+              "exp_name native_db_path exp_db_path"
+
+    if sys.argv[1] == "--help" or len(sys.argv) == 1:
+        sys.exit(help)
+
+    if len(sys.argv) < 4:
+        sys.exit(help)
+
+
+    exp_name = sys.argv[1]
+    native_db_path = sys.argv[2]
+    exp_db_path = sys.argv[3]
+
+    recovery_calculator = RecoveryCalculator()
+    recovery_calculator.apply(exp_name, native_db_path, exp_db_path)
 
 
 

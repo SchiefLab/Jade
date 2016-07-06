@@ -213,8 +213,8 @@ class PDB_database:
         """
         Updates modelID to specify L1 through H3 and framework for possible future statistical analysis.
         """
-        from basic.structure.Structure import Antibody_Structure
-        AB = Antibody_Structure()
+        from basic.structure.Structure import AntibodyStructure
+        AB = AntibodyStructure()
         self.cur.execute("UPDATE pdb SET modelID='FRAMEWORK'")
         for cdr in AB.CDRS:   
             self.cur.execute("UPDATE pdb SET modelID=? WHERE chain=? AND resnum BETWEEN ? AND ?", (cdr.name, cdr.chain, cdr.Nter, cdr.Cter))

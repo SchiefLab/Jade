@@ -86,7 +86,7 @@ class BenchmarkInfo:
 
 
 
-def get_run_settings(dir, fname="RUN_SETTING.txt"):
+def get_run_settings(dir, fname="RUN_SETTINGS.txt"):
     """
     Gets a dict of the settings used to run the benchmark in the directory.
 

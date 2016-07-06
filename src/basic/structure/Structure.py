@@ -15,7 +15,8 @@ import os
 import sys
 from collections import defaultdict
 
-
+### Global Values #####
+cdr_names = ["L1", "L2", "L3", "H1", "H2", "H3"]
 
 class PDBInfo(object):
     """
@@ -358,30 +359,73 @@ class ResidueRegion:
 
     ###Lots of other cool stuff to do with this:
 
-class Antibody_Structure:
+class AntibodyStructure:
     """
-    Simple class for accessing Modified_AHO antibody numbering information outside of Rosetta.  Use protocols/antibody/AntibodyInfo if importing Rosetta.
+    Simple class for accessing Modified_AHO antibody numbering information outside of Rosetta.
     """
     def __init__(self):
         #3 Different ways to access the CDR Loops.  Should be one.  Not convoluted.
-        self.L1 = CDR("L1"); self.L2 = CDR("L2"); self.L3=CDR("L3");
-        self.H1 = CDR("H1"); self.H2 = CDR("H2"); self.H3=CDR("H3");
-        self.CDRS = [self.L1, self.L2, self.L3, self.H1, self.H2, self.H3]; #Switch to a dictionary with CDR name and cdr as item????
+
+        self.cdrs = defaultdict()
+        self.cdr_names = cdr_names #So we have an ordered list the way we like it.
+
+        for cdr_name in self.cdr_names:
+            self.cdrs[cdr_name] = CDR(cdr_name)
+
+    def get_cdr(self, cdr_name):
+        """
+        Get a CDR object of the given name
+        :param cdr_name: str
+        :rtype: CDR
+        """
+        return self.cdrs[cdr_name]
+
+    def get_cdrs(self):
+        """
+        Get a dictionary of CDR objects, indexed by name
+        :rtype: defaultdict[str] = CDR
+
+        """
+        return self.cdrs
 
 
-        self.CDR = {"L1":self.L1, "L2":self.L2, "L3":self.L3, "H1":self.H1, "H2":self.H2, "H3":self.H3}
+    def get_cdr_names(self):
+        return self.cdr_names
 
-    def get_CDRs(self):
-        return self.CDRS
+class CDR:
+    def __init__(self, name):
+        self.regions = {
+            "L1":['L', 24, 42],
+            "L2":['L', 57, 72],
+            "L3":['L', 107, 138],
+            "H1":['H', 24, 42],
+            "H2":['H', 57, 69],
+            "H3":['H', 107, 138]}
 
-    def get_CDR(self, cdr_name):
-        return self.CDR[cdr_name]
+        self.name = name
+        self.region = self.regions[self.name]
+        self.chain = self.region[0]
+        self.Nter = self.region[1]
+        self.Cter = self.region[2]
+        self.residue_records = dict()
 
-    def get_PDB_name(self, Path):
-        root, pdb = os.path.split(Path)
-        pdb = pdb.split('.')[0]
-        self.pdb = pdb
-        return self.pdb
+    def __str__(self):
+        return str(self.regions[self.name])
+
+    def get_pdb_chain(self):
+        return self.regions[self.name][0]
+
+    def get_pdb_start(self):
+        return self.regions[self.name][1]
+
+    def get_pdb_end(self):
+        return self.regions[self.name][2]
+
+    def set_gene(self, gene):
+        self.gene = gene
+
+    def add_residue_record(self, name, num):
+        self.residue_records[num]=ResidueRecord(name, num)
 
 
 class FrameworkRegions:
@@ -457,41 +501,7 @@ class FrameworkRegions:
     def F3(self):
         return self.regions["F3"]
 
-class CDR:
-    def __init__(self, name):
-        self.regions = {
-            "L1":['L', 24, 42],
-            "L2":['L', 57, 72],
-            "L3":['L', 107, 138],
-            "H1":['H', 24, 42],
-            "H2":['H', 57, 69],
-            "H3":['H', 107, 138]}
-        
-        self.name = name
-        self.region = self.regions[self.name]
-        self.chain = self.region[0]
-        self.Nter = self.region[1]
-        self.Cter = self.region[2]
-        self.residue_records = dict()
-    
-    def __str__(self):
-        return str(self.regions[self.name])
-    
-    def get_pdb_chain(self):
-        return self.regions[self.name][0]
-        
-    def get_pdb_start(self):
-        return self.regions[self.name][1]
-    
-    def get_pdb_end(self):
-        return self.regions[self.name][2]
-        
-    def set_gene(self, gene):
-        self.gene = gene
-        
-    def add_residue_record(self, name, num):
-        self.residue_records[num]=ResidueRecord(name, num)
-        
+
 
 ############################################################FUTURE1#############################################################
 class PDB:
