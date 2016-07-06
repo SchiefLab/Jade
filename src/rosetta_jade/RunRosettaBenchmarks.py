@@ -238,7 +238,7 @@ class RunRosettaBenchmarks(RunRosetta):
     @overrides
     def _get_job_name(self):
         #return self._get_make_mpi_tracer_dir().replace('/', '.').replace("logs.", "")
-        return self.extra_options.get_exp()+"."+os.path.basename(self._get_make_out_path())+"."+self._current_settings["l_chain"]
+        return self.extra_options.get_exp()+"."+os.path.basename(self._get_make_out_path())
 
     def _get_pdb_list_ids(self):
 

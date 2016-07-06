@@ -94,8 +94,8 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
                         self._current_settings["l_chain"]+".PDBLIST.txt"])
 
     @overrides
-    def _get_make_mpi_tracer_dir(self):
-        return RunRosettaBenchmarks._get_make_mpi_tracer_dir(self)+"."+self._current_settings["l_chain"]
+    def _get_job_name(self):
+        return self.extra_options.get_exp()+"."+os.path.basename(self._get_make_out_path())+"."+self._current_settings["l_chain"]
 
     ### Helper Functions ###
 
