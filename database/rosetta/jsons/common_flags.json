@@ -10,6 +10,7 @@
     "-other_pose_to_scorefile",
     "-scorefile_format json",
     "-flip_HNQ",
-    "-delete_old_poses"
+    "-delete_old_poses",
+    "-add_graft_log_to_pdb"
   ]
 }

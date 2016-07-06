@@ -606,8 +606,11 @@ class AnalyzeRecovery:
         else:
             INFILE = open(filename, 'r')
         for line in INFILE:
+            line = line.strip()
+            if not line or line.startswith("ATOM"): continue
+
             if re.search(" DATA GRAFT_CLOSURE ", line):
-                lineSP = line.strip().split()
+                lineSP = line.split()
                 data_index = 0
                 for i in range(0, len(lineSP)):
                     if lineSP[i]=="DATA":
@@ -627,6 +630,7 @@ class AnalyzeRecovery:
 
                 self.exp_totals[ref_name][input_tag][cdr]+=1
 
+                print repr(self.exp_data)
                 if length == self.native_lengths[input_tag][cdr]:
                     #self.exp_lengths[ref_name][input_tag][cdr] +=1
                     self.exp_data["length"][ref_name][input_tag][cdr]+=1
