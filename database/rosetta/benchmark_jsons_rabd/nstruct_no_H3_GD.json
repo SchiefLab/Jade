@@ -97,5 +97,8 @@
       "bm2_instructions",
       "bm2_flags"
     ]
-  }]
+  }],
+  "flags":[
+    "-add_graft_log_to_pdb"
+  ]
 }

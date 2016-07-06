@@ -186,28 +186,8 @@ class RunRosettaBenchmarks(RunRosetta):
         if hasattr(self.options, "out_prefix") and self.options.out_prefix:
             return self.options.out_prefix+"."
 
+        return self.extra_options.get_exp()+"_"
 
-        s = []
-
-        s.append(self.extra_options.get_exp())
-        for key in self._current_settings_ordered_keys:
-            if not self.extra_options.use_benchmark_for_prefix(key):
-                continue
-
-            if self._current_settings.has_key(key) and self._current_settings[key] != None:
-                opt = self._current_settings[key]
-                if type(opt) == bool:
-                    if opt == True:
-                        opt = "T"
-                    else:
-                        opt = "F"
-                elif type(opt) != str:
-                    opt = str(opt)
-
-                s.append(key+"-"+opt)
-
-
-        return ".".join(s)
 
     @overrides
     def _get_make_out_path(self):
