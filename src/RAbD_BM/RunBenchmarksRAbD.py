@@ -61,8 +61,8 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
 
         #Special case for mintype - switch to two if set to 1:
         if benchmark_options[benchmark_names.index("mintype")] != "relax":
-            if benchmark_options[benchmark_names.index("inner_cycle_rounds")] == 1:
-                benchmark_options[benchmark_names.index("inner_cycle_rounds")] = 2
+            if benchmark_options[benchmark_names.index("inner_cycles")] == 1:
+                benchmark_options[benchmark_names.index("inner_cycles")] = 2
 
         if separate_cdrs:
             for cdr in self._get_designable_cdrs():
@@ -94,8 +94,8 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
                         self._current_settings["l_chain"]+".PDBLIST.txt"])
 
     @overrides
-    def _get_make_log_dir(self):
-        return RunRosettaBenchmarks._get_make_log_dir(self)+"."+self._current_settings["l_chain"]
+    def _get_make_mpi_tracer_dir(self):
+        return RunRosettaBenchmarks._get_make_mpi_tracer_dir(self)+"."+self._current_settings["l_chain"]
 
     ### Helper Functions ###
 

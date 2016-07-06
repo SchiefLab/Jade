@@ -149,7 +149,7 @@ class RunRosetta(object):
 
         Common Methods to override for more benchmarking control:
           _add_args()
-          _get_make_log_dir()
+          _get_make_mpi_tracer_dir()
           _get_make_out_path()
           _get_prefix()
           _get_output_string()
@@ -511,7 +511,7 @@ class RunRosetta(object):
                 s = s+"_"+a
             return s
         else:
-            return self.options.exp_name
+            return self.options.exp_name+"."+os.path.basename(self._get_make_out_path())
 
     def _get_program(self):
         """
@@ -533,7 +533,7 @@ class RunRosetta(object):
         """
         Get and make the queue dir where qsub/slurm scripts will go.
         """
-        log_path = self.base_options._get_make_log_dir() + "/queue"
+        log_path = self.base_options._get_make_log_root_dir() + "/queue"
         if not os.path.exists(log_path):
             os.mkdir(log_path)
         return log_path
@@ -544,17 +544,21 @@ class RunRosetta(object):
 
     ### Methods to override for specific Benchmarks ###
 
-    def _get_make_log_dir(self, *args, **kwargs):
+    def _get_make_mpi_tracer_dir(self, *args, **kwargs):
         """
         Get and make the dir to which the MPI output of each process will go.
         ONLY for MPI TRACER LOGs
         """
 
         #name = self.get_out_prefix(*args, **kwargs)
-        log_path = self.base_options._get_make_log_dir() + "/" + self._get_job_name()
+        log_path = os.path.join(self.base_options._get_make_log_root_dir(), "mpi_tracer_logs")
         if not os.path.exists(log_path):
             os.mkdir(log_path)
-        return log_path +"/"+self._get_job_name()
+
+        log_path = log_path+"/"+self._get_job_name()
+        if not os.path.exists(log_path):
+            os.mkdir(log_path)
+        return log_path
 
     def _get_out_prefix(self, *args, **kwargs):
         return None
@@ -597,7 +601,8 @@ class RunRosetta(object):
 
         #Log Dir:
         if not self.options.one_file_mpi:
-            s = s + " -mpi_tracer_to_file "+ self._get_make_log_dir(*args, **kwargs)
+            dir = self._get_make_mpi_tracer_dir(*args, **kwargs)
+            s = s + " -mpi_tracer_to_file "+ dir+"/tracer_logs_"
 
         #For these benchmarks, there are only a single root directory.
         if self.extra_options:
@@ -718,7 +723,7 @@ class RunRosetta(object):
 
     def run(self, *args, **kwargs):
 
-        log_dir = self._get_make_log_dir(*args, **kwargs)
+        log_dir = self._get_make_mpi_tracer_dir(*args, **kwargs)
         outpath = self._get_make_out_path(*args, **kwargs)
         queue_dir = self._get_make_queue_dir(*args, **kwargs)
 

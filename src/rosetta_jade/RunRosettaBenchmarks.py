@@ -148,18 +148,19 @@ class RunRosettaBenchmarks(RunRosetta):
         self._resolve_options()
 
     @overrides
-    def _get_make_log_dir(self):
+    def _get_make_mpi_tracer_dir(self):
 
-        name = self._get_out_prefix()
         #print name
-        log_path = self.base_options._get_make_log_dir() + "/" + name
+
         if self.options.separate_job_per_pdb:
+            log_path = self.base_options._get_make_log_root_dir()
             log_path = log_path+"."+path.get_decoy_name(self._current_settings['pdb'])
 
-        if not os.path.exists(log_path):
-            os.mkdir(log_path)
-
-        return log_path+"/"+self.extra_options.get_exp()
+            if not os.path.exists(log_path):
+                os.mkdir(log_path)
+            return log_path
+        else:
+            return RunRosetta._get_make_mpi_tracer_dir(self)
 
     @overrides
     def _get_output_string(self):
@@ -236,7 +237,8 @@ class RunRosettaBenchmarks(RunRosetta):
 
     @overrides
     def _get_job_name(self):
-        return self._get_make_log_dir().replace('/', '.').replace("logs.", "")
+        #return self._get_make_mpi_tracer_dir().replace('/', '.').replace("logs.", "")
+        return self.extra_options.get_exp()+"."+os.path.basename(self._get_make_out_path())+"."+self._current_settings["l_chain"]
 
     def _get_pdb_list_ids(self):
 

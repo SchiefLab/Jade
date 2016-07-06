@@ -30,7 +30,7 @@ class SetupRosettaOptionsGeneral(object):
         else:
             return None
 
-    def _get_make_log_dir(self):
+    def _get_make_log_root_dir(self):
         if not self.json_dict.has_key("logs"):
             return None
 

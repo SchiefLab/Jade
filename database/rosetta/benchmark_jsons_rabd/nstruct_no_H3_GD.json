@@ -22,7 +22,7 @@
       "even_cluster_mc"
     ]
   },
-  "outer_cycle_rounds":{
+  "outer_cycles":{
     "rosetta_option":"-outer_cycle_rounds",
     "benchmarks":[
       25,
@@ -30,13 +30,13 @@
       75,
       100]
   },
-  "inner_cycle_rounds":{
+  "inner_cycles":{
     "rosetta_option":"-inner_cycle_rounds",
     "benchmarks":[
       1
     ]
   },
-  "random_start":{
+  "randomize":{
     "rosetta_option":"-random_start",
     "benchmarks":[
       true
@@ -49,7 +49,7 @@
     ]
   },
 
-  "paper_ab_db":{
+  "paper_db":{
     "rosetta_option":"-paper_ab_db",
     "benchmarks":[
       true
@@ -65,7 +65,7 @@
     "use_for_outdir":false
   },
 
-  "mintype": {
+  "min": {
     "benchmarks": [
       "relax"
     ]
