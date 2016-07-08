@@ -10,7 +10,7 @@ from RAbD_BM.AnalysisInfo import NativeInfo
 #Tools for the features database.
 
 
-def get_cdr_cluster_df(db_con):
+def get_cdr_cluster_df(db_path):
     """
     Get a dataframe with typical cluster info in it
     :param db_con: sqlite3.con
@@ -29,7 +29,12 @@ def get_cdr_cluster_df(db_con):
         "WHERE " \
             "cdr_clusters.struct_id = structures.struct_id "
 
-    return pandas.read_sql_query(query, db_con)
+    con = sqlite3.connect(db_path)
+    df = pandas.read_sql_query(query, con)
+    con.close()
+
+    return df
+
 
 def get_all_entries(df, pdbid, cdr):
     """

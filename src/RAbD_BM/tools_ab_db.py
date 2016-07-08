@@ -1,11 +1,93 @@
 import sqlite3
 import os
 import sys
+import pandas
 from collections import defaultdict
 from antibody import outliers
 #A Collection of functions to query the AbDb
 
 
+
+
+def get_cdr_data_table_df(db_path):
+    """
+    Get a dataframe with typical info from the cdr_data table in the PyIgClassify db.
+    :param db_con: sqlite3.con
+    :rtype: pandas.DataFrame
+    """
+    query="SELECT "\
+            "cdr_data.PDB," \
+            "cdr_data.gene," \
+            "cdr_data.CDR," \
+            "cdr_data.fullcluster," \
+            "cdr_data.length," \
+            "cdr_data.DistDegree," \
+            "cdr_data.seq "\
+        "FROM " \
+            "cdr_data " \
+        "WHERE " \
+            "cdr_clusters.datatag != 'loopKeyNotInPaper'"
+
+    con = sqlite3.connect(db_path)
+    df = pandas.read_sql_query(query, con)
+    con.close()
+
+    return df
+
+def get_total_entries(df, gene, cdr):
+    """
+    Get a the total number of entries matching the gene and the cdr.  Used for recovery.
+    :param df: pandas.DataFrame
+    :rtype: int
+    """
+    return len(df[ (df['gene'] == gene) & (df['cdr'] == cdr)])
+
+############### Matching ###############
+
+def get_length_matches(df, gene, cdr, length):
+    """
+    Get a dataframe of the matching ("Recovered") rows (DataFrame).
+
+    :param df: pandas.DataFrame
+    :param length: int
+    :rtype: pandas.DataFrame
+    """
+    return df[(df['gene'] == gene) & (df['CDR'] == cdr) & (df['length'] == length )]
+
+def get_cluster_matches(df, gene, cdr, cluster):
+    """
+    Get a dataframe of the matching ("Recovered") rows (DataFrame).
+
+    :param df: pandas.DataFrame
+    :rtype: pandas.DataFrame:
+    """
+    return df[(df['gene'] == gene) & (df['CDR'] == cdr) & (df['fullcluster'] == cluster )]
+
+
+############### Recovery ###############
+
+def get_length_enrichment(df, gene, cdr, length):
+    """
+    Get the number of matches in the df and pdbid to the cdr and length
+
+    :param df: pandas.DataFrame
+    :param length: int
+    :rtype: int
+    """
+    return len(get_length_matches(df, gene, cdr, length)['length'])
+
+def get_cluster_enrichment(df, gene, cdr, cluster):
+    """
+    Get the number of matches in the df and pdbid to the cdr and cluster
+    :param df: pandas.DataFrame
+    :rtype: int
+    """
+    return len(get_cluster_matches(df, gene, cdr, cluster)['fullcluster'])
+
+
+
+
+###########################
 def get_pdb_chain_subset(db, gene):
     """
     Return a list of tuples of [pdb, chain] of the particular gene

@@ -17,7 +17,11 @@ from collections import defaultdict
 
 ### Global Values #####
 cdr_names = ["L1", "L2", "L3", "H1", "H2", "H3"]
+heavy_cdr_names = ["H1", "H2", "H3"]
 
+
+
+#########################################
 class PDBInfo(object):
     """
     Analogous to Rosetta PDBInfo Class
