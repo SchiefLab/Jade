@@ -43,17 +43,19 @@ class AnalyzeRecovery:
     """
     Pools Recovery and RR data, outputs to DB
     """
-    def __init__(self, pyig_design_db_path, analysis_info, native_info):
+    def __init__(self, pyig_design_db_path, analysis_info, native_info, cdrs = None):
         """
+        Class for anlyzing length and cluster recovery and risk ratios.
+
+        Optionally pass in CDRs to control which CDRs are analyzed.
+          Otherwise, we read the info from RUN_SETTINGS, which either has ALL or a specific CDR.
+
 
         :param pyig_design_dbpath: str
         :param analysis_info: AnalysisInfo
         :param native_info: NativeInfo
-        :return:
+        :param cdrs: [str]
         """
-
-
-
         if not isinstance(analysis_info, AnalysisInfo): sys.exit()
         if not isinstance(native_info, NativeInfo): sys.exit()
 
@@ -67,10 +69,13 @@ class AnalyzeRecovery:
         self.lambda_kappa_dict["kappa"] = native_info.kappa_pdbids
 
         ## Set the CDRs we will need. (WE NEED TO MAKE SURE WE HAVE H# OR NOT!!!)
-        if self.analysis_info.bm_info.settings["CDR"] == "ALL":
+        if cdrs:
+            self.cdrs = cdrs
+        elif self.analysis_info.bm_info.settings["CDR"] == "ALL":
             self.cdrs = cdr_names
         else:
             self.cdrs = [self.analysis_info.bm_info.settings["CDR"]]
+
 
         self.recovery_types = ["length", "cluster"]
 
@@ -97,6 +102,7 @@ class AnalyzeRecovery:
         self.recovery_df = self.recovery_calc.apply(
             self.analysis_info.get_exp(),
             self.native_info.pdbids,
+            self.cdrs,
             self.native_info.get_features_db(),
             self.analysis_info.get_features_db())
 
@@ -104,6 +110,7 @@ class AnalyzeRecovery:
         self.observed_df = self.observed_calc.apply(
             self.analysis_info.get_exp(),
             self.native_info.pdbids,
+            self.cdrs,
             self.analysis_info.get_decoy_dir())
 
     def apply(self, db_path, drop_tables = False):
@@ -133,7 +140,6 @@ class AnalyzeRecovery:
 
         db_con.close()
 
-
 ######### Recovery Calculators
 
 class RecoveryCalculator(object):
@@ -142,7 +148,7 @@ class RecoveryCalculator(object):
         Super simple base class for recovery calculators.
 
         """
-        self.cdrs = cdr_names
+        self.all_cdrs = cdr_names
         self.heavy_cdrs = heavy_cdr_names
         self.Antibody = AntibodyStructure()
         self.native_df = feat_tools.get_cdr_cluster_df(native_db_path)
@@ -157,7 +163,7 @@ class TopRecoveryCalculator(RecoveryCalculator):
 
         self.bm_df = pandas.DataFrame
 
-    def apply(self, exp_name, pdbids, bm_db_path, output_dir = "data" ):
+    def apply(self, exp_name, pdbids, cdrs, bm_db_path, output_dir = "data" ):
         """
         Calculate length and cluster recoveries.  Store them the same way we used to for the recovery parser.
         Returns the resulting dataframe of recoveries.
@@ -176,11 +182,11 @@ class TopRecoveryCalculator(RecoveryCalculator):
 
         flat_dict = defaultdict(list)
         for pdbid in pdbids:
-            for cdr in self.cdrs:
+            for cdr in cdrs:
                 print pdbid+" "+cdr
 
-                native_length = feat_tools.get_length(native_df, pdbid, cdr)
-                native_cluster = feat_tools.get_cluster(native_df, pdbid, cdr)
+                native_length = feat_tools.get_length(self.native_df, pdbid, cdr)
+                native_cluster = feat_tools.get_cluster(self.native_df, pdbid, cdr)
 
                 print "Native: "+repr(native_length)
                 print "Cluster: "+repr(native_cluster)
@@ -232,7 +238,7 @@ class ObservedRecoveryCalculator(RecoveryCalculator):
         RecoveryCalculator.__init__(self, native_db_path)
         pass
 
-    def apply(self, exp_name, pdbids, bm_decoy_path, output_dir = "data"):
+    def apply(self, exp_name, pdbids, cdrs, bm_decoy_path, output_dir = "data"):
         """
         Calculates the number of times the native clusters and lengths were observed during the experiment, for each PDB.
         Returns the resulting dataframe.
@@ -248,7 +254,7 @@ class ObservedRecoveryCalculator(RecoveryCalculator):
             lengths = defaultdict()
 
             ##Initialize native lengths and clusters to do the check.
-            for cdr in self.cdrs:
+            for cdr in cdrs:
                 clusters[cdr] = feat_tools.get_cluster(self.native_df, pdbid, cdr)
                 lengths[cdr] = feat_tools.get_length(self.native_df, pdbid, cdr)
 
@@ -330,7 +336,7 @@ class PyIgClassifyDBRepresentationCalculator(RecoveryCalculator):
         """
         RecoveryCalculator.__init__(self, native_db_path)
 
-    def apply(self, exp_name, pdbids, pyig_db_path, lambda_kappa_dict, output_dir = "data"):
+    def apply(self, exp_name, cdrs, pyig_db_path, lambda_kappa_dict, output_dir = "data"):
         """
         Calculates the number of times lengths and clusters are present in the PyIgClassify database.
         :param lambda_kappa_dict : dict-like ['lambda'] = [pdbid,]
@@ -341,7 +347,7 @@ class PyIgClassifyDBRepresentationCalculator(RecoveryCalculator):
         cdr_data_df = pyig_tools.get_cdr_data_table_df(pyig_db_path)
         for light_gene in lambda_kappa_dict:
             for pdbid in lambda_kappa_dict[light_gene]:
-                for cdr in self.cdrs:
+                for cdr in cdrs:
 
                     gene = "heavy" if cdr in self.heavy_cdrs else gene = light_gene
                     native_length = feat_tools.get_length(self.native_df, pdbid, cdr)
@@ -399,6 +405,7 @@ def calculate_recovery_and_risk_ratios(top_recovery_df, observed_df):
 def calculate_per_cdr_rr_and_recovery(exp, cdrs, result_df):
     """
     Calculate the recovery and risk-ratios PER CDR.
+    :rtype: pandas.DataFrame
     """
     flat_dict = defaultdict(list)
     for rtype in ['length', 'cluster']:
@@ -411,7 +418,12 @@ def calculate_per_cdr_rr_and_recovery(exp, cdrs, result_df):
     return pandas.DataFrame.from_dict(flat_dict)
 
 def calculate_exp_rr_and_recovery(exp, result_df):
-
+    """
+    Calculate the overall recovery and risk ratio.
+    :param exp:
+    :param result_df:
+    :rtype: pandas.DataFrame
+    """
     flat_dict = defaultdict(list)
     for rtype in ['length', 'cluster']:
         flat_dict["exp"].append(exp)

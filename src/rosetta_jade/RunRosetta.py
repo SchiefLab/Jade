@@ -49,7 +49,7 @@ def run_on_slurm(cmd, queue_dir, name, nodes = False, ntasks = None, print_only 
     #qsub -q dna -l nodes=10:ppn=11 -V -N $1 -d $qsub_output -v np=101 $benchmarks/$1
 
     ##Set the walltime for something rediculous.  I hate walltime.
-    extra_opts = extra_opts+" "+"--time=100:00:00"
+    extra_opts = extra_opts+" "+"--time=0"
 
     slurm_cmd = "sbatch  "+extra_opts+" --job-name="+name + " "
     slurm_cmd = slurm_cmd + " -o "+queue_dir+"/"+name+"_%j.out"
