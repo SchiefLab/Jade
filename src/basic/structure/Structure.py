@@ -14,7 +14,7 @@
 import os
 import sys
 from collections import defaultdict
-
+from basic.RestypeDefinitions import RestypeDefinitions
 ### Global Values #####
 cdr_names = ["L1", "L2", "L3", "H1", "H2", "H3"]
 heavy_cdr_names = ["H1", "H2", "H3"]
@@ -115,13 +115,7 @@ class PDBInfo(object):
         """
         Get the matching 'resnum' (i) or None if not found.
         """
-        for i in range(1, self.total_residue_record()+1):
-            #print repr(i)
-            res = self.pose_to_record_map[ i ]
-            if res.get_pdb_num() == pdb_num and res.get_chain() == chain() and res.get_icdoe() == icode:
-                return i
-
-        return None
+        return self.pdb2pose(pdb_num, chain, icode)
 
     def get_residue_record_of_pdb_num(self, pdb_num, chain_id, icode =' '):
         for residue_record in self.pose_to_record_map:
@@ -371,10 +365,14 @@ class AntibodyStructure:
         #3 Different ways to access the CDR Loops.  Should be one.  Not convoluted.
 
         self.cdrs = defaultdict()
+        self.frameworks = defaultdict()
         self.cdr_names = cdr_names #So we have an ordered list the way we like it.
 
         for cdr_name in self.cdr_names:
             self.cdrs[cdr_name] = CDR(cdr_name)
+
+        for chain in ["L", "H"]:
+            self.frameworks[chain] = FrameworkRegions(chain)
 
     def get_cdr(self, cdr_name):
         """
@@ -394,7 +392,35 @@ class AntibodyStructure:
 
 
     def get_cdr_names(self):
+        """
+        Get a list of cdr names
+        :rtype: [str]
+        """
         return self.cdr_names
+
+    def get_cdr_seq(self, bio_pose, cdr_name):
+        """
+        Get the CDR sequence from a bio pose
+        :param bio_pose: basic.structure.BioPose
+        :param cdr_name: str
+        :rtype: str
+        """
+        seq = ""
+
+        start = self.get_cdr(cdr_name).get_pdb_start()
+        end = self.get_cdr(cdr_name).get_pdb_end()
+        chain = self.get_cdr(cdr_name).get_pdb_chain()
+
+        return bio_pose.pdbinfo().get_sequence_bt_resnums(bio_pose.resnum(start, chain), bio_pose.resnum(end, chain))
+
+
+    def get_framework_info(self, chain):
+        """
+        Get the framework info class
+        :param chain: str
+        :rtype: FrameworkRegions
+        """
+        return self.frameworks[chain]
 
 class CDR:
     def __init__(self, name):
@@ -506,19 +532,6 @@ class FrameworkRegions:
         return self.regions["F3"]
 
 
-
-############################################################FUTURE1#############################################################
-class PDB:
-    """
-    The PDB should have seperate molecules for each chain.
-    """
-    def __init__(self, filename):
-        self.loadPDB()
-    def loadPDB(self):
-        #Sets a few different properties.
-        #Can look up residue data, atom data, etc.  =
-        pass
-        
 
 
 

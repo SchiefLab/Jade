@@ -1235,7 +1235,7 @@ class CompareAntibodyDesignStrategies:
         fasta.output_fasta_from_pdbs_biopython(decoy_header_dict, fasta_path, self.native_path, "native",
                                                self.is_camelid.get())
         clustal_runner = ClustalRunner(fasta_path)
-        clustal_runner.set_threads(processors)
+        #clustal_runner.set_threads(processors)
         clustal_runner.set_hard_wrap(self.clustal_soft_wrap.get())
         clustal_runner.set_extra_options(extra_options)
         clustal_runner.set_output_format(output_format)

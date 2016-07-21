@@ -15,7 +15,7 @@ from Bio.PDB import calc_dihedral
 from Bio.PDB import Vector
 
 from basic.RestypeDefinitions import RestypeDefinitions
-from basic.structure.Structure import PDBInfo as PDBInfo
+from basic.structure.Structure import PDBInfo
 from basic.structure.Structure import ResidueRecord
 from basic.structure.util import peptide_bond_distance
 from basic.path import *
@@ -85,6 +85,12 @@ class BioPose(object):
         self.peptide_bond_distances = self._setup_peptide_bond_distances() #map of bond distances to next residue in pose.
 
     ############ Getting Components #############
+    def pdbinfo(self):
+        return self.pdb_info
+
+    def resnum(self, pdb_num, chain, icode=' '):
+        return self.pdb_info.get_resnum(pdb_num, chain, icode)
+
     def structure(self):
         """
         Get the Bio Structure stored in this class.
@@ -357,7 +363,7 @@ class BioPose(object):
         all_residues = vector1()
 
         for chain_id in self.get_chain_ids(model_num):
-            print "ChainID: "+chain_id
+            #print "ChainID: "+chain_id
             residues = self.residues(chain_id, model_num)
             all_residues.extend(residues)
 

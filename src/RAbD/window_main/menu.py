@@ -82,7 +82,7 @@ class AntibodyDesignAnalysisMenu(object):
 
         ## Clustal Menu ##
         self.clustal_menu = Menu(self.main_menu, tearoff=0)
-        self.clustal_menu.add_command(label="Set Max Processors", command=lambda: self.set_max_clustal_procs())
+        #self.clustal_menu.add_command(label="Set Max Processors", command=lambda: self.set_max_clustal_procs()) - Requires OpenMP support
         self.clustal_menu.add_command(label="Set Output format", command=lambda: self.set_clustal_output_format())
         self.clustal_menu.add_command(label="Set Soft Wrap", command=lambda: self.set_clustal_soft_wrap())
         self.clustal_menu.add_separator()

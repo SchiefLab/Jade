@@ -43,16 +43,16 @@ if __name__ == "__main__":
     if not os.path.exists(options.outdir):
         os.mkdir(options.outdir)
 
-    for d in dirs:
-        print d
-        if not general.match_patterns(d, options.strategies): continue
+    for d in sorted(dirs):
+        match, pattern = general.match_patterns(d, options.strategies)
+        if not match: continue
 
-        print "\n"+d
+        print "\n\n"+"_".join(os.path.basename(d).replace(pattern+"_", "").split(".")[0].split("_")[2:])+" "+pattern
         pdbs = glob.glob(d+"/*.pdb*")
         for pdb in pdbs:
 
             N = int(os.path.basename(pdb).split("_")[1])
-            if N <= options.n:
+            if N <= int(options.n):
                 print os.path.basename(pdb)
 
                 os.system('cp '+pdb+' '+options.outdir+"/"+os.path.basename(pdb))

@@ -9,6 +9,8 @@ from collections import defaultdict
 from basic import path
 from basic.structure import util
 from basic import general
+from basic.structure.Structure import AntibodyStructure
+from basic.structure.BioPose import BioPose
 
 begin_schief_order = """
 Scripps PO C426550C
@@ -56,6 +58,10 @@ if __name__ == "__main__":
 
     parser.add_argument("--chain", "-c",
                         help = "A specific chain to output",
+                        default = "")
+
+    parser.add_argument("--cdr",
+                        help = "Pass a specific CDR to output alignments of.",
                         default = "")
 
     parser.add_argument("--format",
@@ -130,9 +136,15 @@ if __name__ == "__main__":
 
     for pdb in pdbs:
         #print "#Reading "+pdb
-        biostructure = util.get_biopython_structure(pdb)
-        if options.chain:
-            seq = util.get_seq_from_biostructure(biostructure, options.chain)
+        biopose = BioPose(pdb)
+        biostructure = biopose.structure()
+        ab_info = AntibodyStructure()
+        if options.cdr:
+            seq = ab_info.get_cdr_seq(biopose, options.cdr.upper())
+            sequences[path.get_decoy_name(pdb)+"_"+options.cdr] = seq
+            ordered_ids.append(path.get_decoy_name(pdb)+"_"+options.cdr)
+        elif options.chain:
+            seq = biopose.get_sequence(options.chain)
             sequences[path.get_decoy_name(pdb)+"_"+options.chain] = seq
             ordered_ids.append(path.get_decoy_name(pdb)+"_"+options.chain)
         else:
@@ -224,3 +236,4 @@ if __name__ == "__main__":
             print(line)
 
 
+    print "Done."

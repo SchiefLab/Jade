@@ -91,7 +91,7 @@ def match_patterns(search_string, patterns):
         if re.search(pattern, search_string):
             match = True
             break
-    return match
+    return match, pattern
 
 def strip_right(s, pattern):
     """

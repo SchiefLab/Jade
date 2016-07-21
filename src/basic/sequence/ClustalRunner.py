@@ -1,7 +1,7 @@
 import os
 import sys
 import multiprocessing
-
+from basic.threading.Threader import *
 
 class ClustalRunner:
     """
@@ -58,7 +58,7 @@ class ClustalRunner:
 
         self.extra_options = extra_options
 
-    def output_alignment(self, out_dir, out_name):
+    def output_alignment(self, out_dir, out_name, parellel_process = False):
         """
         Configure command line and Run Clustal Omega
         """
@@ -84,12 +84,15 @@ class ClustalRunner:
                   " --wrap "+repr(self.hard_wrap)+ \
                   " "+self.extra_options
 
-        if self.threads != multiprocessing.cpu_count():
-            cmd_line = cmd_line+ " --threads "+repr(self.threads)
+
+        #cmd_line = cmd_line+ " --threads "+repr(self.threads) - Requires OpenMP support
 
         print "Running Clustal Omega: "+cmd_line
 
-
-
+        print "Running: "+cmd_line
+        if parellel_process:
+            threader = Threader()
+            #threader.run_system_command(cmd)
+            threader.run_functions([lambda: os.system(cmd_line)])
 
         os.system(cmd_line)
