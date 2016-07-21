@@ -33,4 +33,24 @@
     copy_top_each_strategy.py -i pdbs_sessions -o ../../expressed -n 2
     ```
  
+ - 8) Have a page in Excel made of up three columns.  new_name expressed rel_path.  The expressed column should be * with ones you will actually express.  New name is what you will now call the designs.  Copy and paste these three columns in a text file.  Save the file.  Run this script within the directory with all the PDBs (I recommend copying them into a new directory and then CDing into that first):
+ 
+    ```
+    rename_designs.py -i old_to_new.txt
+    ```
+ 
+ - 9) Now we get the sequences ready for ordering.  In this case, we have antibodies.  We will have to put them into a construct.  Currently, we have a script to create the orders for the Schief site, but we can generally make one using the code.   Open up the file and see what we are currently using as the vector, with an example sequence.  Use clustal omega to align the example sequence with one of your sequences. See what will need to be added or stripped.  Then use the following commands:
+    
+    ```
+    get_seq.py --help
+    ```
+ Take a look at our options.  Now, for an example of an antibody order for IgG:
+  
+    ```
+    get_seq.py --pdblist PDBLIST.txt --chain H --format IgG_order_heavy --outpath 1999_heavy_order.txt --pad_c_term S
+    get_seq.py --pdblist PDBLIST.txt --chain L --format IgG_order_kappa --outpath 1999_light_order.txt
+    ```
+    
+ Add any control sequences you want to order and you are now ready to send your sequences to genscript!
+ 
     
