@@ -162,6 +162,8 @@ if __name__ == "__main__":
     if options.format == "general_order" or igg_type_format:
         outlines.append(begin_schief_order)
 
+        print "DOUBLE CHECK FOR MISSING DENSITY IN THE STRUCTURE!  MAKE SURE SEQUENCES MATCH!"
+
     if options.format == "igg_order_heavy":
         outlines.append("###################################################################################################################################################")
         outlines.append("Use pFUSEss-CHIg-hG1 (human heavy) vector and clone between the two flanking regions: "
