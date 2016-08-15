@@ -63,6 +63,40 @@ Nothing fancy yet.  A true python install via PIP is planned.  For now, you will
 ## _basic_
 Useful general classes and collections of functions (Threading, BioPose, PandasDataFrame, path, etc)
 
+### _Basic Modules_
+
+#### _general.py_
+General tools go here.  If you can't figure out where to put things, for now, put it here.
+
+#### _numeric.py_
+All useful numeric functions should go here.  Currently we have some basic functions for distance calculations.
+
+#### _path.py_
+This is your go-to module. It should be split up in the future. However, currently, it is used to get decoy extensions, get paths to the database or subdirectories within the database, as well as get paths to the Rosetta source code.  Also to open gz or non-gz files in the correct way.  Check it out, organize it if your feeling up for it (Just make sure to use PyCharm to do it).
+
+#### _RestypeDefinitions.py_
+Main one-letter to three-letter amino acid functions, allows conversion between these and full names, as well as housing what constitutes 'polar' vs 'non-polar', 'positive' type residues, etc.
+
+### _basic/plotting_
+Collection of plotting classes and functions for matplotlib, seaborn
+
+### _basic/sequence_
+Modules for dealing with protein sequence
+
+### _basic/structure_
+Modules for reading PDBs and storing structure information.  Checkout the BioPose as a nice meta-class interface to underlying biopython represenations. This is what I mainly use for quick analysis through biopython, without the [not-so-great] biophython PDB class interface.
+
+### _basic/pandas_
+A pandas sublcass, and helpful pandas functions to make working with pandas easier.
+
+### _basic/threading_
+A multi-processor Job Distribution system that uses a list of lambda functions to do it.  Very useful for parellel jobs.  May need a bit of work still.
+
+### _basic/Tkinter_
+Subclasses and functions for TKinter GUIs, such as a smarter (resizing) Listbox and image frame
+
+
+
 ## _utility_
 Functions and simple classes go in <code>__init__.py</code> 
 vector1 is a list indexed at 1
@@ -72,8 +106,6 @@ vector1 is a list indexed at 1
 ## _antibody_
 A small collection of general antibody scripts and modules from PyIgClassify.  http://dunbrack2.fccc.edu/PyIgClassify/.  The meat of PyIgClassify should be publically released soon.
 
-## _plotting_
-Collection of plotting classes and functions for matplotlib, seaborn
 
 ## _pymol_jade_
 Python PyMol modules and pymol scripts
@@ -82,13 +114,8 @@ Python PyMol modules and pymol scripts
 ## _rosetta_jade_
 Rosetta (www.rosettacommons.org) modules and flags files for analyzing results, benchmarking, etc.  PyRosetta (www.pyrosetta.org) modules and scripts from various projects
 
-
-## _sequence_
-Modules for dealing with protein sequence
-
-
-## _structure_
-Modules for reading PDBs and storing structure information.  Yes, my own general PDB reader.  Because everyone has one, right?
+## _machine_learning_
+Modules for machine learning.  Currently barebones. 
 
 ## _tcl_
 TCL modules for molecular dynamic simulations.
