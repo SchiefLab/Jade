@@ -23,20 +23,20 @@ Nothing fancy yet.  A true python install via PIP is planned.  For now, you will
 
 1) __PYTHONPATH:__ Add the root path to your _PYTHONPATH_ environment variable in your shell. 
 
- - <code>export PYTHONPATH=$PYTHONPATH:/path/to/Jade/src</code>
+<code>export PYTHONPATH=$PYTHONPATH:/path/to/Jade/src</code>
 
 2) __PATH:__ Add the path to Jade/apps to your _PATH_ environment variable to use scripts and programs as executables 
 
- - <code>export PATH=$PATH:/path/to/Jade/apps</code>
+<code>export PATH=$PATH:/path/to/Jade/apps</code>
 
 3) __Dependancies:__  
  - Install [Pip](https://pypi.python.org/pypi/pip) if you don't already have it.  
  - Run: ```sudo ./setup_dependancies.sh``` in the main Jade directory.
  
-4) __OptionalL:__ 
+4) __Optional:__ 
  - _RABD (RosettaAntibodyDesign) Applications_: Add the path to Jade/apps/RAbD to your PATH environment variable.
  
-  -  ```export PATH=$PATH:/path/to/Jade/apps/RAbD```
+  ```export PATH=$PATH:/path/to/Jade/apps/RAbD```
  
  
  
