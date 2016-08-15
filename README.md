@@ -77,24 +77,25 @@ This is your go-to module. It should be split up in the future. However, current
 #### _RestypeDefinitions.py_
 Main one-letter to three-letter amino acid functions, allows conversion between these and full names, as well as housing what constitutes 'polar' vs 'non-polar', 'positive' type residues, etc.
 
-### _basic/plotting_
+### _Basic Directories_
+
+#### _basic/plotting_
 Collection of plotting classes and functions for matplotlib, seaborn
 
-### _basic/sequence_
+#### _basic/sequence_
 Modules for dealing with protein sequence
 
-### _basic/structure_
+#### _basic/structure_
 Modules for reading PDBs and storing structure information.  Checkout the BioPose as a nice meta-class interface to underlying biopython represenations. This is what I mainly use for quick analysis through biopython, without the [not-so-great] biophython PDB class interface.
 
-### _basic/pandas_
+#### _basic/pandas_
 A pandas sublcass, and helpful pandas functions to make working with pandas easier.
 
-### _basic/threading_
+#### _basic/threading_
 A multi-processor Job Distribution system that uses a list of lambda functions to do it.  Very useful for parellel jobs.  May need a bit of work still.
 
-### _basic/Tkinter_
+#### _basic/Tkinter_
 Subclasses and functions for TKinter GUIs, such as a smarter (resizing) Listbox and image frame
-
 
 
 ## _utility_
