@@ -1,23 +1,42 @@
 
-A repository for modules and applications to aid in the design and analysis of Biological molecules. 
+
+A repository for modules and applications to aid in the design and analysis of Biological molecules, especially when working with Rosetta or PyRosetta.
+
+# Authors
+
+Jared Adolf-Bryfogle (jadolfbr@gmail.com), lab of Dr. William Schief
+
+# Contributions
+
+If you have great changes you would like to add to the repository, please open a Pull Request.  Once people actually start using this, I will switch to this model myself via branches.
+
+Currently, we do not have any automatic testing in place.  Unit testing is planned.  Please be careful with what you code.  If you are intrepid, you can go ahead and add unit testing to /testing.  This will be done when I have time.
+
+# License 
+
+Like Numpy, and SciPy (amongst many other python modules), we use a [BSD license](https://opensource.org/licenses/BSD-2-Clause).
+
 
 # Setup
 
-Nothing fancy yet.  
+Nothing fancy yet.  A true python install via PIP is planned.  For now, you will need to set it up manually. 
 
-1) Add the root path to your PYTHONPATH environment variable in your shell. 
+1) __PYTHONPATH:__ Add the root path to your _PYTHONPATH_ environment variable in your shell. 
 
-<code>export PYTHONPATH=$PYTHONPATH:/path/to/Jade/src</code>
+ - <code>export PYTHONPATH=$PYTHONPATH:/path/to/Jade/src</code>
 
-2) Add the path to Jade/apps to your PATH environment variable to use scripts and programs as executables 
+2) __PATH:__ Add the path to Jade/apps to your _PATH_ environment variable to use scripts and programs as executables 
 
-<code>export PATH=$PATH:/path/to/Jade/apps</code>
+ - <code>export PATH=$PATH:/path/to/Jade/apps</code>
 
-
-3) __RABD Applications__:
- Add the path to Jade/apps/RAbD to your PATH environment variable.
+3) __Dependancies:__  
+ - Install [Pip](https://pypi.python.org/pypi/pip) if you don't already have it.  
+ - Run: ```sudo ./setup_dependancies.sh``` in the main Jade directory.
  
- ```export PATH=$PATH:/path/to/Jade/apps/RAbD```
+4) __Optional:__ 
+ - _RABD (RosettaAntibodyDesign) Applications_: Add the path to Jade/apps/RAbD to your PATH environment variable.
+ 
+  ```export PATH=$PATH:/path/to/Jade/apps/RAbD```
  
  
  
@@ -44,6 +63,41 @@ Nothing fancy yet.
 ## _basic_
 Useful general classes and collections of functions (Threading, BioPose, PandasDataFrame, path, etc)
 
+### _Basic Modules_
+
+#### _general.py_
+General tools go here.  If you can't figure out where to put things, for now, put it here.
+
+#### _numeric.py_
+All useful numeric functions should go here.  Currently we have some basic functions for distance calculations.
+
+#### _path.py_
+This is your go-to module. It should be split up in the future. However, currently, it is used to get decoy extensions, get paths to the database or subdirectories within the database, as well as get paths to the Rosetta source code.  Also to open gz or non-gz files in the correct way.  Check it out, organize it if your feeling up for it (Just make sure to use PyCharm to do it).
+
+#### _RestypeDefinitions.py_
+Main one-letter to three-letter amino acid functions, allows conversion between these and full names, as well as housing what constitutes 'polar' vs 'non-polar', 'positive' type residues, etc.
+
+### _Basic Directories_
+
+#### _basic/plotting_
+Collection of plotting classes and functions for matplotlib, seaborn
+
+#### _basic/sequence_
+Modules for dealing with protein sequence
+
+#### _basic/structure_
+Modules for reading PDBs and storing structure information.  Checkout the BioPose as a nice meta-class interface to underlying biopython represenations. This is what I mainly use for quick analysis through biopython, without the [not-so-great] biophython PDB class interface.
+
+#### _basic/pandas_
+A pandas sublcass, and helpful pandas functions to make working with pandas easier.
+
+#### _basic/threading_
+A multi-processor Job Distribution system that uses a list of lambda functions to do it.  Very useful for parellel jobs.  May need a bit of work still.
+
+#### _basic/Tkinter_
+Subclasses and functions for TKinter GUIs, such as a smarter (resizing) Listbox and image frame
+
+
 ## _utility_
 Functions and simple classes go in <code>__init__.py</code> 
 vector1 is a list indexed at 1
@@ -53,8 +107,6 @@ vector1 is a list indexed at 1
 ## _antibody_
 A small collection of general antibody scripts and modules from PyIgClassify.  http://dunbrack2.fccc.edu/PyIgClassify/.  The meat of PyIgClassify should be publically released soon.
 
-## _plotting_
-Collection of plotting classes and functions for matplotlib, seaborn
 
 ## _pymol_jade_
 Python PyMol modules and pymol scripts
@@ -63,13 +115,8 @@ Python PyMol modules and pymol scripts
 ## _rosetta_jade_
 Rosetta (www.rosettacommons.org) modules and flags files for analyzing results, benchmarking, etc.  PyRosetta (www.pyrosetta.org) modules and scripts from various projects
 
-
-## _sequence_
-Modules for dealing with protein sequence
-
-
-## _structure_
-Modules for reading PDBs and storing structure information.  Yes, my own general PDB reader.  Because everyone has one, right?
+## _machine_learning_
+Modules for machine learning.  Currently barebones. 
 
 ## _tcl_
 TCL modules for molecular dynamic simulations.
@@ -77,102 +124,11 @@ TCL modules for molecular dynamic simulations.
 
 # Notable Scripts and Programs
 
-## RunRosettaMPI
-
-Run MPI-built Rosetta locally, or an a cluster using slurm or qsub as the job manager.  Run from your root project directory or set the root dir as an option in the program.  Will cd into the root, or set the job manager script to cd into root before the MPI run.
-
-It uses JSON files to setup the base flags (<code>--json_base</code>) and then specific flags for different rosetta runs (<code>--json_run</code>).  The [default baseline json](https://github.com/SchiefLab/module_c/blob/master/rosetta_jadeeral/jsons/common_flags.json) should be good for most runs.  See [this dir](https://github.com/SchiefLab/module_c/tree/master/rosetta_jadeeral/jsons) for a list of currently implemented jsons.  Feel free to implement your own.  I typically add that json path as an alias to easily run scripts.  The class is easily extendable for benchmarking experiments, [like I have done for antibody design](https://github.com/SchiefLab/module_c/blob/master/bin/BenchmarkRAbD.py).
-
-Use <code>--print_only</code> to print instead of run to double check everything.  Paths can (and should) be relative.  Will setup any directories mentioned.  You can feed additional flags files or options (or overwrite any set in the json files) using :     <code>--extra_options @rel/path/to/flags rosetta_opt=setting another_opt=setting a_boolean_opt</code>
-
-Set the job manager using the option <code>--job_manager</code>. Current options are __slurm__, __qsub__, and __local__.  Set extra options for the job manager in parenthesis, such as the slurm partition option -p, using <code>--job_manager_opts "set of -options -for run"</code>
-
-Be sure to set <code>--np</code> and <code>--nstruct</code> (if not set in flags files or extra_options)
-
-Relational Database support has been added.  See database section.  If using sqlite3, it will automatically combine the databases at the end of the run.  Very useful for running antibody_features reporters.  
-
-If you think a GUI would be useful for this, let me know!
-See below for the current full help of the program:
-
-
-
-```
-usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  Relative paths are accepted.
-       [-h] [--job_manager {slurm,qsub,local,local_test}]
-       [--job_manager_opts [JOB_MANAGER_OPTS [JOB_MANAGER_OPTS ...]]]
-       [--np NP] [--nodes NODES] [--ppn PPN] [--nstruct NSTRUCT]
-       [--compiler {gcc,clang}] [--machine_file MACHINE_FILE]
-       [--job_name JOB_NAME] [--program PROGRAM] [-s S] [-l L]
-       [--outdir OUTDIR] [--json_base JSON_BASE] [--json_run JSON_RUN]
-       [--root ROOT] [--extra_options [EXTRA_OPTIONS [EXTRA_OPTIONS ...]]]
-       [--one_file_mpi] [--print_only] [--db_mode {sqlite3,mysql,postgres}]
-       [--db_name DB_NAME] [--db_batch DB_BATCH] [--db_in] [--db_out]
-
-optional arguments:
-  -h, --help            show this help message and exit
-
-Job Setup:
-  --job_manager {slurm,qsub,local,local_test}
-                        Job Manager to launch job. Default = 'slurm '
-  --job_manager_opts [JOB_MANAGER_OPTS [JOB_MANAGER_OPTS ...]]
-                        Extra options for the job manager, such as queue or
-                        processor requestsRemove double dashes. Exclusive is
-                        on by default. Specify like: -p imperial exclusive.
-  --np NP               Number of processors to use for MPI. Default = 101
-  --nodes NODES         Number of nodes to ask for. Optional.
-  --ppn PPN             Processors per node for qsub. NTasks is np for slurm
-  --nstruct NSTRUCT
-  --compiler {gcc,clang}, -c {gcc,clang}
-                        Set the compiler used. Will set clang automatically
-                        for macos. Default = 'gcc'
-  --machine_file MACHINE_FILE
-                        Optional machine file for passing to MPI
-  --job_name JOB_NAME   Set the job name used for mpi_tracer_to_file dir and
-                        queue. Default = 'rosetta_run'. (Benchmarking:
-                        Override any set in json_base.)
-
-Protocol Setup:
-  --program PROGRAM     Define the Rosetta program to use if not set in
-                        json_run
-  -s S                  Path to a pdb file
-  -l L                  Path to a list of pdb files
-  --outdir OUTDIR, -o OUTDIR
-                        Outpath. Default = 'pwd/decoys'
-  --json_base JSON_BASE
-                        JSON file for setting up base paths/etc. for the
-                        cluster.Default = 'file_dir/jsons/common_flags.json'
-  --json_run JSON_RUN   JSON file for specific Rosetta run. Not required.
-  --root ROOT           Set the root directory. Default = pwd. (Benchmarking:
-                        Override any set in json_base.)
-  --extra_options [EXTRA_OPTIONS [EXTRA_OPTIONS ...]], -e [EXTRA_OPTIONS [EXTRA_OPTIONS ...]]
-                        Extra Rosetta options. Specify like:
-                        cdr_instructions=my_file other_option=setting. Note NO
-                        - charactor. Booleans do not need an = sign.
-  --one_file_mpi        Don't setup mpi_tracer_to_file.
-  --print_only          Do not actually run anything. Just print setup for
-                        review.
-
-Relational Databases:
-  Options for Rosetta Database input and output. Use for features or for
-  inputting and output structures as databases
-
-  --db_mode {sqlite3,mysql,postgres}
-                        Set the mode for Rosetta to use if using a database.
-                        Features will be output to a database. If not sqlite3,
-                        must build Rosetta with extras. If any post-processing
-                        is required, such as combining sqlite3 dbs, will do
-                        this. Default DB mode for features is sqlite3.
-  --db_name DB_NAME     In or Out database name
-  --db_batch DB_BATCH   Batch of structures.
-  --db_in               Use an input database
-  --db_out              Use an output database
-```
-
 ## score_analysis
 
-Analyze Rosetta decoys that were scored with an output json file.  Get top models, score summaries, top_n_by_10, and output pymol sessions.
+Analyze Rosetta decoys that were scored with an output json file.  Get top models, score summaries, top_n_by_10, and output pymol sessions, plot scores.
 
-Use <code>-scorefile_format json</code> during your Rosetta runs.  This is a fork of the scorefile.py script that is located in rosetta source dir.   
+Use <code>-scorefile_format json</code> during your Rosetta runs (but now currently works on json or classic score files.  This is a fork of the scorefile.py script that is located in rosetta source dir.   
 
 I copy the current help text below.
 
@@ -181,11 +137,13 @@ usage: This utility parses and extracts data from score files in JSON format
        [-h] [-s [SCORETYPES [SCORETYPES ...]]] [-n TOP_N]
        [--top_n_by_10 TOP_N_BY_10]
        [--top_n_by_10_scoretype TOP_N_BY_10_SCORETYPE]
-       [--decoy_names [DECOY_NAMES [DECOY_NAMES ...]]] [-S] [-c]
-       [--list_scoretypes] [--make_pdblist] [--pdblist_prefix PDBLIST_PREFIX]
-       [--pdblist_outdir PDBLIST_OUTDIR] [--pymol_session]
-       [--session_prefix SESSION_PREFIX] [--session_outdir SESSION_OUTDIR]
-       [--native NATIVE] [--top_dir TOP_DIR] [--ab_structure] [--super SUPER]
+       [--decoy_names [DECOY_NAMES [DECOY_NAMES ...]]] [--list_scoretypes]
+       [--pdb_dir PDB_DIR] [--summary] [--csv] [--make_pdblist]
+       [--pymol_session] [--plot [PLOT [PLOT ...]]] [--copy_top_models]
+       [--prefix PREFIX] [--outdir OUTDIR]
+       [--plot_type {line,scatter,bar,hist,box,kde,area,pie,hexbin}]
+       [--plot_filter PLOT_FILTER] [--native NATIVE] [--ab_structure]
+       [--super SUPER]
        [scorefiles [scorefiles ...]]
 
 positional arguments:
@@ -205,48 +163,194 @@ optional arguments:
                         scoretype not present, won't do anything.
   --decoy_names [DECOY_NAMES [DECOY_NAMES ...]]
                         Decoy names to use
-  -S, --summary         Compute stats summarizing data
-  -c, --csv             Output selected columns, top, and decoys as CSV.
   --list_scoretypes     List score term names
+  --pdb_dir PDB_DIR, -d PDB_DIR
+                        Directory for PDBs if different than the directory of
+                        the scorefile
 
-PDBLISTs:
-  Options for pdblist output
+OUTPUT:
+  General output options.
 
+  --summary, -S         Compute stats summarizing data
+  --csv, -c             Output selected columns, top, and decoys as CSV.
   --make_pdblist        Output PDBlist file(s)
-  --pdblist_prefix PDBLIST_PREFIX
-                        Prefix to use for PDBLIST outputs
-  --pdblist_outdir PDBLIST_OUTDIR
-                        Output dir for pdblist files
+  --pymol_session       Make pymol session(s) of the scoretypes specified
+  --plot [PLOT [PLOT ...]]
+                        Plot one score type vs another. Save the plot. 2 or 3
+                        Arguments. [X, Y, 'Title''] OR [X, 'Title']. If title
+                        has spaces, use quotes. Nothing special, just used for
+                        quick info.
+  --copy_top_models     Copy the top -n to the output directory for each
+                        scorefile passed.
+  --prefix PREFIX, -p PREFIX
+                        Prefix to use for any file output. Do not include any
+                        _
+  --outdir OUTDIR, -o OUTDIR
+                        Output dir. Default is current directory.
 
-PyMol:
+PLOTTING:
+  Options for plot output
+
+  --plot_type {line,scatter,bar,hist,box,kde,area,pie,hexbin}
+                        The type of plot we are outputting.
+  --plot_filter PLOT_FILTER
+                        Filter X to top Percent of this - useful to remove
+                        outliers.
+
+PYMOL:
   Options for pymol session output
 
-  --pymol_session       Make pymol session(s) of the scoretypes specified
-  --session_prefix SESSION_PREFIX
-                        Prefix used for output pymol session
-  --session_outdir SESSION_OUTDIR
-                        Output dir for pymol sessions.
   --native NATIVE       Native structure to use for pymol sessions.
-  --top_dir TOP_DIR     Top directory for PDBs if different than the directory
-                        of the scorefile
   --ab_structure        Specify if the module is a renumbered antibody
                         structure. Will run pymol script for ab-specific
                         selection
   --super SUPER         Super this selection instead of align all to.
   
 ```
-
 ### Current Limitations
 
 Works on individual scorefiles, with no -best-of-all- or combined output.
 
+## RunRosettaMPI
 
-## RAbD_Jade
+Run MPI-built Rosetta locally, or an a cluster using slurm or qsub as the job manager.  Run from your root project directory or set the root dir as an option in the program.  Will cd into the root, or set the job manager script to cd into root before the MPI run.
 
-GUI for antibody design analysis.  Inputs are Antibody Features Reporter databases.  I will probably change the name soon. Each design strategy should have its own database.  Example: <code>PyRAbD_Compare.py path/to/directory/of/sqlite3/databases</code>
+It uses JSON files to setup the base flags (<code>--json_base</code>) and then specific flags for different rosetta runs (<code>--json_run</code>).  The [default baseline json](https://github.com/SchiefLab/module_c/blob/master/rosetta_jadeeral/jsons/common_flags.json) should be good for most runs.  See [this dir](https://github.com/SchiefLab/module_c/tree/master/rosetta_jadeeral/jsons) for a list of currently implemented jsons.  Feel free to implement your own.  I typically add that json path as an alias to easily run scripts.  The class is easily extendable for benchmarking experiments, [like I have done for antibody design](https://github.com/SchiefLab/module_c/blob/master/bin/BenchmarkRAbD.py).
 
-### Current Limitations
+Use <code>--print_only</code> to print instead of run to double check everything.  Paths can (and should) be relative.  Will setup any directories mentioned.  You can feed additional flags files or options (or overwrite any set in the json files) using :     <code>--extra_options @rel/path/to/flags rosetta_opt=setting another_opt=setting a_boolean_opt</code>
 
-Note that it currently only supports sqlite3 databases and each decoy used in the comparison must have a unique name.  
+Set the job manager using the option <code>--job_manager</code>. Current options are __slurm__, __qsub__, and __local__.  Set extra options for the job manager in parenthesis, such as the slurm partition option -p, using <code>--job_manager_opts "set of -options -for run"</code>
 
+Be sure to set <code>--np</code> and <code>--nstruct</code> (if not set in flags files or extra_options)
+
+Relational Database support has been added.  Use RunRosettaDBMode app instead.  If using sqlite3, it will automatically combine the databases at the end of the run.  Very useful for running features reporters.  
+
+If you think a GUI would be useful for this, let me know!
+See below for the current full help of the program:
+
+
+```
+usage: This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  Relative paths are accepted.
+       [-h] [-s S] [-l L] [--np NP] [--nstruct NSTRUCT] [--job_name JOB_NAME]
+       [--outdir OUTDIR] [--json_run JSON_RUN] [--extra_options EXTRA_OPTIONS]
+       [--script_vars [SCRIPT_VARS [SCRIPT_VARS ...]]] [--program PROGRAM]
+       [--print_only] [--local_test] [--one_file_mpi]
+       [--job_manager {slurm,qsub,local,local_test}]
+       [--job_manager_opts [JOB_MANAGER_OPTS [JOB_MANAGER_OPTS ...]]]
+       [--json_base JSON_BASE] [--compiler {gcc,clang}] [--mpiexec MPIEXEC]
+       [--machine_file MACHINE_FILE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+Common Options:
+  -s S                  Path to a pdb file
+  -l L                  Path to a list of pdb files
+  --np NP               Number of processors to use for MPI. Default = 101
+  --nstruct NSTRUCT     The number of structures/parallel runs. Can also set
+                        this in any JSON file.
+  --job_name JOB_NAME   Set the job name used for mpi_tracer_to_file dir and
+                        queue. Default = 'rosetta_run'. (Benchmarking:
+                        Override any set in json_base.)
+  --outdir OUTDIR, -o OUTDIR
+                        Outpath. Default = 'pwd/decoys'
+  --json_run JSON_RUN   JSON file for specific Rosetta run. Not required. Pre-
+                        Configured JSONS include: ['antibody_designer.json',
+                        'antibody_designer_dock.json',
+                        'antibody_designer_even_clus.json',
+                        'antibody_designer_even_clus_dock.json',
+                        'antibody_designer_even_len_clus.json',
+                        'antibody_designer_even_len_clus_dock.json',
+                        'antibody_features.json', 'blank.json',
+                        'cluster_features.json', 'common_flags.json',
+                        'dualspace_relax.json', 'glycan_clash_check.json',
+                        'glycosylate_relax.json', 'interface_analyzer.json',
+                        'NGK.json', 'NGK_smooth.json', 'NGK_smooth_shap.json',
+                        'pareto_optimal_relax.json', 'relax.json',
+                        'relaxed_design.json', 'relaxed_design_ds.json',
+                        'remodel.json', 'rosetta_scripts.json']
+  --extra_options EXTRA_OPTIONS
+                        Extra Rosetta options. Specify in quotes!
+  --script_vars [SCRIPT_VARS [SCRIPT_VARS ...]]
+                        Any script vars for XML scripts.Specify as you would
+                        in Rosetta. like: glycosylation=137A,136A
+  --program PROGRAM     Define the Rosetta program to use if not set in
+                        json_run
+
+Testing and Debugging:
+  --print_only          Do not actually run anything. Just print setup for
+                        review.
+  --local_test          Is this a local test? Will change nstruct to 1 and run
+                        on 2 processors
+  --one_file_mpi        Output all MPI std::out to a single file instead of
+                        splitting it.
+
+Special Options for controlling execution:
+  --job_manager {slurm,qsub,local,local_test}
+                        Job Manager to launch job. (Or none if local or
+                        local_test)Default = 'slurm '
+  --job_manager_opts [JOB_MANAGER_OPTS [JOB_MANAGER_OPTS ...]]
+                        Extra options for the job manager, such as queue or
+                        processor requestsRemove double dashes. Exclusive is
+                        on by default. Specify like: -p imperial exclusive.
+  --json_base JSON_BASE
+                        JSON file for setting up base paths/etc. for the
+                        cluster.Default =
+                        'database/rosetta/jsons/common_flags.json'
+  --compiler {gcc,clang}
+                        Set the compiler used. Will set clang automatically
+                        for macos. Default = 'gcc'
+  --mpiexec MPIEXEC     Specify a particular path (or type of) MPI exec.
+                        Default is srun (due to vax). If local or local test,
+                        will use mpiexex
+  --machine_file MACHINE_FILE
+                        Optional machine file for passing to MPI
+
+```
+
+
+## get_seq
+
+My own app to get sequences from structures for regions, chains, etc, and output fasta files or just print to the screen (either as a single PDB or multiple).  Also used to create Gene order forms for genscript.  THis is a bit specific for the SchiefLab, but it can be generalized if needed. 
+
+```
+usage: get_seq.py [-h] [--pdb PDB] [--pdblist PDBLIST]
+                  [--pdblist_input_dir PDBLIST_INPUT_DIR] [--chain CHAIN]
+                  [--cdr CDR]
+                  [--format {basic,fasta,general_order,IgG_order,IgG_order_lambda,IgG_order_kappa,IgG_order_heavy}]
+                  [--outpath OUTPATH] [--prefix PREFIX] [--region REGION]
+                  [--strip_c_term STRIP_C_TERM] [--pad_c_term PAD_C_TERM]
+                  [--output_original_seq]
+
+Uses Biopython to print sequence information. Example: get_seq.py --pdb
+2j88_A.pdb --format fasta --outpath test.txt
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --pdb PDB, -s PDB     Input PDB path
+  --pdblist PDBLIST, -l PDBLIST
+                        Input PDB List
+  --pdblist_input_dir PDBLIST_INPUT_DIR, -i PDBLIST_INPUT_DIR
+                        Input directory if needed for PDB list
+  --chain CHAIN, -c CHAIN
+                        A specific chain to output
+  --cdr CDR             Pass a specific CDR to output alignments of.
+  --format {basic,fasta,general_order,IgG_order,IgG_order_lambda,IgG_order_kappa,IgG_order_heavy}
+                        The output format requried.
+  --outpath OUTPATH, -o OUTPATH
+                        Output path. If none is specified it will write to
+                        screen.
+  --prefix PREFIX, -t PREFIX
+                        Tag to add before chain
+  --region REGION       specify a particular region, start:end:chain
+  --strip_c_term STRIP_C_TERM
+                        Strip this sequence off the C-term of resulting
+                        sequences. (Useful for antibodies
+  --pad_c_term PAD_C_TERM
+                        Pad this sequence with some C-term (Useful for
+                        antibodies
+  --output_original_seq
+                        Output the original sequence and the striped seqeunce
+                        if stripped. Default FALSE.
+ ```
 
