@@ -103,7 +103,6 @@ class AnalyzeRecovery:
             self.analysis_info.get_exp(),
             self.native_info.pdbids,
             self.cdrs,
-            self.native_info.get_features_db(),
             self.analysis_info.get_features_db())
 
 
@@ -152,6 +151,20 @@ class RecoveryCalculator(object):
         self.heavy_cdrs = heavy_cdr_names
         self.Antibody = AntibodyStructure()
         self.native_df = feat_tools.get_cdr_cluster_df(native_db_path)
+        #print "Native Dataframe: "
+        #print self.native_df
+
+    #IMPLEMENT THIS:
+    #def apply(self):
+    #    """
+    #    Each calculator implements its own version of apply (which may take different arguments.
+    #      Pythons argument dictionary is horrible, and I hate it, so instead, this is a comment
+    #
+    #    Each calculator also returns the resultant dataframe.
+    #
+    #    :return: pandas.DataFrame
+    #    """
+    #    pass
 
 class TopRecoveryCalculator(RecoveryCalculator):
     def __init__(self, native_db_path):
@@ -183,21 +196,21 @@ class TopRecoveryCalculator(RecoveryCalculator):
         flat_dict = defaultdict(list)
         for pdbid in pdbids:
             for cdr in cdrs:
-                print pdbid+" "+cdr
+                #print pdbid+" "+cdr
 
                 native_length = feat_tools.get_length(self.native_df, pdbid, cdr)
                 native_cluster = feat_tools.get_cluster(self.native_df, pdbid, cdr)
 
-                print "Native: "+repr(native_length)
-                print "Cluster: "+repr(native_cluster)
+                #print "Native: "+repr(native_length)
+                #print "Cluster: "+repr(native_cluster)
 
                 total_entries = feat_tools.get_total_entries(bm_df, pdbid, cdr)
 
                 length_recovery = feat_tools.get_length_recovery(bm_df, pdbid, cdr, native_length)
                 cluster_recovery = feat_tools.get_cluster_recovery(bm_df, pdbid, cdr, native_cluster)
 
-                print "length_recovery: "+str(length_recovery)
-                print "cluster_recovery: "+str(cluster_recovery)
+                #print "length_recovery: "+str(length_recovery)
+                #print "cluster_recovery: "+str(cluster_recovery)
 
                 flat_dict['length_recovery_freq'].append(length_recovery)
                 flat_dict['cluster_recovery_freq'].append(cluster_recovery)
@@ -209,15 +222,16 @@ class TopRecoveryCalculator(RecoveryCalculator):
 
         self.bm_df = bm_df
         result_df = pandas.DataFrame.from_dict(flat_dict)
+
         ##Convert into something easily converted to pandas and output CSV.
 
         print "Recoveries calculated."
 
         self.native_df.to_csv(output_dir+"/native_clusters.csv")
 
-        columns = ['exp', 'pdbid', 'cdr', 'length_recovery', 'cluster_recovery', 'total_entries']
+        columns = ['exp', 'pdbid', 'cdr', 'length_recovery_freq', 'cluster_recovery_freq', 'total_entries']
 
-        out = output_dir+"/all_recoveries.txt"
+        out = output_dir+"/all_recoveries.csv"
         if os.path.exists(out):
             ftype = 'a'
             header = False
@@ -227,6 +241,7 @@ class TopRecoveryCalculator(RecoveryCalculator):
 
         OUTFILE = open(out, ftype)
         result_df.to_csv(OUTFILE, columns=columns, header=header)
+        OUTFILE.close()
 
         return result_df
 
@@ -236,7 +251,6 @@ class ObservedRecoveryCalculator(RecoveryCalculator):
         Calculates the number of times the native clusters and lengths were observed during the experiment, for each PDB.
         """
         RecoveryCalculator.__init__(self, native_db_path)
-        pass
 
     def apply(self, exp_name, pdbids, cdrs, bm_decoy_path, output_dir = "data"):
         """
@@ -249,12 +263,14 @@ class ObservedRecoveryCalculator(RecoveryCalculator):
         flat_dict = defaultdict(list)
         data_types = ["total_grafts", "native_lengths_observed", "native_clusters_observed"]
         for pdbid in pdbids:
+            print pdbid
             totals = defaultdict()
             clusters = defaultdict()
             lengths = defaultdict()
 
             ##Initialize native lengths and clusters to do the check.
             for cdr in cdrs:
+
                 clusters[cdr] = feat_tools.get_cluster(self.native_df, pdbid, cdr)
                 lengths[cdr] = feat_tools.get_length(self.native_df, pdbid, cdr)
 
@@ -266,57 +282,67 @@ class ObservedRecoveryCalculator(RecoveryCalculator):
 
             filenames = get_decoys(bm_decoy_path, pdbid)
             for filename in filenames:
-
+                total_grafts = 0
                 if os.path.basename(filename).split('.')[-1] == "gz":
                     INFILE = gzip.open(filename, 'rb')
                 else:
                     INFILE = open(filename, 'r')
-                    for line in INFILE:
-                        line = line.strip()
-                        if not line or line.startswith("ATOM"): continue
 
-                        if re.search(" DATA GRAFT_CLOSURE ", line):
-                            lineSP = line.split()
-                            data_index = 0
-                            for i in range(0, len(lineSP)):
-                                if lineSP[i]=="DATA":
-                                    data_index = i
-                                    break
+                for line in INFILE:
+                    line = line.strip()
+                    if not line or line.startswith("ATOM"): continue
 
-                            input_tag = lineSP[data_index+3]
-                            cluster = lineSP[data_index+5]
-                            cdr = cluster.split("-")[0]
-                            length = cluster.split("-")[1]
+                    if re.search(" DATA GRAFT_CLOSURE ", line):
+                        total_grafts+=1
+                        lineSP = line.split()
+                        data_index = 0
+                        for i in range(0, len(lineSP)):
+                            if lineSP[i]=="DATA":
+                                data_index = i
+                                break
+
+                        input_tag = lineSP[data_index+3]
+                        cluster = lineSP[data_index+5]
+                        cdr = cluster.split("-")[0]
+                        length = int(cluster.split("-")[1])
 
 
-                            # Now, Add the data to self.exp_data
-                            print "Adding data for input_tag "+input_tag
-                            print "Adding data for cdr " +cdr
+                        # Now, Add the data to self.exp_data
+                        #print "Adding data for input_tag "+input_tag
+                        #print "Adding data for cdr " +cdr
 
-                            totals[cdr]["total_grafts"] += 1
+                        totals[cdr]["total_grafts"] += 1
 
-                            if length == lengths[cdr]:
-                                totals[cdr]["native_lengths_observed"] += 1
+                        if length == lengths[cdr]:
+                            totals[cdr]["native_lengths_observed"] += 1
 
-                            if cluster == clusters[cdr]:
-                                totals[cdr]["native_clusters_observed"] += 1
+                        if cluster == clusters[cdr]:
+                            totals[cdr]["native_clusters_observed"] += 1
 
-                    INFILE.close()
+                #print "grafts: "+repr(total_grafts)
+                INFILE.close()
 
             ###Add to flattened dic.
-            for cdr in totals:
+            for cdr in cdrs:
+
+                flat_dict["pdbid"].append(pdbid)
+                flat_dict["cdr"].append(cdr)
+                flat_dict["exp"].append(exp_name)
+
                 for data_type in data_types :
-                    flat_dict["pdbid"].append(pdbid)
-                    flat_dict["cdr"].append(cdr)
-                    flat_dict["exp"].append(exp_name)
-                    flat_dict[data_type].append(totals[data_type])
+                    #print pdbid
+                    #print cdr
+                    #print exp_name
+
+                    flat_dict[data_type].append(totals[cdr][data_type])
 
 
         ##Now we unflatten dictionary and turn it into a nice dataframe.
         columns = ["exp", "pdbid", "cdr"]
         columns.extend(data_types)
+
         result_df = pandas.DataFrame.from_dict(flat_dict)
-        out = output_dir+"/all_observed.txt"
+        out = output_dir+"/all_observed.csv"
         if os.path.exists(out):
             ftype = 'a'
             header = False
@@ -349,7 +375,7 @@ class PyIgClassifyDBRepresentationCalculator(RecoveryCalculator):
             for pdbid in lambda_kappa_dict[light_gene]:
                 for cdr in cdrs:
 
-                    gene = "heavy" if cdr in self.heavy_cdrs else gene = light_gene
+                    gene = "heavy" if cdr in self.heavy_cdrs else light_gene
                     native_length = feat_tools.get_length(self.native_df, pdbid, cdr)
                     native_cluster = feat_tools.get_cluster(self.native_df, pdbid, cdr)
 
@@ -398,7 +424,7 @@ def calculate_recovery_and_risk_ratios(top_recovery_df, observed_df):
 
     for rtype in ["length", "cluster"]:
         df[rtype+'_recovery'] = (df[rtype+'_recovery_freq']/df['total_entries'].astype('float'))
-        df[rtype+'_rr'] = df[rtype+'_recovery']/(df['native_'+rtype+'_observed']/df['total_grafts'].astype('float'))
+        df[rtype+'_rr'] = df[rtype+'_recovery']/(df['native_'+rtype+'s_observed']/df['total_grafts'].astype('float'))
 
     return df
 
@@ -408,10 +434,11 @@ def calculate_per_cdr_rr_and_recovery(exp, cdrs, result_df):
     :rtype: pandas.DataFrame
     """
     flat_dict = defaultdict(list)
-    for rtype in ['length', 'cluster']:
-        for cdr in cdrs:
-            flat_dict.append(exp)
-            flat_dict.append(cdr)
+    for cdr in cdrs:
+        flat_dict['exp'].append(exp)
+        flat_dict['cdr'].append(cdr)
+        for rtype in ['length', 'cluster']:
+
             flat_dict[rtype+'_rr'].append(numpy.mean(result_df[(result_df['cdr'] == cdr)][rtype+'_rr']))
             flat_dict[rtype+'_recovery'].append(numpy.mean(result_df[(result_df['cdr'] == cdr)][rtype+'_recovery']))
 
@@ -425,8 +452,8 @@ def calculate_exp_rr_and_recovery(exp, result_df):
     :rtype: pandas.DataFrame
     """
     flat_dict = defaultdict(list)
+    flat_dict["exp"].append(exp)
     for rtype in ['length', 'cluster']:
-        flat_dict["exp"].append(exp)
         flat_dict[rtype+'_rr'].append(numpy.mean(result_df[result_df['exp'] == exp][rtype+'_rr']))
         flat_dict[rtype+'_recovery'].append(numpy.mean(result_df[result_df['exp'] == exp][rtype+'_recovery']))
 

@@ -85,7 +85,7 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         s = s + (" -in:path "+self.dataset_root_dir+"/"+self._current_settings["input_pdb_type"])
 
         #Instructions
-        s = s + " -cdr_instructions " + self._create_instructions(self.instructions_dir+"/"+self._get_out_prefix()+".instruct")
+        s = s + " -cdr_instructions " + self._create_instructions(self.instructions_dir+"/"+os.path.basename(self._get_make_out_path())+".instruct")
         return s
 
     @overrides
