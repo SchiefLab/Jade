@@ -14,6 +14,41 @@ from matplotlib.dates import YearLocator, MonthLocator, DateFormatter, WeekdayLo
 
 # Jared Adolf-Bryfogle
 
+
+
+
+'''
+NOTES:
+
+Matplotlib class organization generally makes no overall sense, so here is some notes (to myself) to help:
+
+1) Figures are made of axes.
+2) subplot is just an axes on a grid!  Hahahahahah
+ -> 'Axes are very similar to subplots but allow placement of plots at any location in the figure.
+     So if we want to put a smaller plot inside a bigger one we do so with axes.'
+
+3) axes are the actual fucking PLOTS. They should be called PLOTS. Why it is called this is beyond me.
+
+You can get the figure of an axes, and the [axes] of a figure.
+
+fig.axes
+axes.figure
+
+Boom.  Like an access pointer in C++ I guess.
+
+Almost everything you need can and should be controlled by individual axes (USING ACTUAL SETTERS!).
+In order to give common x or y labels, or titles, see the functions below.
+
+Passing x= or y= to labels like titles, will control the offset.
+x=0 and y=1.0 are the default.
+
+y=1.05 will raise it up a bit - just enough to make the titles look great.
+Title size of 18 and x/y label size of 16 seems to look ok.
+
+'''
+
+
+
 def plot_x_vs_y_sea_with_regression(df, title, outpath, x, y, top_p = .95, reverse = True):
     """
     Plot X vs Y using a Pandas Dataframe and Seaborn, with regression line., save the figure, and return the Axes.
@@ -96,7 +131,7 @@ def pad_single_title(ax, x=.5, y=1.05):
     ttl = ax.title
     ttl.set_position([x, y])
 
-def set_common_title(fig, title, size=16, x=.5, y=1.05):
+def set_common_title(fig, title, size=16, x=0, y=1.05):
     """
     for FACETED plots, add a common title.
 

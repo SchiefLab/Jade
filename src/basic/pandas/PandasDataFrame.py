@@ -92,6 +92,7 @@ def detect_numeric(df):
 def get_columns(df, columns):
     """
     Get a new dataframe of only the columns
+
     :param df: pandas.DataFrame
     :param columns: list
     :rtype: pandas.DataFrame
@@ -101,6 +102,7 @@ def get_columns(df, columns):
 def get_matches(df, column, to_match):
     """
     Get all the rows that match a paricular element of a column.
+
     :param df: pandas.DataFrame
     :param column: str
     :param to_match: str
@@ -108,6 +110,17 @@ def get_matches(df, column, to_match):
     """
 
     return df[df[column] == to_match]
+
+def get_multiple_matches(df, column, to_match_array):
+    """
+    Get all the rows that match any of the values in to_match_array.
+
+    :param df: pandas.DataFrame
+    :param column: str
+    :param to_match_array: list
+    :rtype: pandas.DataFrame
+    """
+    return df[df[column].isin(to_match_array)]
 
 def get_match_by_array(df, column, match_array):
     """

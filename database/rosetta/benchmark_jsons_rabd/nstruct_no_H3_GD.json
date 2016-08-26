@@ -65,7 +65,7 @@
     "use_for_outdir":false
   },
 
-  "min": {
+  "mintype": {
     "benchmarks": [
       "relax"
     ]
