@@ -30,10 +30,12 @@ def main():
                         help = "Output data directory.  Not Required.  Default = pooled_data",
                         default = "pooled_data")
 
-    parser.add_argument("--benchmarks",
-                        help = "Particular benchmarks to use.  Deprecated.  Not Required",
+    parser.add_argument("--jsons","-j",
+                        help = "Analysis JSONs to use.  See RAbD_MB.AnalysisInfo for more on what is in the JSON."
+                               "The JSON allows us to specify the final name, decoy directory, and features db associated with the benchmark as well as all options that went into it.",
                         nargs = "*",
-                        default = [])
+                        required = True)
+
 
     options = parser.parse_args()
 

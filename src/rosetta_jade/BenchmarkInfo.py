@@ -111,6 +111,9 @@ def get_run_settings(dir, fname="RUN_SETTINGS.txt"):
     :rtype: defaultdict
     """
     settings = defaultdict()
+    if not os.path.exists(fname):
+        return settings
+
     FILE = open(dir+"/"+fname)
     for line in FILE:
         line = line.strip()

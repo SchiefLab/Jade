@@ -15,6 +15,7 @@ from rosetta_jade.RunRosetta import RunRosetta
 
 from pymol_jade.PyMolScriptWriter import *
 from basic.general import *
+from basic import path
 
 def main():
 
@@ -85,6 +86,7 @@ def main():
 
         for line in PDBLIST:
             new_line = options.indir+"/"+line.strip()
+            new_line = path.get_decoy_path(new_line)
             if not os.path.exists(new_line):
                 sys.exit(new_line+" does not exist - cannot continue")
 

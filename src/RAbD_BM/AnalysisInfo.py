@@ -2,6 +2,8 @@ import json, os, sys
 
 import rosetta_jade.BenchmarkInfo as rosetta_bms
 from basic.path import get_decoy_name
+
+
 class AnalysisInfo:
     """
     Simple class that parses a json file which defines (USING RELATIVE PATHS):

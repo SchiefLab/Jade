@@ -12,6 +12,7 @@ from basic.filters.DataFilters import *
 from basic.filters.FilterSettings import *
 from basic.threading.Threader import *
 from basic.pandas import PandasDataFrame
+from RAbD_BM.AnalysisInfo import *
 
 # Rosetta Tools
 import rosetta_jade.FeaturesJsonCreator as json_creator
@@ -22,13 +23,21 @@ class CompareAntibodyDesignStrategies:
     Class mainly for comparing different Antibody Design strategies using our Features Databases.
     """
 
-    def __init__(self, db_dir, out_dir_name, strategies=[]):
+    def __init__(self, db_dir, out_dir_name, strategies=[], jsons = []):
+        """
+
+        :param db_dir:
+        :param out_dir_name:
+        :param strategies:
+        :param jsons:
+        """
 
         #Init construction options
         self.db_dir = StringVar(value=db_dir)
         self.out_dir_name = StringVar(value=out_dir_name)
         self.native_path = None
         self.strategies = strategies
+        self.jsons = jsons
 
         #Init Classes and data
         self.db_paths = defaultdict()
@@ -369,6 +378,37 @@ class CompareAntibodyDesignStrategies:
             if len(x.split('.')[-2].split('_')) > 2:
                 strategy = strategy + '.' + '_'.join(x.split('.')[-2].split('_')[:-2])
                 print strategy
+
+            if not nr_dbs.has_key(strategy):
+
+                self.strategies.append(strategy)
+                nr_dbs[strategy] = " "
+                self.db_paths[strategy] = []
+                self.db_paths[strategy].append(db)
+            else:
+                self.db_paths[strategy].append(db)
+
+    def set_strategies_from_json_infos(self):
+        """
+        Uses self.json, which are AnalysisInfo classes, to populate.
+
+        :return:
+        """
+
+        if not self.jsons:
+            print "JSONS NOT SET!"
+            return
+
+        nr_dbs = defaultdict()
+        for info in self.jsons:
+            if not isinstance(info, AnalysisInfo): sys.exit()
+
+            db = info.get_features_db()
+            print db
+
+            ##Example naming convention: 'ch103_5_CDR_prelim.norm_ab_features.db'
+            strategy = info.get_exp()
+            print strategy
 
             if not nr_dbs.has_key(strategy):
 

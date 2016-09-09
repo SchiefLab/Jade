@@ -101,8 +101,8 @@ def get_decoy_name(decoy):
 
 def get_decoy_path(decoy, alternate_paths = None):
     """
-    Search no extensions or with .pdb, .pdb.gz, .cif, .cif.gz, .xml, .xml.gz
-    Search alternative search paths.
+    Search .pdb, .pdb.gz, .cif, .cif.gz, .xml, .xml.gz
+    In addition, Search alternative search paths.
     Return found path or NONE.
 
     :param decoy:

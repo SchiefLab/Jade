@@ -16,6 +16,7 @@ sys.path.append(p);  # Allows all modules to use all other modules, without need
 # PyIgD
 from antibody.cdr_data.CDRDataTypes import *
 from basic.threading.Threader import *
+from RAbD_BM.AnalysisInfo import *
 from RAbD.AnalyzeAntibodyDesigns import CompareAntibodyDesignStrategies
 
 ## Window Frames
@@ -73,13 +74,25 @@ def main():
                         help = "PyIgClassify Root Directory with DBOUT",
                         default = "")
 
+    parser.add_argument("--jsons","-j",
+                        help = "Analysis JSONs to use.  See RAbD_MB.AnalysisInfo for more on what is in the JSON."
+                               "The JSON allows us to specify the final name, decoy directory, and features db associated with the benchmark as well as all options that went into it.",
+                        nargs = "*")
+
     options = parser.parse_args()
 
     if options.root_dir != os.getcwd():
         print "Changing to root."
         os.chdir(options.root_dir)
 
-    GUI = CompareAntibodyDesignStrategies_GUI(Tk(), options.db_dir, options.analysis_name)
+    jsons = []
+    if options.jsons:
+        jsons = [AnalysisInfo(json_file) for json_file in options.jsons]
+
+    GUI = CompareAntibodyDesignStrategies_GUI(Tk(),
+                                              db_dir=options.db_dir,
+                                              analysis_dir=options.analysis_name,
+                                              jsons=jsons)
 
     # Set any values
     if options.native:
@@ -93,13 +106,30 @@ def main():
 
 
 class CompareAntibodyDesignStrategies_GUI:
-    def __init__(self, main, db_dir="", analysis_dir="", strategies=[]):
+    def __init__(self, main, db_dir="", analysis_dir="", jsons = [], strategies=[]):
+        """
+        JSON file is used for analysis or renaming things:
+        Requires these settings.
 
+        { "short_name": "min.remove_antigen-T",
+          "decoy_dir":"decoy_dir",
+          "features_db":"ab_features_path"
+
+        }
+
+        :param main:
+        :param db_dir:
+        :param analysis_dir:
+        :param jsons: [AnalysisInfo]
+        :param strategies:
+        """
         self._tk_ = main
         self._tk_.title("PyIgDesign Compare")
-        self.compare_designs = CompareAntibodyDesignStrategies(db_dir, analysis_dir, strategies)
-        if self.compare_designs.db_dir and not self.compare_designs.strategies:
+        self.compare_designs = CompareAntibodyDesignStrategies(db_dir, analysis_dir, strategies, jsons=jsons)
+        if self.compare_designs.db_dir and not self.compare_designs.strategies and not jsons:
             self.compare_designs.set_strategies_from_databases()
+        elif self.compare_designs.db_dir and not self.compare_designs.strategies and jsons:
+            self.compare_designs.set_strategies_from_json_infos()
 
         self.current_dir = os.getcwd()
 

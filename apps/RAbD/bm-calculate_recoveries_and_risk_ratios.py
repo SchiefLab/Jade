@@ -21,9 +21,6 @@ def main():
                         help = "Path to outfile. DEFAULT = data",
                         default = "data")
 
-    parser.add_argument("--plot_outdir", "-p",
-                        help = "DIR for plots. DEFAULT = plots",
-                        default = "plots")
 
     #parser.add_argument("--root_dataset_dir",
     #                    help = "List of PDBIds to use for individual PDB output. DEFAULT = datasets/pdblists",
@@ -32,7 +29,6 @@ def main():
     options = parser.parse_args()
 
     if not os.path.exists(options.data_outdir): os.mkdir(options.data_outdir)
-    if not os.path.exists(options.plot_outdir): os.mkdir(options.plot_outdir)
 
     analysis_infos = [AnalysisInfo(json_file) for json_file in options.jsons]
 
