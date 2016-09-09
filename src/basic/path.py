@@ -113,12 +113,14 @@ def get_decoy_path(decoy, alternate_paths = None):
     #This is a hack due to wierd issues with the score file vs pdb file and an extra '_'
     #decoy = decoy.replace('pre_model_1_', 'pre_model_1__')
 
-    def find_decoy(decoy):
-        if get_decoy_extension(decoy):
-            decoy.replace(get_decoy_extension( decoy ), "")
+    def find_decoy(f):
+        if get_decoy_extension(f):
+            print "Repalcing "+f
+            f.replace(get_decoy_extension( f ), "")
+
         for ext in extensions:
             for comp in compressions:
-                search_path = decoy+ext+comp
+                search_path = f+ext+comp
                 if os.path.exists(search_path):
                     return search_path
 
@@ -141,11 +143,10 @@ def get_decoy_extension(decoy):
     """
 
     for ext in extensions:
-        if re.search(ext, decoy):
-            if re.search(".gz", decoy):
-                return ext+".gz"
-            else:
-                return ext
+        for comp in compressions:
+            extension = ext+comp
+            if re.search(extension, decoy):
+                extension
 
     return None
 
