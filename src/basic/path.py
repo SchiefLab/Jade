@@ -115,12 +115,13 @@ def get_decoy_path(decoy, alternate_paths = None):
 
     def find_decoy(f):
         if get_decoy_extension(f):
-            print "Repalcing "+f
+            print "Replacing "+f
             f.replace(get_decoy_extension( f ), "")
-
+            print f
         for ext in extensions:
             for comp in compressions:
                 search_path = f+ext+comp
+                print search_path
                 if os.path.exists(search_path):
                     return search_path
 
