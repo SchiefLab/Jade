@@ -114,13 +114,14 @@ def get_decoy_path(decoy, alternate_paths = None):
     #decoy = decoy.replace('pre_model_1_', 'pre_model_1__')
 
     def find_decoy(decoy):
+        if get_decoy_extension(decoy):
+            decoy.replace(get_decoy_extension( decoy ), "")
         for ext in extensions:
             for comp in compressions:
                 search_path = decoy+ext+comp
                 if os.path.exists(search_path):
                     return search_path
 
-        return None
 
     if alternate_paths:
         for dir in alternate_paths:
@@ -129,6 +130,8 @@ def get_decoy_path(decoy, alternate_paths = None):
 
     else:
         return find_decoy(decoy)
+
+    return None
 
 def get_decoy_extension(decoy):
     """
@@ -144,7 +147,7 @@ def get_decoy_extension(decoy):
             else:
                 return ext
 
-    return ""
+    return None
 
 
 def make_dir_if_not_exists(dir):
