@@ -86,7 +86,9 @@ def main():
 
         for line in PDBLIST:
             new_line = options.indir+"/"+line.strip()
+            print "finding: "+new_line
             new_line = path.get_decoy_path(new_line)
+
             if not os.path.exists(new_line):
                 sys.exit(new_line+" does not exist - cannot continue")
 
