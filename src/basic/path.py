@@ -145,6 +145,7 @@ def get_decoy_extension(decoy):
     for ext in extensions:
         for comp in compressions:
             extension = ext+comp
+            print extension
             if re.search(extension, decoy):
                 extension
 
