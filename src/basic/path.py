@@ -141,13 +141,13 @@ def get_decoy_extension(decoy):
     :param decoy: str
     :rtype: str
     """
-
+    #print "finding extension for "+ decoy
     for ext in extensions:
         for comp in compressions:
             extension = ext+comp
             print extension
             if re.search(extension, decoy):
-                extension
+                return extension
 
     return None
 
