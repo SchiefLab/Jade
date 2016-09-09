@@ -114,10 +114,12 @@ def get_decoy_path(decoy, alternate_paths = None):
     #decoy = decoy.replace('pre_model_1_', 'pre_model_1__')
 
     def find_decoy(f):
-        if get_decoy_extension(f):
-            print "Replacing "+f
-            f.replace(get_decoy_extension( f ), "")
-            print f
+        found_ext = get_decoy_extension(f)
+        if found_ext:
+            #print "Found extension "+found_ext
+            #print "Replacing "+f
+            f = f.replace(found_ext, "")
+
         for ext in extensions:
             for comp in compressions:
                 search_path = f+ext+comp
