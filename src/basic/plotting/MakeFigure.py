@@ -174,7 +174,6 @@ class MakeFigure:
 
     I wrote this before I knew of pandas.
 
-    Probably should have just used ggplot now that I see its been released...oh well.
     You need to know the number of plots ahead of time by passing the grid.
         1x1 will make one plot.
         2x2 will make a grid of 4 plots.

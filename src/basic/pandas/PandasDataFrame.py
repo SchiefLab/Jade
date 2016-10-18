@@ -150,3 +150,13 @@ def get_row_matches(df, column1, to_match, column2):
     """
 
     return df[df[column1] == to_match][column2]
+
+def get_value(df, column):
+    """
+    Get a single value from a one-row df.  THis is to help for implicit docs, since the syntax to Iloc is so fucking strange.
+
+    :param df: pandas.DataFrame
+    :param column: str
+    :return: value
+    """
+    return df.iloc[0][column]
