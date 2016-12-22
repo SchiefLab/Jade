@@ -12,5 +12,5 @@ def deduce_str_type(s):
     """
     try:
         return ast.literal_eval(s)
-    except ValueError:
+    except (ValueError, SyntaxError):
         return s
