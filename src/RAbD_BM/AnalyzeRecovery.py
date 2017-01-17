@@ -1,14 +1,9 @@
 #!/usr/bin/python
-
+#Author: Jared Adolf-Bryfogle (jadolfbr@gmail.com)
 
 #This Script parses the log of MPI-run antibody_design benchmarks to get the frequency of clusters and lengths against a native database.
-#It also gets DB frequences from our main databases and will soon parse the resultant length and cluster recoveries to determine the log-odds of each experiment for conclusive statistics.
-
-
-
-###############################
-#July 7, 2016 - This has finally been rewritten using Pandas Dataframes (which were not around when this was first written.  I'm finally decently proud of this code.  Only took 2 yrs.
-
+#It also gets DB frequences from our main databases and will soon parse the resultant length and cluster recoveries to determine the 
+# Risk Ratio of each experiment for conclusive statistics.
 
 
 import gzip
@@ -48,7 +43,7 @@ class AnalyzeRecovery:
         Class for anlyzing length and cluster recovery and risk ratios.
 
         Optionally pass in CDRs to control which CDRs are analyzed.
-          Otherwise, we read the info from RUN_SETTINGS, which either has ALL or a specific CDR.
+          Otherwise, we read the info from RUN_SETTINGS.txt (which is used for benchmarking), which either has ALL or a specific CDR.
 
 
         :param pyig_design_dbpath: str
