@@ -355,7 +355,7 @@ optional arguments:
 ```
 
 
-## RAbD_Jade.py
+## RAbD_Jade ##
 
 ### DESCRIPTION ###
  Application which can analyze features databases and create PyMol sessions of top models that were output by RosettaAntibodyDesign.
