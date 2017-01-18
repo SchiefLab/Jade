@@ -28,7 +28,7 @@ Nothing fancy yet.  A true python install via PIP is planned.  For now, you will
 2) __PATH:__ Add the path to Jade/apps to your _PATH_ environment variable to use scripts and programs as executables 
 
  - <code>export PATH=$PATH:/path/to/Jade/apps</code>
-
+ 
 3) __Dependancies:__  
  - Install [Pip](https://pypi.python.org/pypi/pip) if you don't already have it.  
  - Run: ```sudo ./setup_dependancies.sh``` in the main Jade directory.
@@ -352,5 +352,61 @@ optional arguments:
   --output_original_seq
                         Output the original sequence and the striped seqeunce
                         if stripped. Default FALSE.
- ```
+```
+
+
+## RAbD_Jade.py
+
+### DESCRIPTION ###
+ Application which can analyze features databases and create PyMol sessions of top models that were output by RosettaAntibodyDesign.
+  It can then sort the models by physical attributes
+  such as Interface Energy, SASA, etc.
+
+ The application can rename decoys into their sorted info and output all sorted data in csv tables with full cluster, sequence, and physical data.
+  Very useful for antibody design analysis.
+
+###  REQUIREMENTS ###
+ - clustal_omega must be installed and the application should be in your $PATH environment.
+ - PyMol must be installed and able to be called from the command line.
+ - ETC: Requires Biopython, numpy, etc.  Run the Jade setup script to install these.
+
+### EXAMPLE COMMAND ###
+
+```
+    RAbD_Jade.py --native input_pdbs/pareto_2j88_renum_0002.pdb --cdrs H1
+      --analysis_name testing --db_dir features_databases
+```
+
+```
+usage: GUI application to analyze designs output by RosettaAntibodyDesign.  
+       Designs should first be analyzed by both the AntibodyFeatures and CDRClusterFeatures 
+       reporters into sqlite3 databases.
+       
+       [-h] [--db_dir DB_DIR] [--analysis_name ANALYSIS_NAME]
+       [--native NATIVE] [--root_dir ROOT_DIR]
+       [--cdrs [{L1,H1,L1,H2,L3,H3} [{L1,H1,L1,H2,L3,H3} ...]]]
+       [--pyigclassify_dir PYIGCLASSIFY_DIR] [--jsons [JSONS [JSONS ...]]]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --db_dir DB_DIR       Directory with databases to compare. DEFAULT =
+                        databases
+  --analysis_name ANALYSIS_NAME
+                        Main directory to complete analysis. DEFAULT =
+                        prelim_analysis
+  --native NATIVE       Any native structure to compare to
+  --root_dir ROOT_DIR   Root directory to run analysis from
+  --cdrs [{L1,H1,L1,H2,L3,H3} [{L1,H1,L1,H2,L3,H3} ...]]
+                        A list of CDRs for the analysis (Not used for Features
+                        Reporters)
+  --pyigclassify_dir PYIGCLASSIFY_DIR
+                        Optional PyIgClassify Root Directory with DBOUT. Used
+                        for debugging.
+  --jsons [JSONS [JSONS ...]], -j [JSONS [JSONS ...]]
+                        Analysis JSONs to use. See RAbD_MB.AnalysisInfo for
+                        more on what is in the JSON.The JSON allows us to
+                        specify the final name, decoy directory, and features
+                        db associated with the benchmark as well as all
+                        options that went into it.
+```
 

@@ -92,9 +92,9 @@ def get_decoy_name(decoy):
 
     name = os.path.basename(decoy)
 
-    if re.search(".pdb.gz", name):
+    if re.search(".pdb.gz", name) or re.search(".cif.gz", name):
         return '.'.join(name.split(".")[0:-2])
-    elif re.search(".pdb", name):
+    elif re.search(".pdb", name) or re.search(".cif", name):
         return '.'.join(name.split('.')[0:-1])
     else:
         return name

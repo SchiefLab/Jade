@@ -7,13 +7,8 @@ from basic.sequence import fasta
 #Modules
 from antibody.cdr_data.CDRData import *
 from basic.sequence.ClustalRunner import *
-
-from rosetta import *
-
-#Rosetta is only used for set_native_data_from_rosetta function for clusters.
-#rosetta.init(" -ignore_unrecognized_res -ignore_zero_occupancy false -ex1 -ex2 -use_input_sc"
-#             " -antibody:numbering_scheme AHO_Scheme "
-#             " -antibody:cdr_definition North")
+from basic.structure.BioPose import *
+from basic.structure.Structure import AntibodyStructure
 
 class CDRLengthData(CDRData):
     def __init__(self, native_path, is_camelid = False):
@@ -25,9 +20,9 @@ class CDRLengthData(CDRData):
     def _setup_native_data(self, pdb_path):
         if not pdb_path: return None
         else:
-            self._set_native_data_from_rosetta(pdb_path)
+            self._set_native_data_from_biopose(pdb_path)
 
-    def _set_native_data_from_rosetta(self, pdb_path):
+    def _set_native_data_from_biopose(self, pdb_path):
         """
         p = pose_from_pdb(pdb_path)
         ab_info = AntibodyInfo(p)
@@ -39,7 +34,7 @@ class CDRLengthData(CDRData):
             native_data.set_value(cdr, value)
         """
         native_data = CDRDataInfo(self.name, "native", pdb_path)
-        pose = pose_from_pdb(pdb_path)
+        pose = BioPose(pdb_path)
         clusterer = CDRClusterer(pose)
 
         data = defaultdict()
@@ -58,9 +53,9 @@ class CDRClusterData(CDRData):
     def _setup_native_data(self, pdb_path):
         if not pdb_path: return None
         else:
-            self._set_native_data_from_rosetta(pdb_path)
+            self._set_native_data_from_biopose(pdb_path)
 
-    def _set_native_data_from_rosetta(self, pdb_path):
+    def _set_native_data_from_biopose(self, pdb_path):
         """
         p = pose_from_pdb(pdb_path)
         ab_info = AntibodyInfo(p)
@@ -72,7 +67,7 @@ class CDRClusterData(CDRData):
             native_data.set_value(cdr, value)
         """
         native_data = CDRDataInfo(self.name, "native", pdb_path)
-        pose = pose_from_pdb(pdb_path)
+        pose = BioPose(pdb_path)
         clusterer = CDRClusterer(pose)
 
         for cdr in self.cdrs:
@@ -92,16 +87,17 @@ class CDRSequenceData(CDRData):
     def _setup_native_data(self, pdb_path):
         if not pdb_path: return None
         else:
-            self._set_native_data_from_rosetta(pdb_path)
+            self._set_native_data_from_biopose(pdb_path)
 
-    def _set_native_data_from_rosetta(self, pdb_path):
+    def _set_native_data_from_biopose(self, pdb_path):
         native_data = CDRDataInfo(self.name, "native", pdb_path)
-        pose = pose_from_pdb(pdb_path)
-        #ab_info = rosetta.antibody.AntibodyInfo(pose, AHO_Scheme, North) Antibody namespace currently does not work in PyRosetta.
-
+        pose = BioPose(pdb_path)
+        ab_structure = AntibodyStructure()
         clusterer = CDRClusterer(pose)
         for cdr in self.cdrs:
-            seq = clusterer.get_sequence(cdr)
+            seq = ab_structure.get_cdr_seq(pose, cdr)
+
+
             native_data.set_value(cdr, seq)
 
         self.native_data = native_data

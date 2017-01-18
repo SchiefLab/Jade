@@ -1,7 +1,8 @@
 #!/usr/bin/env python
+# Author: Jared Adolf-Bryfogle (jadolfbr@gmail.com)
 
 # Yes, the imports are all over.  Basically everything I've coded over the past few years.
-import os
+import os, random
 
 from argparse import ArgumentParser
 
@@ -31,24 +32,30 @@ from RAbD.window_modules.FilterSettingsWindow import *
 from basic.TKinter.ImageFrame import ImageFrame
 from basic import path
 
-from rosetta import *
 
-# Rosetta is only used for set_native_data_from_rosetta function for clusters. (CDRClusterer - which uses a pose to get dihedrals.  needs refactoring.)
-rosetta.init(" -ignore_unrecognized_res -ignore_zero_occupancy false -ex1 -ex2 -use_input_sc"
-             " -antibody:numbering_scheme AHO_Scheme "
-             " -antibody:cdr_definition North")
+#DESCRIPTION
+# Application which can analyze features databases and create PyMol sessions of top models sorted by physical attributes
+#  such as Interface Energy, SASA, etc.
 
+# The application can rename decoys into their sorted info and output all sorted data in tables with full cluster, sequence, and physical data.
+#  Very useful for antibody design analysis.
 
-# We assume that the names of each decoy is different.  How can we remove this dependency?
-#  This may be a problem if people do not use out:prefix or out:suffix to name their decoys...
+#REQUIREMENTS:
+#clustal_omega must be installed and the application should be in your $PATH environment.
+#PyMol must be installed and able to be called from the command line.
+# ETC: Requires Biopython, numpy, etc.  Run the Jade setup script to install these.
 
-### Setup Enums ###
-# length = 1; cluster = 2; sequence = 3;
-
+#EXAMPLE COMMAND:
+#
+#    RAbD_Jade.py --native input_pdbs/pareto_2j88_renum_0002.pdb --cdrs L1
+#      --pyigclassify_dir /Users/jadolfbr/Documents/projects/PyIgClassify --analysis_name testing
 
 
 def main():
-    parser = ArgumentParser()
+    parser = ArgumentParser("GUI application to analyze designs output by RosettaAntibodyDesign.  "
+                            "Designs should first be analyzed by both the AntibodyFeatures and CDRClusterFeatures reporters "
+                            "into sqlite3 databases.")
+
     parser.add_argument("--db_dir",
                         help="Directory with databases to compare. DEFAULT = databases",
                         default="databases")
@@ -71,7 +78,7 @@ def main():
                         default=["L1", "L2", "L3", "H1", "H2", "H3"])
 
     parser.add_argument("--pyigclassify_dir",
-                        help = "PyIgClassify Root Directory with DBOUT",
+                        help = "Optional PyIgClassify Root Directory with DBOUT. Used for debugging.",
                         default = "")
 
     parser.add_argument("--jsons","-j",
@@ -155,7 +162,12 @@ class CompareAntibodyDesignStrategies_GUI:
 
         self.menu_class = AntibodyDesignAnalysisMenu(self._tk_, self.compare_designs, self)
 
-        self.image_10e9 = ImageFrame(self._tk_, path.get_database_path()+"/assets/10e9_image_55.gif", bd=2, relief=RIDGE)#
+        #self.image_10e9 = ImageFrame(self._tk_, path.get_database_path()+"/assets/10e9_image_55.gif", bd=2, relief=RIDGE)#
+
+        images = [path.get_database_path()+ "/assets/"+r for r in ["smiling_2J88_small.gif", "10e9_image_55.gif", "2j88_native_full_sticks_lines_small.gif", "ch103_native_full_small.gif"]]
+
+        image_to_use  = random.choice(images)
+        self.image_10e9 = ImageFrame(self._tk_, image_to_use, bd=2, relief=RIDGE)
 
     def sho_tk(self):
 

@@ -268,7 +268,7 @@ class CDRData(object):
     def _setup_native_data(self, pdb_path):
         if not pdb_path: return None
 
-    def _set_native_data_from_rosetta(self, pdb_path):
+    def _set_native_data_from_biopose(self, pdb_path):
         pass
 
     def _set_native_data(self, data):

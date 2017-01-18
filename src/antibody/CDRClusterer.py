@@ -107,7 +107,7 @@ class CDRClusterer:
         #string psis;
         #string omegas;
         PI = math.pi
-        centers = path.get_database_path() + "/cluster_center_dihedrals.txt"
+        centers = path.get_database_path() + "/antibody/cluster_center_dihedrals.txt"
 
 
         cdr_length = len(self.dihedrals['phi'])

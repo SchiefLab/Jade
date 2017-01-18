@@ -542,7 +542,7 @@ class CompareAntibodyDesignStrategies:
         df = self.get_pandas_dataframe()
         dfs = []
         for strategy in self.get_strategies():
-            dfs.append(df["strategy" == strategy].sort(score_name)[0:self.top_n.get()-1])
+            dfs.append(df["strategy" == strategy].sort_values(score_name)[0:self.top_n.get()-1])
 
         df = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs))
         return df
@@ -643,18 +643,18 @@ class CompareAntibodyDesignStrategies:
 
         combined_scores = PandasDataFrame.drop_duplicate_columns(pandas.concat(dfs, axis=1, join="outer")) #Drop Duplicates
         combined_scores = combined_scores[output_names]
-        combined_scores = combined_scores.convert_objects(convert_numeric=True) #Not sure why this is not done automatically.
+        combined_scores = combined_scores.apply(pandas.to_numeric, errors='ignore')
         combined_scores.index.name = "decoy"
 
         if top:
             venn_df = PandasDataFrame.drop_duplicate_columns(pandas.concat(venn_dfs, axis=1, join="inner"))
             venn_df = venn_df[output_names]
-            venn_df.sort(columns = ['strategy', 'dG'])
+            venn_df.sort_values(['strategy', 'dG'])
             #venn_df.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_ven_top_"+str(self.top_n.get())+".csv", "w"))
 
             venn2_df = PandasDataFrame.drop_duplicate_columns(pandas.concat(venn_dfs, axis=1, join="inner"))
             venn2_df = venn2_df[output_names]
-            venn2_df.sort(columns = ['strategy', 'dG'])
+            venn2_df.sort_values(['strategy', 'dG'])
             #venn2_df.to_csv(open(self._setup_outdir_individual()+"/ind_per_model_ven_dG_total_top_"+str(self.top_n.get())+".csv", "w"))
 
             score_dfs=[]
@@ -682,7 +682,7 @@ class CompareAntibodyDesignStrategies:
                     score = self._get_score(score_name)
                     decoy_list = score.get_ordered_decoy_list(strategy, self.top_n.get())
                     df = combined_scores[combined_scores.index.isin(decoy_list)]
-                    df.sort(columns=[sort_name]) #Not working !!
+                    df.sort_values([sort_name])
 
                     strat_dfs.append(df)
                 top_df = pandas.concat(strat_dfs)
@@ -698,7 +698,7 @@ class CompareAntibodyDesignStrategies:
             if self.individual_analysis.get():
 
                 if summary:
-                    top_df = top_df.convert_objects(convert_numeric=True)
+                    top_df = top_df.apply(pandas.to_numeric, errors='ignore')
 
                     final_dfs.append(top_df.groupby(by=["strategy", "by_score_group"]).describe(exclude=['object']))
                     final_names.append(self._setup_outdir_individual()+"/per_strategy_summary_top")
@@ -723,7 +723,7 @@ class CompareAntibodyDesignStrategies:
                 df = df[name_order]
                 if summary:
                     #df.groupby(by="strategy").describe().to_csv(self._setup_outdir_combined()+"/com_summary_top_by_"+score.name+".csv")
-                    df = df.convert_objects(convert_numeric=True)
+                    df = df.apply(pandas.to_numeric, errors='ignore')
 
                     final_dfs.append(df.groupby(by=["by_score_group"]).describe(exclude=['object']))
                     final_names.append(self._setup_outdir_combined()+"/com_summary_top.csv")
@@ -735,7 +735,7 @@ class CompareAntibodyDesignStrategies:
         else:
 
             if self.individual_analysis.get():
-                combined_scores.sort(columns = ['strategy', 'dG'])
+                combined_scores.sort_values(['strategy', 'dG'])
                 if summary:
 
                     final_dfs.append(combined_scores.groupby(by="strategy").describe(exclude=['object']))
@@ -745,7 +745,7 @@ class CompareAntibodyDesignStrategies:
                     final_names.append(self._setup_outdir_individual()+"/ind_per_model_all")
 
             if self.combined_analysis.get():
-                combined_scores.sort(columns = ['dG'])
+                combined_scores.sort_values(['dG'])
                 if summary:
                     #combined_scores.groupby(by="strategy").describe().to_csv(self._setup_outdir_combined()+"/")
                     final_dfs.append(combined_scores.describe(exclude=['object']))
