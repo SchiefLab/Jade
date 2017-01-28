@@ -45,6 +45,9 @@ def get_lambda_kappa_pdb_ids(dataset,pdb_type, root_dataset_dir = "datasets/pdbl
     """
     def get_ids(path):
         ids = []
+        if not os.path.exists(path):
+            return ids
+
         HANDLE = open(path, "r")
         for line in HANDLE:
             line = line.strip()

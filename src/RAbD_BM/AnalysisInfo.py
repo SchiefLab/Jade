@@ -53,6 +53,9 @@ class NativeInfo:
             """
             pdbids = []
             print "reading from "+path
+            if not os.path.exists(path):
+                return pdbids
+
             INFILE = open(path, 'r')
             for line in INFILE:
                 line = line.strip()
