@@ -59,7 +59,7 @@
   "l_chain": {
     "rosetta_option":"-light_chain",
     "benchmarks": [
-      "lambda"
+      "kappa"
     ],
     "use_for_prefix":false,
     "use_for_outdir":false
