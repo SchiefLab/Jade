@@ -2,7 +2,7 @@
   "nstruct":100,
   "dataset": {
     "benchmarks":[
-      "bm2_1aoz"
+      "bm2_1oaz"
     ],
     "use_for_prefix":false,
     "use_for_outdir":false
