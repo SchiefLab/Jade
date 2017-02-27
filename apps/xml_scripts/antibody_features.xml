@@ -6,8 +6,8 @@
 			<ResidueTypesFeatures/>
 			<ScoreTypeFeatures/>
                 	<StructureScoresFeatures/>
-			<CDRClusterFeatures numbering_scheme="AHO_Scheme"/>
-			<AntibodyFeatures numbering_scheme="AHO_Scheme" cdr_definition="North" interface="LH_A" pack_separated="%%pack_separated%%" pack_together="%%pack_together%%"/>
+			<CDRClusterFeatures input_ab_scheme="AHO_Scheme"/>
+			<AntibodyFeatures input_ab_scheme="AHO_Scheme" cdr_definition="North" interface="LH_A" pack_separated="%%pack_separated%%" pack_together="%%pack_together%%"/>
 			<ResidueSecondaryStructureFeatures/>
 			<ResidueScoresFeatures/>
 			<HBondFeatures/>

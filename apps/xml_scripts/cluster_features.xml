@@ -3,7 +3,7 @@
 		<ReportToDB name="features" database_name="%%name%%" batch_description="%%batch%%">
 			<ResidueFeatures/>
 			<PdbDataFeatures/>
-			<CDRClusterFeatures numbering_scheme="AHO_Scheme"/>
+			<CDRClusterFeatures input_ab_scheme="AHO_Scheme"/>
 			<ScoreTypeFeatures/>
                 	<StructureScoresFeatures/>
 		</ReportToDB>
