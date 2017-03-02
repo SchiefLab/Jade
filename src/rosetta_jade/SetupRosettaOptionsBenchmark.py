@@ -93,7 +93,13 @@ class SetupRosettaOptionsBenchmark(SetupRosettaOptionsGeneral):
         if not self.json_dict.has_key(benchmark_name):
             sys.exit("Could not find benchmark name in json dict!  "+benchmark_name)
         else:
-            return self.json_dict[benchmark_name][self.key_benchmarks]
+
+            #In special circumstances, it may be a list (as for the CDRs), since they can both be a benchmark or all together.
+
+            try:
+                return self.json_dict[benchmark_name][self.key_benchmarks]
+            except TypeError:
+                return self.json_dict[benchmark_name]
 
     def get_rosetta_option_of_key(self, benchmark_name):
         """

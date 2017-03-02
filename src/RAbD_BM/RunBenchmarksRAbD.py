@@ -104,22 +104,27 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         extra_lines=[]
         extra_lines.append("\n".join( str(line) for line in self.extra_options.json_dict["base_cdr_instruction_lines"]))
 
-
+        print output_path
         #print repr(self._current_settings)
 
         extra_lines.append("ALL MinProtocol MinType "+self._current_settings["mintype"])
         extra_lines.append("ALL FIX")
 
+        seq_design_cdrs = self.extra_options.get_benchmarks_of_key("seq_design_cdrs")
+        graft_design_cdrs = self.extra_options.get_benchmarks_of_key("graft_design_cdrs")
 
-        if self._current_settings["CDR"] != "ALL":
+        current_cdr = self._current_settings["CDR"]
+        if current_cdr != "ALL" and current_cdr in graft_design_cdrs:
+            print "Adding " +current_cdr + " to graftdesign. "
             extra_lines.append(self._current_settings["CDR"]+" GraftDesign Allow")
-        else:
+        elif current_cdr == "ALL":
             for cdr in self.extra_options.json_dict["graft_design_cdrs"]:
                 extra_lines.append(cdr+" GraftDesign Allow")
 
-        if self._current_settings["CDR"] != "ALL" and not self.extra_options.json_dict["separate_cdrs"]["all_given_seq_design"]:
+        if current_cdr != "ALL" and current_cdr in seq_design_cdrs:
+            print "Adding " + current_cdr + " to seqdesign. "
             extra_lines.append(self._current_settings["CDR"]+" SeqDesign Allow")
-        else:
+        elif current_cdr == "ALL":
             for cdr in self.extra_options.json_dict["seq_design_cdrs"]:
                 extra_lines.append(cdr+" SeqDesign Allow")
 

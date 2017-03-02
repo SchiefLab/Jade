@@ -77,6 +77,8 @@
     "DE FIX",
 
     "ALL CDRSet ONLY_CURRENT_CLUSTER",
+    "H3 SeqDesign STRATEGY CONSERVATIVE",
+
     "L1 MinProtocol Min_Neighbors L2 L3",
     "L2 MinProtocol Min_Neighbors L1",
     "L3 MinProtocol Min_Neighbors L1 H3",
@@ -88,8 +90,7 @@
   ],
 
   "separate_cdrs":{
-    "benchmarks":[true],
-    "all_given_seq_design":false
+    "benchmarks":[true]
   },
 
 
