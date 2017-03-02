@@ -5,11 +5,12 @@ import os
 
 #Cancel jobs for slurm (scancel)
 
-if len(sys.argv) != 3:
+if len(sys.argv) < 3:
     print "Use: canceljobs.py start end"
+    sys.exit()
 if sys.argv[1] == "--help":
     print "Use: canceljobs.py start end"
-
+    sys.exit()
 
 for i in range(int(sys.argv[1]), int(sys.argv[2]) + 1):
     cmd = 'scancel '+repr(i)
