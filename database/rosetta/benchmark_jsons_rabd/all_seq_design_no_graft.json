@@ -1,0 +1,108 @@
+{ "exp": "all_seq_design",
+  "nstruct":100,
+  "dataset": {
+    "benchmarks":[
+      "bm2_ten"
+    ],
+    "use_for_prefix":false,
+    "use_for_outdir":false
+  },
+  "input_pdb_type": {
+    "benchmarks":[
+      "pareto"
+    ]
+  },
+  "remove_antigen":{
+    "rosetta_option":"-remove_antigen",
+    "benchmarks":[
+      false,
+      true
+    ]
+  },
+  "protocol":{
+    "rosetta_option":"-design_protocol",
+    "benchmarks":[
+      "even_cluster_mc"
+    ]
+  },
+  "outer_cycles":{
+    "rosetta_option":"-outer_cycle_rounds",
+    "benchmarks":[
+      1
+    ]
+  },
+  "inner_cycles":{
+    "rosetta_option":"-inner_cycle_rounds",
+    "benchmarks":[
+      1
+    ]
+  },
+  "randomize":{
+    "rosetta_option":"-random_start",
+    "benchmarks":[
+      false
+    ]
+  },
+  "dock":{
+    "rosetta_option":"-do_dock",
+    "benchmarks":[
+      false
+    ]
+  },
+
+  "paper_db":{
+    "rosetta_option":"-paper_ab_db",
+    "benchmarks":[
+      true
+    ]
+  },
+  "l_chain": {
+    "rosetta_option":"-light_chain",
+    "benchmarks": [
+      "lambda",
+      "kappa"
+    ],
+    "use_for_prefix":false,
+    "use_for_outdir":false
+  },
+
+  "mintype": {
+    "benchmarks": [
+      "min",
+      "relax"
+    ]
+  },
+
+  "base_cdr_instruction_lines":[
+    "DE FIX",
+
+    "H3 SeqDesign STRATEGY CONSERVATIVE",
+
+    "L1 MinProtocol Min_Neighbors L2 L3",
+    "L2 MinProtocol Min_Neighbors L1",
+    "L3 MinProtocol Min_Neighbors L1 H3",
+
+    "H1 MinProtocol Min_Neighbors H2 H3",
+    "H2 MinProtocol Min_Neighbors H1",
+    "H3 MinProtocol Min_Neighbors L1 L3"
+
+  ],
+
+  "separate_cdrs":{
+    "benchmarks":[true]
+  },
+
+
+  "graft_design_cdrs":[],
+  "seq_design_cdrs":["L1","L2","L3","H1","H2","H3"],
+
+  "in_paths": [{
+    "paths": [
+      "bm2_instructions",
+      "bm2_flags"
+    ]
+  }],
+  "flags":[
+    "-add_graft_log_to_pdb"
+  ]
+}
