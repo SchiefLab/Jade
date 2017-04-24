@@ -1,4 +1,4 @@
-{ "exp": "all_seq_design",
+{ "exp": "all_seq_design_basic",
   "nstruct":100,
   "dataset": {
     "benchmarks":[
