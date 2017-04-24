@@ -59,10 +59,13 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
 
         separate_cdrs = benchmark_options[benchmark_names.index("separate_cdrs")]
 
-        #Special case for mintype - switch to two if set to 1:
+        #Special case for mintype - We now do this within code itself!
+        '''
         if benchmark_options[benchmark_names.index("mintype")] != "relax":
             if benchmark_options[benchmark_names.index("inner_cycles")] == 1:
                 benchmark_options[benchmark_names.index("inner_cycles")] = 2
+        '''
+
 
         if separate_cdrs:
             for cdr in self._get_designable_cdrs():
