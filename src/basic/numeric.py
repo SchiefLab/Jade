@@ -2,6 +2,29 @@ import math
 import numpy
 import sys
 
+def wrapto360(angle):
+    """
+    Wrap a value on -180, 180 to 360.
+
+    :param degrees: float
+    :return: float
+    """
+    if angle >= 0:
+        return angle
+    else:
+        return 360 + angle
+
+def geometric_mean(data):
+    """
+    Get the geometric mean of the data.
+    Useful for numbers that go from 0 -> and are a type of enrichment of the data.
+
+    :param data: numpy.Array
+    :return: float
+    """
+    logs = numpy.log(data)
+    return math.exp(logs.mean())
+
 def distance_numpy(array1, array2):
     """
     Get the distance between two points

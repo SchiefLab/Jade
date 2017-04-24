@@ -5,7 +5,9 @@ import sys
 from argparse import ArgumentParser
 
 from rosetta import *
-rosetta.init("-include_sugars -read_pdb_link_records -ignore_unrecognized_res -ignore_zero_occupancy false")
+from pyrosetta import *
+
+init("-include_sugars -ignore_unrecognized_res -ignore_zero_occupancy false")
 
 
 parser = ArgumentParser("Simple app to scan a PDB file and print PDB info and Rosetta understood chains and resnums.")

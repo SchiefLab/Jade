@@ -418,6 +418,7 @@ def calculate_recovery_and_risk_ratios(top_recovery_df, observed_df):
     df = pandas.merge(top_recovery_df, observed_df, how="outer")
 
     for rtype in ["length", "cluster"]:
+
         df[rtype+'_recovery'] = (df[rtype+'_recovery_freq']/df['total_entries'].astype('float'))
         df[rtype+'_rr'] = df[rtype+'_recovery']/(df['native_'+rtype+'s_observed']/df['total_grafts'].astype('float'))
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 import sys
 import pandas
@@ -73,10 +72,17 @@ class GetNNKData(object):
 
         return (top_freq/bot_freq).as_matrix().flatten()
 
-def load_data(data_dir, data_type):
+    def get_2D_data_freq_nnk_data(self, antigen = "C5-SOSIP", sort = "S1"):
+        top_freq = self.get_nnk_data('freqTopPerPosition', antigen=antigen, sort=sort)
+        bot_freq = self.get_nnk_data('freqBotPerPosition', antigen=antigen, sort=sort)
+        return top_freq/bot_freq
+
+def load_1d_data(data_dir, data_type):
     """
     Here, this is a test bed for SVM and simple neural networks
     No recurrent Neural nets or anything fancy.  Will have to try that next.
+
+    The 1D data is so that the residuetypes all line up in the SVM.
     :param data_dir:
     :return:
     """
@@ -96,6 +102,54 @@ def load_data(data_dir, data_type):
                 continue
 
     return loaded_data
+
+def load_2d_data(data_dir, data_type):
+    """
+    Load a representation of the 2D data with res and position.
+
+    :param data_dir:
+    :return:
+    """
+    loaded_data = defaultdict(dict)
+
+    #Germline
+    data_loader = GetNNKData(data_dir, data_type)
+
+    for antigen in data_loader.antigens:
+        for sort in sorts:
+            print "Loading mature data for: "+antigen+" : "+sort
+            try:
+                loaded_data[sort][antigen] = data_loader.get_2D_data_freq_nnk_data(antigen, sort)
+            except IOError:
+                print "Data does not exist for. "+antigen+" : "+sort
+                print "Continueing"
+                continue
+
+    return loaded_data
+
+def write_raw_sorts(data, outdir, outname = "raw_enrichments.csv", antigen = 'GT81'):
+    """
+    Write the data as columns, S1, S2, S3 for easy import into matlab.
+
+    :param data:
+    :param outdir:
+    :param outname:
+    :param antigen:
+    :return:
+    """
+    out = outdir + "/"+outname
+    OUTFILE = open(out, 'w')
+    OUTFILE.write("S1\tS2\tS3\n")
+
+    for i in range(0, len(data['S1'][antigen])):
+        line = ""
+        for sort in sorts:
+            line = line + repr(data[sort][antigen][i]) + "\t"
+        line = line.strip()
+        OUTFILE.write(line + "\n")
+    OUTFILE.close()
+    print "Done"
+
 
 if __name__ == "__main__":
 

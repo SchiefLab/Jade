@@ -45,6 +45,28 @@ class GeneralPandasDataFrame(pd.DataFrame):
 
         return self[self[column1] == to_match][column2]
 
+    def n_matches(self, column, to_match):
+        """
+        Return the number of matches.
+        :param column: str
+        :param to_match: str
+        :rtype: int
+        """
+        return len(get_matches(column, to_match))
+
+    def to_tsv(self, path_or_buf=None, na_rep='', float_format=None,
+               columns=None, header=True, index=True, index_label=None,
+               mode='w', encoding=None, compression=None, quoting=None,
+               quotechar='"', line_terminator='\n', chunksize=None,
+               tupleize_cols=False, date_format=None, doublequote=True,
+               escapechar=None, decimal='.'):
+        self.to_csv(sep = "\t", path_or_buf=path_or_buf, na_rep=na_rep, float_format=float_format,
+               columns=columns, header=header, index=index, index_label=index_label,
+               mode=mode, encoding=encoding, compression=compression, quoting=quoting,
+               quotechar=quotechar, line_terminator=line_terminator, chunksize=chunksize,
+               tupleize_cols=tupleize_cols, date_format=date_format, doublequote=doublequote,
+               escapechar=escapechar, decimal=decimal)
+
 def multi_tab_excel(df_list, sheet_list, file_name):
     """
     Writes multiple dataframes as separate sheets in an output excel file.
@@ -160,3 +182,13 @@ def get_value(df, column):
     :return: value
     """
     return df.iloc[0][column]
+
+def get_n_matches(df, column, to_match):
+    """
+    Get the number of matches
+    :param df: pandas.DataFrame
+    :param column: str
+    :param to_match:
+    :rtype: int 
+    """
+    return len(get_matches(df, column, to_match))

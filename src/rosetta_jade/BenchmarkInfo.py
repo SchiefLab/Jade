@@ -110,11 +110,15 @@ def get_run_settings(dir, fname="RUN_SETTINGS.txt"):
     :param dir: str
     :rtype: defaultdict
     """
+
+    fpath = dir+"/"+fname
+    print "attempting to open "+fpath
     settings = defaultdict()
-    if not os.path.exists(fname):
+    if not os.path.exists(fpath):
+        print fpath+" does not exist"
         return settings
 
-    FILE = open(dir+"/"+fname)
+    FILE = open(fpath)
     for line in FILE:
         line = line.strip()
         if not line or line.startswith("#"): continue
