@@ -1,27 +1,22 @@
 #!/usr/bin/env python
 
-import numpy as np
-import os
-import sys
-import pandas
 import glob
+import os
 from collections import defaultdict
 
-import machine_learning.util as ml_util
+import pandas
 
-
-
-sorts=['S1','S2','S3']
-data_types = ["glCHA31", "matCHA31", "matVRC01", "minVRC01"]
+_sorts_=['S1','S2','S3']
+_ab_types_ = ["glCHA31", "matCHA31", "matVRC01", "minVRC01"]
 
 class GetNNKData(object):
     """
     Get NNK Data as a formatted tupple of 1d data (Or raw Pandas DF)
     """
-    def __init__(self, data_dir, ab_class="glCHA31" ):
+    def __init__(self, data_dir, ab_group="glCHA31" ):
         self.data_dir = data_dir
-        self.class_dir = data_dir+"/"+ab_class
-        self.ab_class = ab_class
+        self.class_dir = data_dir+"/"+ab_group
+        self.ab_group = ab_group
         self.data_types = self.__get_all_data_types()
         self.antigens = self.__get_all_antigens()
         print "Antigens: "+repr(self.antigens)
@@ -42,25 +37,29 @@ class GetNNKData(object):
         return self.__get_unique_data_groups(2)
 
     def __get_all_data_types(self):
+        """
+        Get all the data types within an antibody group directory, such as freqTopPerPosition.
+        :rtype: []
+        """
         return self.__get_unique_data_groups(0)
 
-    def get_nnk_data(self, dt, antigen="C5-SOSIP", sort="S1"):
+    def get_nnk_data(self, dt="freqTopPerPosition", antigen="C5-SOSIP", sort="S1"):
         """
         Get pandas dataframe of NNK data.
         """
         if not dt in self.data_types:
-            print "datatype not understood"
+            print "dt not understood"
             print "Available datatypes: "+repr(self.data_types)
 
-        if not sort in sorts:
+        if not sort in _sorts_:
             print "sort not understood"
 
         if not antigen in self.antigens:
             print "antigens not understood"
 
-        filename=self.class_dir+"/"+"_".join([dt, self.ab_class, antigen, sort, "top5"])+".csv"
+        filename=self.class_dir+"/"+"_".join([dt, self.ab_group, antigen, sort, "top5"])+".csv"
         if not os.path.exists(filename):
-            filename = self.class_dir+"/"+"_".join([dt, self.ab_class, antigen, sort])+".csv"
+            filename = self.class_dir+"/"+"_".join([dt, self.ab_group, antigen, sort])+".csv"
         df = pandas.read_csv(filename)
         df.columns = df.columns.str.replace('Unnamed: 0','ResType')
         df = df.set_index('ResType')
@@ -73,6 +72,12 @@ class GetNNKData(object):
         return (top_freq/bot_freq).as_matrix().flatten()
 
     def get_2D_data_freq_nnk_data(self, antigen = "C5-SOSIP", sort = "S1"):
+        """
+        Return a dataframe with ResType as index and resnum as columns.
+        :param antigen:
+        :param sort:
+        :rtype: pandas.DataFrame
+        """
         top_freq = self.get_nnk_data('freqTopPerPosition', antigen=antigen, sort=sort)
         bot_freq = self.get_nnk_data('freqBotPerPosition', antigen=antigen, sort=sort)
         return top_freq/bot_freq
@@ -92,7 +97,7 @@ def load_1d_data(data_dir, data_type):
     data_loader = GetNNKData(data_dir, data_type)
 
     for antigen in data_loader.antigens:
-        for sort in sorts:
+        for sort in _sorts_:
             print "Loading mature data for: "+antigen+" : "+sort
             try:
                 loaded_data[sort][antigen] = data_loader.get_1d_data_tuple_freq_nnk_data(antigen, sort)
@@ -116,7 +121,7 @@ def load_2d_data(data_dir, data_type):
     data_loader = GetNNKData(data_dir, data_type)
 
     for antigen in data_loader.antigens:
-        for sort in sorts:
+        for sort in _sorts_:
             print "Loading mature data for: "+antigen+" : "+sort
             try:
                 loaded_data[sort][antigen] = data_loader.get_2D_data_freq_nnk_data(antigen, sort)
@@ -143,7 +148,7 @@ def write_raw_sorts(data, outdir, outname = "raw_enrichments.csv", antigen = 'GT
 
     for i in range(0, len(data['S1'][antigen])):
         line = ""
-        for sort in sorts:
+        for sort in _sorts_:
             line = line + repr(data[sort][antigen][i]) + "\t"
         line = line.strip()
         OUTFILE.write(line + "\n")
@@ -155,6 +160,6 @@ if __name__ == "__main__":
 
     data_dir = "/Users/jadolfbr/Documents/projects/nnk_data"
 
-    germline_cha31_data = load_data(data_dir, data_types[0])
-    mature_ch131_data = load_data(data_dir, data_types[1])
+    germline_cha31_data = load_data(data_dir, _ab_types_[0])
+    mature_ch131_data = load_data(data_dir, _ab_types_[1])
 

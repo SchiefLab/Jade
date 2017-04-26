@@ -77,6 +77,9 @@ def get_rosetta_json_run_path():
 def get_rosetta_features_json_path():
     return get_database_path()+"/rosetta/features"
 
+def get_nnk_database_path():
+    return get_database_path()+"/nnk"
+
 ###########################################################################
 
 
