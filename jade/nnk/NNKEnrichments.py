@@ -10,12 +10,23 @@ class NNKEnrichments(object):
     """
     Simple class that holds all the enrichment data for a particular class, antibody, and antigen.
     """
-    def __init__(self, data_dir, class_type = 'VRC01', antibody = 'glVRC01', antigen = 'GT81', sort = 'S1'):
+    def __init__(self, data_dir, zeros = -2.0, class_type = 'VRC01', antibody = 'glVRC01', antigen = 'GT81', sort = 'S1'):
+        """
+
+        :param data_dir: the directory with sort data. Each set of data + antibody should be in a separate directory (Ex: glCHA31, et.c)
+        :param zeros: The number we use when enrichment of top/bottom gate is zero.  This is the log(enrichment). -2.0 corresponds to an enrichment of about .08.
+        :param class_type:
+        :param antibody:
+        :param antigen:
+        :param sort:
+        """
 
         data_loader = NNKAbMaturation.GetNNKData(data_dir, antibody)
 
         self.df = data_loader.get_2D_data_freq_nnk_data(antigen=antigen, sort=sort)
         self.df = self.df.applymap(numpy.log)
+        self.df = self.df.replace(numpy.NINF, float(zeros))
+
         if not isinstance(self.df, pandas.DataFrame): sys.exit()
 
         self.data_1D = data_loader.get_1d_data_tuple_freq_nnk_data(antigen=antigen, sort=sort)

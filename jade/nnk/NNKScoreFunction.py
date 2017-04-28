@@ -61,7 +61,7 @@ class AntibodyNNKScoreFunction(object):
         if not isinstance(res_info, PDBResInfo): sys.exit()
 
         for i in range(1, res_info.total_residue() + 1):
-            tup = res_info.get_residue(i).tuple()
+            tup = (res_info.get_residue(i).tuple())
             res = res_info.get_residue(i)
             if not self.template_index.index.has_key(tup):
                 continue

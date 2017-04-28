@@ -7,6 +7,7 @@ from jade.nnk.NNKEnrichments import NNKEnrichments
 from jade.nnk.NNKScoreFunction import AntibodyNNKScoreFunction
 from jade.nnk.NNKAbMaturation import GetNNKData
 from jade.basic.sequence import fasta
+from jade.basic import general
 
 NNKSortIndex = namedtuple('NNKSortIndex', 'antibody antigen sort')
 _sorts_ = ['S1', 'S2', 'S3']
@@ -22,7 +23,8 @@ if __name__ == "__main__":
     parser.add_argument('--mat_antigens', '-m',                           help = "A list of mature antigens to use.  We will report both score as the means and them split.")
     parser.add_argument('--input', '-s',                                  help = "A fasta or PDB file")
     parser.add_argument('--input_seq_list', '-l',                         help = "A file with the ID in column 1 and the sequence in column 2. Space or tab delimited.  Header must have comments. Sequence can have '-' in them. ")
-
+    parser.add_argument('--zeros', '-z', default = -2,                    help = "The number to use for any zero top game enrichment.  Too high, and you may penalize these too much.  Too low, and they won't hold their weight. "
+                                                                                 "-2 represents an erichment of .11; -2.5 at .08, and -3.0 at about .05.  -2 is about the last standard deviation in the erichment curve that resembles a gaussian.")
     options = parser.parse_args()
 
 
@@ -89,7 +91,7 @@ if __name__ == "__main__":
     for sort in _sorts_:
         es = []
         for antibody in options.abs:
-            enrichments = NNKEnrichments(options.nnk_dir, 'VRC01', 'gl'+antibody, options.gl_antigen, sort)
+            enrichments = NNKEnrichments(options.nnk_dir, options.zeros, 'VRC01', 'gl'+antibody, options.gl_antigen, sort)
             score = AntibodyNNKScoreFunction([enrichments], index)
             sort_index = NNKSortIndex('gl'+antibody, options.gl_antigen, sort)
 
@@ -113,7 +115,7 @@ if __name__ == "__main__":
             for antigen in antigen_dict[antibody]:
 
                 sort_index = NNKSortIndex('mat'+antibody, antigen, sort)
-                enrichments = NNKEnrichments(options.nnk_dir, 'VRC01', 'mat'+antibody, antigen, sort)
+                enrichments = NNKEnrichments(options.nnk_dir, options.zeros, 'VRC01', 'mat'+antibody, antigen, sort)
 
                 score = AntibodyNNKScoreFunction([enrichments], index)
                 mat_scoring_functions[sort_index] = score
@@ -129,9 +131,9 @@ if __name__ == "__main__":
         if len(options.abs) > 1:
             all = []
             for antigen in combined_mature_antigens:
-                es []
+                es = []
                 for antibody in options.ab:
-                    enrichments = NNKEnrichments(options.nnk_dir, 'VRC01', 'mat'+antibody, antigen, sort)
+                    enrichments = NNKEnrichments(options.nnk_dir, options.zeros, 'VRC01', 'mat'+antibody, antigen, sort)
                     es.append(enrichments)
 
                 score = AntibodyNNKScoreFunction(es, index)
@@ -144,20 +146,27 @@ if __name__ == "__main__":
 
 
     #For now, this is default HEAVY as we have none with LIGHT chains
-    SCOREOUT = open(options.out_dir+'/'+base_name+'_scores.tsv')
-    SCOREOUT.write("#\tid\tantibody\tantigen\tsort\n")
+    SCOREOUT = open(options.out_dir+'/'+base_name+'_scores.tsv', 'w')
+    SCOREOUT.write("#zeros\tid\tantibody\tantigen\tsort\tscore\n")
 
+    GROUPS = open(options.out_dir+'/'+'score_function_info.tsv', 'w')
+    GROUPS.write('#zeros\tantibody\tantigen\tsort\tmin\tmin_sequence\tmax\tmax_sequence\n')
+
+    all_scoring_functions = general.merge_dicts(gl_scoring_functions, mat_scoring_functions)
     test_data = TestAbNNKIndex(options.input)
     for classified_ab in test_data.classified_list():
         id = classified_ab.ig_chain.id
         print id
-        for score_index, score in gl_scoring_functions.iteritems():
+        for score_index, score in all_scoring_functions.iteritems():
 
             s = score.relative_score_classified_ab(classified_ab)
-            out = "\t".join([id, score_index.antibody, score_index.antigen, score_index.sort, "%.3f" % s])
+            out = "\t".join([str(options.zeros), id, score_index.antibody, score_index.antigen, score_index.sort, "%.3f" % s])
             print out
             SCOREOUT.write(out+"\n")
 
+            out2 = [str(options.zeros), score_index.antibody, score_index.antigen, score_index.sort, score.min_score, score.min_squence, score.max_score, score.max_sequence]
+            GROUPS.write("\t".join(out2)+"\n")
     SCOREOUT.close()
+    GROUPS.close()
     print "Done"
 

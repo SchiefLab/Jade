@@ -3,6 +3,18 @@ import itertools
 import re
 import datetime
 
+def merge_dicts(*dict_args):
+    """
+    Given any number of dicts, shallow copy and merge into a new dict,
+    precedence goes to key value pairs in latter dicts.
+    (Pre-Python 3.5)
+    (http://stackoverflow.com/questions/38987/how-to-merge-two-python-dictionaries-in-a-single-expression)
+    """
+    result = {}
+    for dictionary in dict_args:
+        result.update(dictionary)
+    return result
+
 
 def get_rosetta_program(program, mpi = True, compiler = 'gcc'):
     """
