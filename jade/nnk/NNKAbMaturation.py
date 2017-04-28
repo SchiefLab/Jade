@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-import glob
-import os
+import os, re, glob
 from collections import defaultdict
 
 import pandas
@@ -57,13 +56,22 @@ class GetNNKData(object):
         if not antigen in self.antigens:
             print "antigens not understood"
 
-        filename=self.class_dir+"/"+"_".join([dt, self.ab_group, antigen, sort, "top5"])+".csv"
-        if not os.path.exists(filename):
-            filename = self.class_dir+"/"+"_".join([dt, self.ab_group, antigen, sort])+".csv"
-        df = pandas.read_csv(filename)
-        df.columns = df.columns.str.replace('Unnamed: 0','ResType')
-        df = df.set_index('ResType')
-        return df
+        filename=self.class_dir+"/"+"_".join([dt, self.ab_group, antigen, sort, ".*"])+".csv"
+        #if not os.path.exists(filename):
+        #    filename = self.class_dir+"/"+"_".join([dt, self.ab_group, antigen, sort])+".csv"
+
+        filenames = glob.glob(self.class_dir+"/*.csv")
+        for f in filenames:
+            if re.search(filename, f):
+                df = pandas.read_csv(f)
+
+                print "Loading "+f
+                df.columns = df.columns.str.replace('Unnamed: 0','ResType')
+                df = df.set_index('ResType')
+                return df
+
+        raise IOError("Could not find filename!")
+
 
     def get_1d_data_tuple_freq_nnk_data(self, antigen = "C5-SOSIP", sort = "S1"):
         top_freq = self.get_nnk_data('freqTopPerPosition', antigen=antigen, sort=sort)
@@ -157,9 +165,8 @@ def write_raw_sorts(data, outdir, outname = "raw_enrichments.csv", antigen = 'GT
 
 
 if __name__ == "__main__":
+    data_dir = "/Users/jadolfbr/Documents/projects/nnk_data/sort_data"
 
-    data_dir = "/Users/jadolfbr/Documents/projects/nnk_data"
-
-    germline_cha31_data = load_data(data_dir, _ab_types_[0])
-    mature_ch131_data = load_data(data_dir, _ab_types_[1])
-
+    data_loader = GetNNKData(data_dir, 'glCHA31')
+    d = data_loader.get_nnk_data('relativeGateEnrichment', '.*', 'S1')
+    print d.tail()

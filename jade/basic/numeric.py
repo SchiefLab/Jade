@@ -2,6 +2,17 @@ import math
 import numpy
 import sys
 
+def linear_rescale(min, max, value):
+    """
+    Linearly rescale a value to 0 and 1 using the min and max values.
+    :param min:
+    :param max:
+    :param value:
+    :rtype: float
+    """
+    x = (value - min)/(max - min)
+    return x
+
 def wrapto360(angle):
     """
     Wrap a value on -180, 180 to 360.
