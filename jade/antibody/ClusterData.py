@@ -1,5 +1,5 @@
 from antibody import ab_db
-import Structure
+import jade.basic.structure.Structure as Structure
 import os
 import sys
 import sqlite3
@@ -12,7 +12,7 @@ class Data:
         self.ab_db = ab_db
         self.cdr_dir = cdr_dir
         self.limit_to_known = limit_to_known
-        self.ab_struct = Structure.Antibody_Structure()
+        self.ab_struct = Structure.AntibodyStructure()
         self.res_cutoff = 2.8
         self.rfac_cutoff = .3
 
@@ -34,7 +34,7 @@ class CDRData(Data):
     def load_data(self, extra_sele = []):
         self.data = defaultdict(CDRLengths)
 
-        for cdr in self.ab_struct.CDRS:
+        for cdr in self.ab_struct.cdrs:
             lengths = CDRLengths(self.ab_db, self.cdr_dir, self.limit_to_known)
             lengths.load_data(cdr.name, extra_sele)
             self.data[cdr.name] = lengths

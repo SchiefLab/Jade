@@ -2,7 +2,7 @@
 
 import sys
 
-from basic.RestypeDefinitions import RestypeDefinitions
+from jade.basic.RestypeDefinitions import RestypeDefinitions
 
 
 class SequenceStats:

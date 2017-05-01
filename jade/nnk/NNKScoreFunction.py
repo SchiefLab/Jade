@@ -125,14 +125,12 @@ class AntibodyNNKScoreFunction(object):
 
     def __calculate_min_max(self):
 
-        s = len(self.template_index.get_seq_up_to_h3())
-
         self.min_score = 0; self.max_score = 0
-        self.min_sequence = ""; self.max_sequence = 0
+        self.min_sequence = ""; self.max_sequence = ""
 
-        for i in range(1, s+1):
-            min_sc, min_seq = self.enrich.min(i)
-            max_sc, max_seq = self.enrich.max(i)
+        for pdb_res, position in self.template_index.index.iteritems():
+            min_sc, min_seq = self.enrich.min(position)
+            max_sc, max_seq = self.enrich.max(position)
 
             self.min_score += min_sc; self.max_score += max_sc
 

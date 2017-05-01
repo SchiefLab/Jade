@@ -1,7 +1,7 @@
 import json, os, sys
 
-import rosetta_jade.BenchmarkInfo as rosetta_bms
-from basic.path import get_decoy_name
+import jade.rosetta_jade.BenchmarkInfo as rosetta_bms
+from jade.basic.path import get_decoy_name
 
 
 class AnalysisInfo:

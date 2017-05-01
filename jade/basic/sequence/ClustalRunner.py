@@ -1,7 +1,7 @@
 import os
 import sys
 import multiprocessing
-from basic.threading.Threader import *
+from jade.basic.threading.Threader import *
 
 class ClustalRunner:
     """

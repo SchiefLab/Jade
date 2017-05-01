@@ -6,7 +6,7 @@
 import sys
 import os
 
-from basic.structure.BasicPose import *
+from jade.basic.structure.BasicPose import *
 from argparse import ArgumentParser
 
 def reorder_and_save_chains(in_path, out_path, remove_het = False):

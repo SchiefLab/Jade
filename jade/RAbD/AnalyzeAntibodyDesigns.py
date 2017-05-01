@@ -4,18 +4,18 @@ import pandas
 
 
 # PyIgD
-from pymol_jade.PyMolScriptWriter import *
-from antibody.cdr_data.CDRDataTypes import *
-from antibody.decoy_data.DecoyDataTypes import *
-from basic.sequence import fasta
-from basic.filters.DataFilters import *
-from basic.filters.FilterSettings import *
-from basic.threading.Threader import *
-from basic.pandas import PandasDataFrame
-from RAbD_BM.AnalysisInfo import *
+from jade.pymol_jade.PyMolScriptWriter import *
+from jade.antibody.cdr_data.CDRDataTypes import *
+from jade.antibody.decoy_data.DecoyDataTypes import *
+from jade.basic.sequence import fasta
+from jade.basic.filters.DataFilters import *
+from jade.basic.filters.FilterSettings import *
+from jade.basic.threading.Threader import *
+from jade.basic.pandas import PandasDataFrame
+from jade.RAbD_BM.AnalysisInfo import *
 
 # Rosetta Tools
-import rosetta_jade.FeaturesJsonCreator as json_creator
+import jade.rosetta_jade.FeaturesJsonCreator as json_creator
 
 
 class CompareAntibodyDesignStrategies:

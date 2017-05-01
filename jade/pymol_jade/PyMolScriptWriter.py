@@ -4,11 +4,11 @@
 import sys
 from collections import defaultdict
 
-from basic.path import *
-from basic.threading.Threader import Threader
-from basic.structure import Structure
-from basic.path import *
-from antibody import util as ab_util
+from jade.basic.path import *
+from jade.basic.threading.Threader import Threader
+from jade.basic.structure import Structure
+from jade.basic.path import *
+from jade.antibody import util as ab_util
 
 
 class PyMolScriptWriter:

@@ -1,6 +1,6 @@
 import sys
 
-from basic.structure import Structure
+from jade.basic.structure import Structure
 
 
 def get_overhang_sele(pymol_writer, cdr, overhang =3):

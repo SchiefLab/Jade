@@ -4,11 +4,11 @@ import math
 import sys
 from collections import defaultdict
 
-from basic import path
-from basic.structure.BioPose import BioPose
-from basic.RestypeDefinitions import RestypeDefinitions
+from jade.basic import path
+from jade.basic.structure.BioPose import BioPose
+from jade.basic.RestypeDefinitions import RestypeDefinitions
 
-from basic.structure.Structure import AntibodyStructure
+from jade.basic.structure.Structure import AntibodyStructure
 
 class CDRClusterer:
     """

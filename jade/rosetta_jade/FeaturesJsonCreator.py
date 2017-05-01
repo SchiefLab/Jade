@@ -10,8 +10,8 @@ import json
 import shutil
 from collections import defaultdict
 
-from basic.path import *
-from basic.threading.Threader import *
+from jade.basic.path import *
+from jade.basic.threading.Threader import *
 
 ########################################################################################################################
 ####### Class based implementation

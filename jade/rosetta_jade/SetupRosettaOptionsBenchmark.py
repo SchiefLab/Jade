@@ -1,6 +1,6 @@
 import os
 import sys
-from rosetta_jade.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
+from jade.rosetta_jade.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
 
 
 

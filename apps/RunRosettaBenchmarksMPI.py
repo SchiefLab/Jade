@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from rosetta_jade.RunRosettaBenchmarks import *
+from jade.rosetta_jade.RunRosettaBenchmarks import *
 
 
 ##Main to RunRosetta.

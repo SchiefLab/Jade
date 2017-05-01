@@ -6,7 +6,7 @@
 #I am just really sick of doing this by hand.
 #Example Cmd-line:  python create_features_json.py --database databases/baseline_comparison.txt --scripts cluster
 
-from rosetta_jade.FeaturesJsonCreator import *
+from jade.rosetta_jade.FeaturesJsonCreator import *
 from argparse import ArgumentParser
 
 if __name__ == "__main__":

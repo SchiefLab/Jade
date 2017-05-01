@@ -1,4 +1,4 @@
-from basic.filters.DataFilter import DataFilter
+from jade.basic.filters.DataFilter import DataFilter
 
 class TotalScoreCutoffFilter(DataFilter):
     """

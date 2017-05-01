@@ -1,10 +1,10 @@
 import sys
 from collections import defaultdict
 
-from basic.structure.Structure import ResidueRecord
-from basic.structure.Structure import ResidueRegion
-from basic.structure.Structure import PDBInfo
-from basic.RestypeDefinitions import RestypeDefinitions
+from jade.basic.structure.Structure import ResidueRecord
+from jade.basic.structure.Structure import ResidueRegion
+from jade.basic.structure.Structure import PDBInfo
+from jade.basic.RestypeDefinitions import RestypeDefinitions
 import fasta
 
 

@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 import glob
 import re
 
-from pymol_jade.PyMolScriptWriter import PyMolScriptWriter
+from jade.pymol_jade.PyMolScriptWriter import PyMolScriptWriter
 
 
 if __name__ == "__main__":

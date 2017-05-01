@@ -3,7 +3,7 @@ import os
 import sys
 import re
 import argparse
-from basic.path import *
+from jade.basic.path import *
 
 
 class SetupRosettaOptionsGeneral(object):

@@ -3,8 +3,8 @@ import pandas
 import matplotlib as mpl
 import numpy
 
-from basic.pandas.stats import calculate_stddev_binomial_distribution
-from basic.pandas.stats import calculate_stddev
+from jade.basic.pandas.stats import calculate_stddev_binomial_distribution
+from jade.basic.pandas.stats import calculate_stddev
 
 
 

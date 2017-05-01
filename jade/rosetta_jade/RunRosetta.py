@@ -9,9 +9,9 @@ import os
 import sys
 from collections import defaultdict
 import argparse
-from basic.general import get_platform
-from basic.path import *
-from basic.general import fix_input_args
+from jade.basic.general import get_platform
+from jade.basic.path import *
+from jade.basic.general import fix_input_args
 
 from rosetta_jade.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
 

@@ -3,11 +3,10 @@
 import random
 from collections import defaultdict
 
-from rosetta.core.pose import get_chain_from_chain_id
 from weblogolib import *
 
-from basic.sequence.ClustalRunner import ClustalRunner
-from basic.structure.util import *
+from .ClustalRunner import ClustalRunner
+from jade.basic.structure.util import *
 
 
 ########  Fasta Input  ######
@@ -145,6 +144,8 @@ def chain_fasta_files_from_pose(pose, prefix, outdir):
     """
     Creates fasta for each chain in the pose.  Returns a list of paths for each fasta.
     """
+    from rosetta.core.pose import get_chain_from_chain_id
+
     if not os.path.exists(outdir):
         os.mkdir(outdir)
 

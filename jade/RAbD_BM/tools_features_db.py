@@ -4,8 +4,8 @@ import sqlite3
 import pandas
 from collections import defaultdict
 
-from RAbD_BM.AnalysisInfo import AnalysisInfo
-from RAbD_BM.AnalysisInfo import NativeInfo
+from jade.RAbD_BM.AnalysisInfo import AnalysisInfo
+from jade.RAbD_BM.AnalysisInfo import NativeInfo
 
 #Tools for the features database.
 

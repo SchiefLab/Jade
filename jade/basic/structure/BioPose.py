@@ -14,13 +14,13 @@ from Bio.PDB import MMCIFParser
 from Bio.PDB import calc_dihedral
 from Bio.PDB import Vector
 
-from basic.RestypeDefinitions import RestypeDefinitions
-from basic.structure.Structure import PDBInfo
-from basic.structure.Structure import ResidueRecord
-from basic.structure.util import peptide_bond_distance
-from basic.path import *
-from basic.numeric import *
-from utility import vector1
+from jade.basic.RestypeDefinitions import RestypeDefinitions
+from jade.basic.structure.Structure import PDBInfo
+from jade.basic.structure.Structure import ResidueRecord
+from jade.basic.structure.util import peptide_bond_distance
+from jade.basic.path import *
+from jade.basic.numeric import *
+from jade.utility import vector1
 
 
 class BioPose(object):

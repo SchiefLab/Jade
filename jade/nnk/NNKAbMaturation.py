@@ -20,6 +20,8 @@ class GetNNKData(object):
         self.antigens = self.__get_all_antigens()
         print "Antigens: "+repr(self.antigens)
 
+        self.df = None
+
     def reinit(self, ab_class):
         self.__init__(self.data_dir, ab_class)
 
@@ -56,7 +58,8 @@ class GetNNKData(object):
         if not antigen in self.antigens:
             print "antigens not understood"
 
-        filename=self.class_dir+"/"+"_".join([dt, self.ab_group, antigen, sort, ".*"])+".csv"
+        filename=self.class_dir+"/"+"_".join([dt, self.ab_group, antigen, sort])
+        filename = filename+".*.csv"
         #if not os.path.exists(filename):
         #    filename = self.class_dir+"/"+"_".join([dt, self.ab_group, antigen, sort])+".csv"
 
@@ -70,14 +73,18 @@ class GetNNKData(object):
                 df = df.set_index('ResType')
                 return df
 
-        raise IOError("Could not find filename!")
+        raise IOError("Could not find filename "+filename)
 
 
     def get_1d_data_tuple_freq_nnk_data(self, antigen = "C5-SOSIP", sort = "S1"):
-        top_freq = self.get_nnk_data('freqTopPerPosition', antigen=antigen, sort=sort)
-        bot_freq = self.get_nnk_data('freqBotPerPosition', antigen=antigen, sort=sort)
 
-        return (top_freq/bot_freq).as_matrix().flatten()
+        if not self.df.empty:
+            return self.df.as_matrix().flatten()
+        else:
+
+            top_freq = self.get_nnk_data('freqTopPerPosition', antigen=antigen, sort=sort)
+            bot_freq = self.get_nnk_data('freqBotPerPosition', antigen=antigen, sort=sort)
+            return (top_freq/bot_freq).as_matrix().flatten()
 
     def get_2D_data_freq_nnk_data(self, antigen = "C5-SOSIP", sort = "S1"):
         """
@@ -88,7 +95,9 @@ class GetNNKData(object):
         """
         top_freq = self.get_nnk_data('freqTopPerPosition', antigen=antigen, sort=sort)
         bot_freq = self.get_nnk_data('freqBotPerPosition', antigen=antigen, sort=sort)
-        return top_freq/bot_freq
+
+        self.df = top_freq/bot_freq
+        return self.df
 
 def load_1d_data(data_dir, data_type):
     """

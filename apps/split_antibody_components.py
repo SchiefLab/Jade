@@ -1,7 +1,7 @@
 # Author: Jared Adolf-Bryfogle
 # Description: Script for splitting AHO renumbered antibodies into FAB, Fv, Fc, and linker regions
 
-from antibody.split_structure import *
+from jade.antibody.split_structure import *
 from argparse import ArgumentParser
 
 

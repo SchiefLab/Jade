@@ -7,7 +7,7 @@ import os
 
 from argparse import ArgumentParser
 
-from basic import path
+from jade.basic import path
 
 
 

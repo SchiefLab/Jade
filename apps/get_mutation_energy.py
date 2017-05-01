@@ -14,7 +14,7 @@ import os
 import sys
 import time
 
-from basic.RestypeDefinitions import *
+from jade.basic.RestypeDefinitions import *
 
 
 

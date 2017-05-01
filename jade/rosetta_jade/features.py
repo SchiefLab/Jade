@@ -2,8 +2,8 @@ import os
 import sys
 import re
 
-from basic.general import *
-from basic.path import *
+from jade.basic.general import *
+from jade.basic.path import *
 
 
 

@@ -11,9 +11,9 @@
 # @author Jared Adolf-Bryfogle - Forking.
 
 from argparse import ArgumentParser
-from pymol_jade.PyMolScriptWriter import *
-from rosetta_jade.ScoreFiles import ScoreFile
-from basic.plotting.MakeFigure import *
+from jade.pymol_jade.PyMolScriptWriter import *
+from jade.rosetta_jade.ScoreFiles import ScoreFile
+from jade.basic.plotting.MakeFigure import *
 
 from shutil import copyfile
 

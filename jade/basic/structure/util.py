@@ -5,8 +5,8 @@ import gzip
 import Bio
 from Bio.PDB.PDBParser import PDBParser
 from Bio.PDB.Residue import Residue
-from basic.RestypeDefinitions import RestypeDefinitions
-from basic.numeric import *
+from jade.basic.RestypeDefinitions import RestypeDefinitions
+from jade.basic.numeric import *
 
 ### NOTE: All Utility function have been replaced by a Bio Structure wrapper: BioPose.
 ### Please see this new class for future developments!

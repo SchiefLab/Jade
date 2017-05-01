@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import sys, os
-from rosetta_jade.RunRosettaBenchmarks import RunRosettaBenchmarks
-from rosetta_jade.RunRosetta import RunRosetta
+from jade.rosetta_jade.RunRosettaBenchmarks import RunRosettaBenchmarks
+from jade.rosetta_jade.RunRosetta import RunRosetta
 
 from overrides import overrides
 

@@ -6,11 +6,11 @@ import pandas
 import ast
 import re
 
-from pymol_jade.PyMolScriptWriter import *
-from basic.pandas.PandasDataFrame import *
-from basic.plotting.MakeFigure import *
-from basic.path import *
-from utility.string_util import *
+from jade.pymol_jade.PyMolScriptWriter import *
+from jade.basic.pandas.PandasDataFrame import *
+from jade.basic.plotting.MakeFigure import *
+from jade.basic.path import *
+from jade.utility.string_util import *
 
 ##Original Author: Luki Goldschmidt <lugo@uw.edu>
 ##Forked by Jared Adolf-Bryfogle.

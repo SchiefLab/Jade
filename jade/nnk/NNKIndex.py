@@ -1,6 +1,6 @@
 import sys, re
 
-import basic.path
+import jade.basic.path
 from collections import defaultdict, namedtuple
 
 from pyigclassify.IgClassifyFASTA import IgClassifyFASTA
@@ -24,7 +24,7 @@ _chain_id_[_light_] = 'light'
 #Skip CDRs: List of CDRs
 #Skip Residues: List of Residue tuples to skip (pdb_res, chain, icode(' '))
 #Skip Residues Number: List of indexes.
-NumericalIndexOptions = namedtuple('NumericalIndexOptions', 'skip_cdrs skip_residues_tuple skip_residues_number')
+NumericalIndexOptions = namedtuple('NumericalIndexOptions', 'skip_cdrs skip_residues_tuple skip_residues_number include_only_regions')
 
 class TemplateAbNNKIndex(object):
     """
@@ -36,20 +36,21 @@ class TemplateAbNNKIndex(object):
 
         self.chainID = _chain_id_[data_type]
         self.class_ab_ = class_ab
-        self.chain, self.ab_index = self.__setup_from_class_directory(data_type)
+        self.chain, self.res_info= self.__setup_from_class_directory(data_type)
 
-        options = NumericalIndexOptions(['H3'], []) #Default indexing options
-        self.set_numerical_index_options(options)
+        opt = NumericalIndexOptions(['H3'], [], [],['FRAME', 'CDR']) #Default indexing options
+        self.set_numerical_index_options(opt)
 
         self.index = self.__setup_indexing()
+        #print repr(self.index)
 
-    def set_numerical_index_options(self, options):
+    def set_numerical_index_options(self, opt):
         """
         Set a namedtuple with specific options for indexing.  This tells us
         :type options: NumericalIndexOptions
         :return:
         """
-        self.index_options = options
+        self.index_options = opt
 
     def get_seq_up_to_h3(self):
         """
@@ -57,12 +58,12 @@ class TemplateAbNNKIndex(object):
         :return:
         """
 
-        if not isinstance(self.ab_index, PDBResInfo): sys.exit()
+        if not isinstance(self.res_info, PDBResInfo): sys.exit()
 
         s = []
-        for i in range(1, self.ab_index.total_residues() + 1 ):
-            if self.ab_index.get_residue(i).get_cdr_type() != 'H3':
-                s.append(self.ab_index.get_residue(i).get_aa())
+        for i in range(1, self.res_info.total_residues() + 1 ):
+            if self.res_info.get_residue(i).get_cdr_type() != 'H3':
+                s.append(self.res_info.get_residue(i).get_aa())
             else:
                 return s
 
@@ -75,45 +76,57 @@ class TemplateAbNNKIndex(object):
         :rtype: ClassifiedAb, PDBResInfo
         """
         germline_directory = defaultdict()
-        inpath = basic.path.get_nnk_database_path()
+        inpath = jade.basic.path.get_nnk_database_path()
+        print "Reading "+inpath+"/germline_sequences.txt"
         INFILE = open(inpath + "/germline_sequences.txt", 'r')
         for line in INFILE:
             line = line.strip()
             if not line or line[0] == '#': continue
 
             lineSP = line.split()
-
+            #print line
             germline_directory[lineSP[0]] = lineSP[1]
         INFILE.close()
 
-        inpath = germline_directory[self.class_ab_][chain_type]
-        classifier = IgClassifyFASTA(inpath)
-        chains = classifier.run()
+        fasta_path = inpath+"/"+germline_directory[self.class_ab_]
+        classifier = IgClassifyFASTA(fasta_path)
+        chains = classifier.run(write_data=True)
         chain = chains[0]
         if not isinstance(chain, ClassifiedAb): sys.exit()
 
-        ab_index = chain.get_pdb_res_info()
+        ab_index = chain.ab_chain.get_pdb_res_info()
 
+        print "Index Information:"
+        print str(chain.ig_chain)
+        #print chain.ab_chain.get_fasta_print()
 
         return chain, ab_index
 
     def __setup_indexing(self):
         index = defaultdict()
-        if not isinstance(self.ab_index, PDBResInfo): sys.exit()
+        if not isinstance(self.res_info, PDBResInfo): sys.exit()
 
-        for i in range(1, self.ab_index.total_residues() +1 ):
-            res = self.ab_index.get_residue(i)
+        print repr(self.res_info.total_residues())
+        for i in range(1, self.res_info.total_residues() +1 ):
+            res = self.res_info.get_residue(i)
             tup = res.tuple()
 
             if self.index_options.skip_cdrs and res.is_cdr() and res.get_cdr_type() in self.index_options.skip_cdrs:
+                print "Skipping "+res.get_cdr_type()+" From Indexing"
                 continue
             elif self.index_options.skip_residues_tuple and tup in self.index_options.skip_residues_tuple:
+                print "Skipping set skip: "+repr(tup)+" From Indexing"
                 continue
             elif self.index_options.skip_residues_number and i in self.index_options.skip_residues_number:
+                print "Skipping set resnum: "+repr(tup)+" From Indexing"
+                continue
+            elif self.index_options.include_only_regions and res.get_region() not in self.index_options.include_only_regions:
+                print "Skipping Non set region "+repr(tup)
                 continue
 
             index[tup] = i
-            return index
+
+        return index
 
 
 class TestAbNNKIndex(object):

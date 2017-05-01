@@ -6,11 +6,11 @@ import argparse
 import re
 from collections import defaultdict
 
-from basic import path
-from basic.structure import util
-from basic import general
-from basic.structure.Structure import AntibodyStructure
-from basic.structure.BioPose import BioPose
+from jade.basic import path
+from jade.basic.structure import util
+from jade.basic import general
+from jade.basic.structure.Structure import AntibodyStructure
+from jade.basic.structure.BioPose import BioPose
 
 begin_schief_order = """
 Scripps PO C426550C

@@ -30,7 +30,6 @@ class NNKEnrichments(object):
         if not isinstance(self.df, pandas.DataFrame): sys.exit()
 
         self.data_1D = data_loader.get_1d_data_tuple_freq_nnk_data(antigen=antigen, sort=sort)
-
     def max(self, position):
         """
 
@@ -41,7 +40,7 @@ class NNKEnrichments(object):
         """
 
         max_index = self.df[str(position)].idxmax()
-
+        #print repr(max_index)
         return self.value(position, max_index), max_index
 
     def min(self, position):
@@ -75,6 +74,8 @@ def combine_enrichments( list_of_nnk_enrichments):
     @type list_of_nnk_enrichments: [NNKEnrichments]
     :rtype: NNKEnrichments
     """
+    print "Len: "+repr(len(list_of_nnk_enrichments))
+
     if len(list_of_nnk_enrichments) == 1:
         return list_of_nnk_enrichments[0]
 
@@ -89,3 +90,4 @@ def combine_enrichments( list_of_nnk_enrichments):
     new_enrich.df = df_2D.groupby(level=0).mean()
 
     new_enrich.data_1D = numpy.mean(numpy.array(dfs_1D), axis = 0)
+    return new_enrich

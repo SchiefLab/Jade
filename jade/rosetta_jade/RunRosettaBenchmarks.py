@@ -9,10 +9,10 @@ import json
 import re
 from collections import defaultdict
 
-from rosetta_jade.SetupRosettaOptionsBenchmark import SetupRosettaOptionsBenchmark
-from rosetta_jade.RunRosetta import RunRosetta
-from basic import general
-from basic import path
+from jade.rosetta_jade.SetupRosettaOptionsBenchmark import SetupRosettaOptionsBenchmark
+from jade.rosetta_jade.RunRosetta import RunRosetta
+from jade.basic import general
+from jade.basic import path
 from overrides import overrides
 
 general.fix_input_args()

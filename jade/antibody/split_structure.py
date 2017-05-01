@@ -8,7 +8,7 @@ import os
 import glob
 import copy
 
-from basic.structure.BasicPose import BasicPose
+from jade.basic.structure.BasicPose import BasicPose
 from antibody import ab_db
 
 

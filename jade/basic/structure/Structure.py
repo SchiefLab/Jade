@@ -14,7 +14,8 @@
 import os
 import sys
 from collections import defaultdict
-from basic.RestypeDefinitions import RestypeDefinitions
+from jade.basic.RestypeDefinitions import RestypeDefinitions
+
 ### Global Values #####
 cdr_names = ["L1", "L2", "L3", "H1", "H2", "H3"]
 heavy_cdr_names = ["H1", "H2", "H3"]

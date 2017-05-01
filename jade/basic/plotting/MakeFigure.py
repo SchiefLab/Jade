@@ -2,7 +2,7 @@ from collections import defaultdict
 import os
 import sys
 
-from basic.pandas.PandasDataFrame import *
+from jade.basic.pandas.PandasDataFrame import *
 import seaborn.apionly as sea
 
 import pandas

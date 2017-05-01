@@ -1,10 +1,10 @@
 import pandas
 import sys,os,re, sqlite3, copy
-from RAbD_BM.AnalyzeRecovery import *
-from basic.pandas.PandasDataFrame import *
-from basic.pandas.stats import *
+from jade.RAbD_BM.AnalyzeRecovery import *
+from jade.basic.pandas.PandasDataFrame import *
+from jade.basic.pandas.stats import *
 import scipy
-import basic.plotting.MakeFigure as plotting
+import jade.basic.plotting.MakeFigure as plotting
 
 import matplotlib.pyplot as plt
 import seaborn.apionly as sea

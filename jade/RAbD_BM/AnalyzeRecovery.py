@@ -23,16 +23,16 @@ import glob
 
 import pandas
 
-import RAbD_BM.tools_ab_db as pyig_tools
-import RAbD_BM.tools_features_db as feat_tools
-from rosetta_jade.BenchmarkInfo import BenchmarkInfo
-from RAbD_BM.AnalysisInfo import AnalysisInfo
-from RAbD_BM.AnalysisInfo import NativeInfo
-from basic.structure.Structure import AntibodyStructure
-from basic.structure.Structure import cdr_names
-from basic.structure.Structure import heavy_cdr_names
+import jade.RAbD_BM.tools_ab_db as pyig_tools
+import jade.RAbD_BM.tools_features_db as feat_tools
+from jade.rosetta_jade.BenchmarkInfo import BenchmarkInfo
+from jade.RAbD_BM.AnalysisInfo import AnalysisInfo
+from jade.RAbD_BM.AnalysisInfo import NativeInfo
+from jade.basic.structure.Structure import AntibodyStructure
+from jade.basic.structure.Structure import cdr_names
+from jade.basic.structure.Structure import heavy_cdr_names
 
-from basic.numeric import *
+from jade.basic.numeric import *
 
 class AnalyzeRecovery:
     """
