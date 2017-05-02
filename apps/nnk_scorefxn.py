@@ -100,6 +100,9 @@ if __name__ == "__main__":
     mat_scoring_functions = defaultdict()
 
     #Create Germline Scoring Functions
+    sort_index_order = []
+
+    # Order groups first:
     for sort in _sorts_:
         es = []
         for antibody in options.abs:
@@ -109,11 +112,14 @@ if __name__ == "__main__":
             sort_index = NNKSortIndex('gl'+antibody, options.gl_antigen, sort)
 
             gl_scoring_functions[sort_index] = score
-            es.append(score)
+            sort_index_order.append(sort_index)
+
+            es.append(enrichments)
         if len(options.abs) > 1:
             print "Combining Germline Antibodies"
-            combined_score = AntibodyNNKScoreFunction([es], index)
+            combined_score = AntibodyNNKScoreFunction(es, index)
             sort_index = NNKSortIndex('glCombined', options.gl_antigen, sort)
+            sort_index_order.append(sort_index)
             gl_scoring_functions[sort_index] = combined_score
 
 
@@ -124,9 +130,12 @@ if __name__ == "__main__":
 
     #Create Mature Scoring Functions
     mature_enrichments = defaultdict()
+
     for sort in _sorts_:
+        es = []
         for antibody in options.abs:
-            es = []
+            sort_index_order.append(NNKSortIndex('mat'+antibody, 'AntigensCombined', sort))
+
             for antigen in antigen_dict[antibody]:
                 print "\nLoading Mature enrichment data for score function: " + antibody + ' ' + antigen + " " + sort
                 sort_index = NNKSortIndex('mat'+antibody, antigen, sort)
@@ -134,6 +143,8 @@ if __name__ == "__main__":
                 mature_enrichments[(antibody, antigen)] = enrichments
                 score = AntibodyNNKScoreFunction([enrichments], index)
                 mat_scoring_functions[sort_index] = score
+                sort_index_order.append(sort_index)
+
                 if antigen in combined_mature_antigens:
                     es.append(enrichments)
 
@@ -147,6 +158,7 @@ if __name__ == "__main__":
             print "\nCombining enrichments"
             all = []
             for antigen in combined_mature_antigens:
+                print repr(antigen)
                 es = []
                 for antibody in options.ab:
                     #enrichments = NNKEnrichments(options.nnk_dir, options.zeros, 'VRC01', 'mat'+antibody, antigen, sort)
@@ -156,6 +168,7 @@ if __name__ == "__main__":
                 score = AntibodyNNKScoreFunction(es, index)
                 sort_index = NNKSortIndex('matCombined', antigen, sort)
                 mat_scoring_functions[sort_index] = score
+
             score = AntibodyNNKScoreFunction(all, index)
             sort_index = NNKSortIndex('matCombined', 'AntigensUnion', sort)
             mat_scoring_functions[sort_index] = score
@@ -175,7 +188,9 @@ if __name__ == "__main__":
     for classified_ab in test_data.classified_list:
         id = classified_ab.ig_chain.id
         print id
-        for score_index, score in all_scoring_functions.iteritems():
+        for score_index in sort_index_order:
+            if not all_scoring_functions.has_key(score_index): continue
+            score = all_scoring_functions[score_index]
 
             s = score.relative_score_classified_ab(classified_ab)
             out = "\t".join([ id, str(options.zeros), score_index.antibody, score_index.antigen, score_index.sort, "%.3f" % s])

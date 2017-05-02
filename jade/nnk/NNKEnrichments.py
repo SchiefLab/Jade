@@ -10,7 +10,7 @@ class NNKEnrichments(object):
     """
     Simple class that holds all the enrichment data for a particular class, antibody, and antigen.
     """
-    def __init__(self, data_dir, zeros = -2.0, class_type = 'VRC01', antibody = 'glVRC01', antigen = 'GT81', sort = 'S1'):
+    def __init__(self, data_dir, zeros = -2.0, class_type = 'VRC01', antibody = 'glCHA31', antigen = 'GT81', sort = 'S1'):
         """
 
         :param data_dir: the directory with sort data. Each set of data + antibody should be in a separate directory (Ex: glCHA31, et.c)
@@ -30,6 +30,7 @@ class NNKEnrichments(object):
         if not isinstance(self.df, pandas.DataFrame): sys.exit()
 
         self.data_1D = data_loader.get_1d_data_tuple_freq_nnk_data(antigen=antigen, sort=sort)
+
     def max(self, position):
         """
 
@@ -83,6 +84,7 @@ def combine_enrichments( list_of_nnk_enrichments):
     dfs_2D = []
     dfs_1D = []
     for enrich in list_of_nnk_enrichments:
+        #print len(enrich.df.columns)
         dfs_2D.append(enrich.df)
         dfs_1D.append(enrich.data_1D)
 

@@ -41,7 +41,7 @@ class TemplateAbNNKIndex(object):
         opt = NumericalIndexOptions(['H3'], [], [],['FRAME', 'CDR']) #Default indexing options
         self.set_numerical_index_options(opt)
 
-        self.index = self.__setup_indexing()
+        self.index, self.reverse_index = self.__setup_indexing()
         #print repr(self.index)
 
     def set_numerical_index_options(self, opt):
@@ -126,7 +126,11 @@ class TemplateAbNNKIndex(object):
 
             index[tup] = i
 
-        return index
+        reverse_index = defaultdict()
+        for key, value in index.iteritems():
+            reverse_index[value] = key
+
+        return index, reverse_index
 
 
 class TestAbNNKIndex(object):
