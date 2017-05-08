@@ -145,7 +145,7 @@ class AntibodyNNKScoreFunction(object):
         """
 
         score = self.score_classified_ab(classified_ab)
-        return linear_rescale(self.min_score, self.max_score, score)
+        return linear_rescale(0, self.nnk_index_score, score)
 
 
     def max_sequence(self):
@@ -226,5 +226,42 @@ class AntibodyNNKScoreFunction(object):
 
 
 
+class MetaAntibodyNNKScoreFunction(object):
+    def __init__(self, list_of_scorefunctions, additive_combine = False):
+        """
+        
+        :rtype list_of_scorefunctions: [AntibodyNNKScoreFunction]
+        """
+        self.scorefxns = list_of_scorefunctions
+        self.additive_combine = additive_combine
 
 
+    def relative_score_classified_ab(self, classified_ab):
+        """
+
+        :type classified_ab: ClassifiedAb
+        :rtype: float
+        """
+
+        s = self.score_classified_ab(classified_ab)
+
+        if self.additive_combine:
+            totals = numpy.sum(numpy.array([scorefxn.nnk_index_score for scorefxn in self.scorefxns]))
+            return linear_rescale(0, totals, s)
+        else:
+            return numpy.mean(numpy.array([scorefxn.relative_score_classified_ab(classified_ab) for scorefxn in self.scorefxns]))
+
+    def score_classified_ab(self, classified_ab):
+        scores = [scorefxn.score_classified_ab(classified_ab) for scorefxn in self.scorefxns]
+
+        if self.additive_combine:
+            return numpy.sum(numpy.array(scores))
+        else:
+            return numpy.mean(numpy.array(scores))
+
+    def __score(self, position, three_letter):
+       scores = [scorefxn.__score(position, three_letter) for scorefxn in self.scorefxns]
+       if self.additive_combine:
+           return numpy.sum(numpy.array(scores))
+       else:
+           return numpy.mean(numpy.array(scores))

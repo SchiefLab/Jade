@@ -6,7 +6,7 @@ from collections import defaultdict, namedtuple
 
 from jade.nnk.NNKIndex import TemplateAbNNKIndex, TestAbNNKIndex
 from jade.nnk.NNKEnrichments import NNKEnrichments
-from jade.nnk.NNKScoreFunction import AntibodyNNKScoreFunction
+from jade.nnk.NNKScoreFunction import AntibodyNNKScoreFunction, MetaAntibodyNNKScoreFunction
 from jade.nnk.NNKAbMaturation import GetNNKData
 from jade.basic.sequence import fasta
 from jade.basic import general
@@ -20,7 +20,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--nnk_dir', '-d', default = "sort_data",         help = "Full or relative path to pre-processed NNK data")
     parser.add_argument('--out_dir', '-o', default = 'scores',            help = "Directory for all output files")
-    parser.add_argument('--abs', '-a', default = ['CHA31'], nargs = '*',  help = "Antibodies to use for the scoring function. ")
+    parser.add_argument('--gl_abs', '-a', default = ['CHA31'], nargs = '*',  help = "Antibodies to use for the germline scoring function. ")
+    parser.add_argument('--mat_abs', default = ['CHA31'], nargs = '*', help = "Antibodies to use for the mature scoring functions.")
     parser.add_argument('--gl_antigen', '-g', default = 'GT81',           help = 'The antigen used for Germline-scoring')
     parser.add_argument('--mat_antigens', '-m',                           help = "A list of mature antigens to use.  We will report both score as the means and them split.")
     parser.add_argument('--skip_mat_antigens', '-k', default = ['GT8-1'], nargs = '*',
@@ -49,9 +50,11 @@ if __name__ == "__main__":
 
     parser.add_argument('--exp', '-e', required = True, help = "Name of the experiment.  Used for concatonating different experiments.")
 
-    parser.add_argument('--additive_combine','-t' default = False, action = 'store_true',
+    parser.add_argument('--additive_combine','-t', default = False, action = 'store_true',
                                                                           help = "Combine antigens/antibodies using addition instead of means.  ")
 
+    parser.add_argument('--overwrite', default = False, action = "store_true",
+                                                                          help = "Overwrite any output")
 
     options = parser.parse_args()
 
@@ -63,7 +66,6 @@ if __name__ == "__main__":
     score_function_options['use_factors'] = options.use_factor_method
     score_function_options['use_global_group_matches'] = options.use_groups
 
-    index = TemplateAbNNKIndex()
     if not os.path.exists(options.nnk_dir):
         sys.exit('NNK Directory not found!  Please pass a proper directory!')
 
@@ -100,7 +102,7 @@ if __name__ == "__main__":
     #If we are using multiple antibodies, make sure we only use the subset antigens for combined antibody data.
     # We will also need to combine all other data as well...
     counts = defaultdict(int)
-    for antibody in options.abs:
+    for antibody in options.mat_abs:
         print "Getting meta data for mature "+antibody
         mat_meta = GetNNKData(options.nnk_dir, 'mat'+antibody)
         if options.mat_antigens:
@@ -126,20 +128,27 @@ if __name__ == "__main__":
         if counts[key] == len(options.abs):
             combined_mature_antigens.append(key)
 
-    #Create Scoring Functions
+    #### Create Scoring Functions
     gl_scoring_functions = defaultdict() #Key Tuple of Antibody, Antigen, Sort; Value is the scoring function.
     mat_scoring_functions = defaultdict()
+
+    #Create Indexes
+    indexes = defaultdict()
+    for antibody in ['gl'+ab for ab in options.gl_abs] + ['mat'+ab for ab in options.mat_abs]:
+        indexes[antibody] = TemplateAbNNKIndex(antibody)
 
     #Create Germline Scoring Functions
     sort_index_order = []
 
+
     # Order groups first:
     for sort in _sorts_:
         es = []
-        for antibody in options.abs:
+        for antibody in options.gl_abs:
+
             print "\nLoading Germline enrichment data for score function: "+antibody+' '+options.gl_antigen+" "+sort
             enrichments = NNKEnrichments(options.nnk_dir, options.zeros, 'VRC01', 'gl'+antibody, options.gl_antigen, sort)
-            score = AntibodyNNKScoreFunction([enrichments], index, **score_function_options )
+            score = AntibodyNNKScoreFunction([enrichments], indexes[antibody], **score_function_options )
             sort_index = NNKSortIndex('gl'+antibody, options.gl_antigen, sort)
 
             gl_scoring_functions[sort_index] = score
@@ -148,7 +157,7 @@ if __name__ == "__main__":
             es.append(enrichments)
         if len(options.abs) > 1:
             print "Combining Germline Antibodies"
-            combined_score = AntibodyNNKScoreFunction(es, index, **score_function_options)
+            combined_score = MetaAntibodyNNKScoreFunction(es, options.additive_combine)
 
             sort_index = NNKSortIndex('glCombined', options.gl_antigen, sort)
             sort_index_order.append(sort_index)
@@ -173,7 +182,7 @@ if __name__ == "__main__":
                 sort_index = NNKSortIndex('mat'+antibody, antigen, sort)
                 enrichments = NNKEnrichments(options.nnk_dir, options.zeros, 'VRC01', 'mat'+antibody, antigen, sort)
                 mature_enrichments[(antibody, antigen)] = enrichments
-                score = AntibodyNNKScoreFunction([enrichments], index)
+                score = AntibodyNNKScoreFunction([enrichments], indexes[antibody])
                 mat_scoring_functions[sort_index] = score
                 sort_index_order.append(sort_index)
 
@@ -182,7 +191,7 @@ if __name__ == "__main__":
 
             if len(antigen_dict[antibody]) > 1:
                 print "Combining mature antigens."
-                combined_score = AntibodyNNKScoreFunction(es, index)
+                combined_score = MetaAntibodyNNKScoreFunction(es, options.additive_combine)
                 sort_index = NNKSortIndex('mat'+antibody, 'AntigensCombined', sort)
                 mat_scoring_functions[sort_index] = combined_score
 
@@ -197,11 +206,11 @@ if __name__ == "__main__":
                     enrichments = mature_enrichments[(antibody, antigen)]
                     es.append(enrichments)
 
-                score = AntibodyNNKScoreFunction(es, index)
+                score = MetaAntibodyNNKScoreFunction(es, options.additive_combine)
                 sort_index = NNKSortIndex('matCombined', antigen, sort)
                 mat_scoring_functions[sort_index] = score
 
-            score = AntibodyNNKScoreFunction(all, index)
+            score = MetaAntibodyNNKScoreFunction(all, options.additive_combine)
             sort_index = NNKSortIndex('matCombined', 'AntigensCombined', sort)
             mat_scoring_functions[sort_index] = score
 
@@ -209,7 +218,7 @@ if __name__ == "__main__":
     score_outname = options.out_dir+'/'+base_name+'_scores.tsv'
 
     how = 'w'
-    if os.path.exists(score_outname):
+    if os.path.exists(score_outname) and not options.overwrite:
         how = 'a'
     SCOREOUT = open(score_outname, how)
 
