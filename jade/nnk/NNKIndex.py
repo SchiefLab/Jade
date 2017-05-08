@@ -56,21 +56,6 @@ class TemplateAbNNKIndex(object):
         self.index_options = opt
         #self.index, self.reverse_index = self.__setup_indexing()
 
-    def get_seq_up_to_h3(self):
-        """
-        Get an array of sequence up to H3
-        :return:
-        """
-
-        if not isinstance(self.res_info, PDBResInfo): sys.exit()
-
-        s = []
-        for i in range(1, self.res_info.total_residues() + 1 ):
-            if self.res_info.get_residue(i).get_cdr_type() != 'H3':
-                s.append(self.res_info.get_residue(i).get_aa())
-            else:
-                return s
-
 
     def __setup_from_class_directory(self, chain_type=_heavy_):
         """

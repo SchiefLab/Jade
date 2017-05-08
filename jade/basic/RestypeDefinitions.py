@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
+import re
+from collections import defaultdict
 
 #This object holds data used to define certain things.  CDR's, SASA, Residue types and names, etc.
 
 
 codons = ["AAA", "AAG"]
-
-
 
 
 
@@ -46,7 +46,15 @@ class RestypeDefinitions():
             tripletSP = triplet.split(":")
             one_letter_codes.append(tripletSP[2])
         return sorted(one_letter_codes)
-    
+
+    def is_conserved(self, query_three_letter, group_three_letter):
+        res_list = self.restype_info["Conserved:"+group_three_letter.upper()]
+        for res in res_list:
+            if re.search(':'+query_three_letter+':', res):
+                return True
+        return False
+
+
     def set_residue_info(self):
         self.restype_info["Charged"]=("Lysine:LYS:K",
                              "Arginine:ARG:R"
@@ -93,7 +101,11 @@ class RestypeDefinitions():
         self.restype_info["Hydroxyl"] = ("Serine:SER:S",
                                 "Threonine:THR:T",
                                 "Tyrosine:TYR:Y")
-        
+
+
+
+        common_groups = ["Charged", "Positive", "Negative", "Non-Polar", "Polar-Uncharged", "Polar", "Aromatic"]
+
         self.restype_info["All"] = ("Alanine:ALA:A",
                            "Arginine:ARG:R",
                            "Asparagine:ASN:N",
@@ -217,4 +229,67 @@ class RestypeDefinitions():
         self.resinfo["TYR"]=("230", "41", "85")
         self.resinfo["VAL"]=("155", "74", "46")
         self.resinfo["HIS_D"]=self.resinfo["HIS"]
-    
+
+
+class ResTypeSergey(object):
+    """
+    Residue Types corresponding to Sergey Menis' definition of groups.  
+    """
+    def __init__(self, ignore_groups = ['small']):
+        all_groups = \
+            """
+            A ALA small tiny hphobic
+            G GLY small tiny hphobic 
+            C CYS small tiny hphobic polar 
+            S SER small tiny polar 
+            P PRO small 
+            V VAL small aliph 
+            T THR small polar 
+            N ASN small polar 
+            D ASP small polar charged neg
+            Q GLN polar 
+            E GLU polar charged neg 
+            I ILE hphobic aliph
+            L LEU hphobic aliph
+            M MET hphobic 
+            F PHE hphobic aro
+            Y TYR hphobic aro polar
+            W TRP hphobic aro polar
+            K LYS polar charged pos
+            H HIS polar charged pos aro
+            R ARG polar charged pos 
+            """
+        self.three_to_groups = defaultdict()
+
+        for line in all_groups.split('\n'):
+            lineSP = line.split()
+
+            types = []
+            for t in lineSP[1:]:
+                if t in ignore_groups:
+                    continue
+                else:
+                    types.append(t)
+
+            self.three_to_groups[lineSP[1]] = types
+
+    def get_groups(self, three_letter_code):
+        return self.three_to_groups[three_letter_code]
+
+    def common_groups(self, three_letter_one, three_letter_two):
+        """
+        Return the intersection of groups. 
+        :return: 
+        """
+        group1 = set(self.get_groups(three_letter_one))
+        group2 = set(self.get_groups(three_letter_two))
+
+        return list(group1.intersection(group2))
+
+    def has_common_group(self, three_letter_one, three_letter_two):
+
+        interset = self.common_groups(three_letter_one, three_letter_two)
+        if len(interset) > 0:
+            return True
+        else:
+            return False

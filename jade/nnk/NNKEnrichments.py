@@ -31,6 +31,7 @@ class NNKEnrichments(object):
 
         self.data_1D = data_loader.get_1d_data_tuple_freq_nnk_data(antigen=antigen, sort=sort)
 
+
     def max(self, position):
         """
 
@@ -48,6 +49,8 @@ class NNKEnrichments(object):
         """
 
         Get the minimum enrichment at a particular position, and the amino acid
+        
+        Note: There may be multiple minumum amino acids - this is not yet accounted for!
 
         :param position:
         :return:
@@ -73,6 +76,8 @@ class NNKEnrichments(object):
 
     def calculate_factors(self):
         """
+        Return a dataframe of calculated factors
+        
         Factor is Sergeys definition:
         
          (P-M)/MAD = scaling factor; where 
@@ -80,13 +85,18 @@ class NNKEnrichments(object):
             M - mean total propensity for all amino acids at this position
             MAD - mean average deviation for propensities at this position.
             
-        :return: 
+        :rtype: pandas.DataFrame 
         """
+
+        factors = deepcopy(self.df)
+
         for pos in self.df.columns:
             m = self.df[pos].mean()
             mad = numpy.absolute(self.df[pos] - m).mean()
-            self.df[pos] = (self.df[pos] - m)/mad
-            
+            factors[pos] = ((self.df[pos] - m)/mad)**2
+
+        return factors
+
 def combine_enrichments( list_of_nnk_enrichments, additive_combine = False):
     """
     Combine a list of nnk_enrichments to populate this one.

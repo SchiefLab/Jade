@@ -35,6 +35,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--use_factors', '-f', default = False, action = 'store_true',
                                                                           help = "Should we score the data as 'factor'?")
+    parser.add_argument('--use_groups', default = False, action = 'store_true',
+                                                                          help = "use global and group matches based on the input NNK sequences")
 
     #parser.add_argument('--plot', '-p', default=False, action = 'store_true',
     #                                                                      help = "Should we output plots of the data?")
@@ -45,13 +47,11 @@ if __name__ == "__main__":
     parser.add_argument('--award_max_and_conserved_only', default=False, action = 'store_true',
                                                                           help = "Award a score if it is maximum or conserved.")
 
-    parser.add_argument('--exp', required = True, help = "Name of the experiment.  Used for concatonating different experiments.")
+    parser.add_argument('--exp', '-e', required = True, help = "Name of the experiment.  Used for concatonating different experiments.")
 
-    parser.add_argument('--additive_combine', default = False, action = 'store_true',
+    parser.add_argument('--additive_combine','-t' default = False, action = 'store_true',
                                                                           help = "Combine antigens/antibodies using addition instead of means.  ")
 
-    parser.add_argument('--subtract_non_match', default = False, action = 'store_true',
-                                                                          help = "If we are awarding max only, do we subtract non-matches?")
 
     options = parser.parse_args()
 
@@ -60,8 +60,8 @@ if __name__ == "__main__":
     score_function_options['additive_combine'] = options.additive_combine
     score_function_options['award_max_only'] = options.award_max_only
     score_function_options['award_max_and_conserved_only'] = options.award_max_and_conserved_only
-    score_function_options['use_factors'] = options.use_factors
-    score_function_options['subtract_non_match'] = options.subtract_non_match
+    score_function_options['use_factors'] = options.use_factor_method
+    score_function_options['use_global_group_matches'] = options.use_groups
 
     index = TemplateAbNNKIndex()
     if not os.path.exists(options.nnk_dir):

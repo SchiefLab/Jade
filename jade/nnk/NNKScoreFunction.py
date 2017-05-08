@@ -1,6 +1,7 @@
 import sys, numpy, pandas
+from collections import defaultdict
 
-from jade.basic.RestypeDefinitions import RestypeDefinitions
+from jade.basic.RestypeDefinitions import RestypeDefinitions, ResTypeSergey
 from jade.nnk.NNKEnrichments import NNKEnrichments, combine_enrichments
 from jade.nnk.NNKIndex import TemplateAbNNKIndex, TestAbNNKIndex
 from pyigclassify.modules.chains.util import ClassifiedAb
@@ -12,8 +13,8 @@ class AntibodyNNKScoreFunction(object):
     A class that takes a list of NNKEnrichment instances to score a potential antibody.
     """
     def __init__(self, list_of_enrichments, template_index,
-                 award_max_only = False, use_factor = False, award_max_conservative_only = False,
-                 subtract_non_match = False, additive_combine = False):
+                 award_max_only = False, use_factors = False, award_max_conservative_only = False,
+                 use_global_group_matches = False, additive_combine = False):
         """
         For now, we calculate the score up to H3.  If we knew the length of H3 for each NNK,
           we could do the other side of the tail.
@@ -24,23 +25,27 @@ class AntibodyNNKScoreFunction(object):
 
         #Options:
         self.award_max_only = award_max_only
-        self.use_factor = use_factor
+        self.use_factors = use_factors
         self.award_max_conservative_only = award_max_conservative_only
-        self.substract_non_match = subtract_non_match
+        self.use_global_group_matches = use_global_group_matches
 
         self.template_index = template_index
         self.enrichments = list_of_enrichments
         self.enrich = combine_enrichments(list_of_enrichments, additive_combine)
 
-        if use_factor:
-            self.enrich.calculate_factors() #I left off here.  Need to implement this!
+        if use_factors:
+            self.factors = self.enrich.calculate_factors()
 
         self.res = RestypeDefinitions()
+        self.groups = ResTypeSergey()
 
         if not isinstance( self.enrich, NNKEnrichments ): sys.exit()
 
         #Calculate Min and Maxes based on the germline indexes.
         self.__calculate_min_max()
+
+        self.global_matches, self.group_matches = self.__calculate_global_and_group_matches()
+
 
     def score_whole_antibody(self, antibody):
         """
@@ -87,25 +92,40 @@ class AntibodyNNKScoreFunction(object):
 
     def __score(self, position, three_letter):
 
+        template_aa = self.res.get_three_letter_from_one(self.template_index.res_info.get_residue(position).get_aa())
+
         v = self.enrich.value(position, three_letter )
+        v_template = self.enrich.value(position, template_aa)
+        if self.use_factors:
+            v = self.factors.get_value(str(position), three_letter )
+            v_template = self.factors.get_value(str(position), template_aa)
 
         max_value, max_aa = self.enrich.max(position)
 
-        if not self.award_max_only or self.award_max_conservative_only:
+
+        if not (self.award_max_only or self.award_max_conservative_only):
             return v
 
-        if self.award_max_only:
+        elif self.award_max_only or self.award_max_conservative_only:
             if three_letter == max_aa:
                 return v
-            elif self.substract_non_match:
-                return -v
 
+            elif self.award_max_conservative_only and self.res.is_conserved(three_letter, max_aa):
+                return v
 
+        elif self.use_global_group_matches:
+            if self.global_matches[position]:
+                if three_letter == max_aa:
+                    return v
+                else:
+                    #Subtract points for it being a global match, but not actually matching.
+                    return -v
 
+            elif self.group_matches[position]:
+                #Return the mean of the grouped values.
+                return (v + v_template)/2.0
 
-
-
-
+        return 0
 
     def relative_score_whole_antibody(self, antibody):
         """
@@ -115,7 +135,7 @@ class AntibodyNNKScoreFunction(object):
         """
         score = self.score_whole_antibody(antibody)
 
-        return linear_rescale(self.min_score, self.max_score, score)
+        return linear_rescale(0, self.max_score, score)
 
     def relative_score_classified_ab(self, classified_ab):
         """
@@ -157,12 +177,23 @@ class AntibodyNNKScoreFunction(object):
         """
         return self.min_score
 
+    def __index_score(self):
+        """
+        Return the score of the NNKIndex used here.  This now corresponds to the maximumn score of the scorefunction.
+        
+        :return: 
+        """
+        return self.nnk_index_score
+
     def __calculate_min_max(self):
 
-        self.min_score = 0; self.max_score = 0
+        self.min_score = 0; self.max_score = 0; self.nnk_index_score = 0
         self.min_sequence = ""; self.max_sequence = ""
 
         for position in sorted(self.template_index.reverse_index.keys()):
+
+            nnk_three_letter = self.res.get_three_letter_from_one( self.template_index.res_info.get_residue(position).get_aa() )
+
             min_sc, min_seq = self.enrich.min(position)
             max_sc, max_seq = self.enrich.max(position)
 
@@ -170,4 +201,30 @@ class AntibodyNNKScoreFunction(object):
 
             self.min_sequence += self.res.get_one_letter_from_three(min_seq)
             self.max_sequence += self.res.get_one_letter_from_three(max_seq)
+
+            self.nnk_index_score += self.__score(position, nnk_three_letter)
+
+    def __calculate_global_and_group_matches(self):
+        group_matches = defaultdict()
+        global_matches = defaultdict()
+
+        for position in sorted(self.template_index.reverse_index.keys()):
+            group_matches[position] = False
+            global_matches[position] = False
+
+            aa = self.res.get_three_letter_from_one( self.template_index.res_info.get_residue(position).get_aa() )
+            max_sc, max_seq = self.enrich.max(position)
+            if aa == max_seq:
+                global_matches[position] = True
+                continue
+
+            if self.groups.has_common_group(aa, max_seq):
+                group_matches[position] = True
+
+        return global_matches, group_matches
+
+
+
+
+
 
