@@ -11,7 +11,9 @@ class AntibodyNNKScoreFunction(object):
     """
     A class that takes a list of NNKEnrichment instances to score a potential antibody.
     """
-    def __init__(self, list_of_enrichments, template_index):
+    def __init__(self, list_of_enrichments, template_index,
+                 award_max_only = False, use_factor = False, award_max_conservative_only = False,
+                 subtract_non_match = False, additive_combine = False):
         """
         For now, we calculate the score up to H3.  If we knew the length of H3 for each NNK,
           we could do the other side of the tail.
@@ -19,9 +21,19 @@ class AntibodyNNKScoreFunction(object):
         :type list_of_enrichments: [NNKEnrichments]
         :type template_index: TemplateAbNNKIndex
         """
+
+        #Options:
+        self.award_max_only = award_max_only
+        self.use_factor = use_factor
+        self.award_max_conservative_only = award_max_conservative_only
+        self.substract_non_match = subtract_non_match
+
         self.template_index = template_index
         self.enrichments = list_of_enrichments
-        self.enrich = combine_enrichments(list_of_enrichments)
+        self.enrich = combine_enrichments(list_of_enrichments, additive_combine)
+
+        if use_factor:
+            self.enrich.calculate_factors() #I left off here.  Need to implement this!
 
         self.res = RestypeDefinitions()
 
@@ -68,10 +80,32 @@ class AntibodyNNKScoreFunction(object):
             else:
                 # Get the energy here:
                 position = self.template_index.index[tup]
-                score = self.enrich.value(position, self.res.get_three_letter_from_one( res.get_aa() ))
+                score = self.__score(position, self.res.get_three_letter_from_one(res.get_aa()))
                 score_sum += score
 
         return score_sum
+
+    def __score(self, position, three_letter):
+
+        v = self.enrich.value(position, three_letter )
+
+        max_value, max_aa = self.enrich.max(position)
+
+        if not self.award_max_only or self.award_max_conservative_only:
+            return v
+
+        if self.award_max_only:
+            if three_letter == max_aa:
+                return v
+            elif self.substract_non_match:
+                return -v
+
+
+
+
+
+
+
 
     def relative_score_whole_antibody(self, antibody):
         """

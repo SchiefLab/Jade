@@ -68,8 +68,26 @@ class NNKEnrichments(object):
         """
         return self.df.get_value(three_letter_code, str(position))
 
+    def mean(self, position):
+        return numpy.mean(self.df[str(position)])
 
-def combine_enrichments( list_of_nnk_enrichments):
+    def calculate_factors(self):
+        """
+        Factor is Sergeys definition:
+        
+         (P-M)/MAD = scaling factor; where 
+            P - total propensity for amino acid at this position,
+            M - mean total propensity for all amino acids at this position
+            MAD - mean average deviation for propensities at this position.
+            
+        :return: 
+        """
+        for pos in self.df.columns:
+            m = self.df[pos].mean()
+            mad = numpy.absolute(self.df[pos] - m).mean()
+            self.df[pos] = (self.df[pos] - m)/mad
+            
+def combine_enrichments( list_of_nnk_enrichments, additive_combine = False):
     """
     Combine a list of nnk_enrichments to populate this one.
     @type list_of_nnk_enrichments: [NNKEnrichments]
@@ -89,7 +107,13 @@ def combine_enrichments( list_of_nnk_enrichments):
         dfs_1D.append(enrich.data_1D)
 
     df_2D = pandas.concat(dfs_2D)
-    new_enrich.df = df_2D.groupby(level=0).mean()
 
-    new_enrich.data_1D = numpy.mean(numpy.array(dfs_1D), axis = 0)
+    if additive_combine:
+        new_enrich.df = df_2D.groupby(level=0).sum()
+        new_enrich.data_1D = numpy.sum(numpy.array(dfs_1D), axis=0)
+    else:
+        new_enrich.df = df_2D.groupby(level=0).mean()
+        new_enrich.data_1D = numpy.mean(numpy.array(dfs_1D), axis=0)
+
+
     return new_enrich

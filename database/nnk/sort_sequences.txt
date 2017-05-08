@@ -1,0 +1,5 @@
+#class	heavy_sequence	light_sequence
+glCHA31	VRC01/4JPK_H.fasta	VRC01/4JPK_L.fasta
+matCHA31 VRC01/matCHA31_H.fasta	NA
+glVRC01	VRC01/glVRC01_H.fasta	NA
+matVRC01 VRC01/matVRC01_H.fasta	NA

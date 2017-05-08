@@ -1,2 +1,0 @@
-#class	heavy_sequence	light_sequence
-VRC01	VRC01/4JPK_H.fasta	VRC01/4JPK_L.fasta

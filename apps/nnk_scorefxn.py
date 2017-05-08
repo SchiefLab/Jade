@@ -23,14 +23,45 @@ if __name__ == "__main__":
     parser.add_argument('--abs', '-a', default = ['CHA31'], nargs = '*',  help = "Antibodies to use for the scoring function. ")
     parser.add_argument('--gl_antigen', '-g', default = 'GT81',           help = 'The antigen used for Germline-scoring')
     parser.add_argument('--mat_antigens', '-m',                           help = "A list of mature antigens to use.  We will report both score as the means and them split.")
-    parser.add_argument('--skip_mat_antigens', '-k',                   help = "A list of mature antigens to skip. ")
+    parser.add_argument('--skip_mat_antigens', '-k', default = ['GT8-1'], nargs = '*',
+                                                                          help = "A list of mature antigens to skip. ")
+
     parser.add_argument('--input', '-s',                                  help = "A fasta or PDB file")
     parser.add_argument('--input_seq_list', '-l',                         help = "A file with the ID in column 1 and the sequence in column 2. Space or tab delimited.  Header must have comments. Sequence can have '-' in them. ")
     parser.add_argument('--zeros', '-z', default = -2,                    help = "The number to use for any zero top game enrichment.  Too high, and you may penalize these too much.  Too low, and they won't hold their weight. "
                                                                                  "-2 represents an erichment of .11; -2.5 at .08, and -3.0 at about .05.  -2 is about the last standard deviation in the erichment curve that resembles a gaussian.")
+    parser.add_argument('--output_individual', '-c', default = False, action = 'store_true',
+                                                                          help = "Should we output individual scores or only combined?")
+
+    parser.add_argument('--use_factors', '-f', default = False, action = 'store_true',
+                                                                          help = "Should we score the data as 'factor'?")
+
+    #parser.add_argument('--plot', '-p', default=False, action = 'store_true',
+    #                                                                      help = "Should we output plots of the data?")
+
+    parser.add_argument('--award_max_only', default = False, action = 'store_true',
+                                                                          help = "Award scores for only maximum matches.")
+
+    parser.add_argument('--award_max_and_conserved_only', default=False, action = 'store_true',
+                                                                          help = "Award a score if it is maximum or conserved.")
+
+    parser.add_argument('--exp', required = True, help = "Name of the experiment.  Used for concatonating different experiments.")
+
+    parser.add_argument('--additive_combine', default = False, action = 'store_true',
+                                                                          help = "Combine antigens/antibodies using addition instead of means.  ")
+
+    parser.add_argument('--subtract_non_match', default = False, action = 'store_true',
+                                                                          help = "If we are awarding max only, do we subtract non-matches?")
+
     options = parser.parse_args()
 
 
+    score_function_options = defaultdict()
+    score_function_options['additive_combine'] = options.additive_combine
+    score_function_options['award_max_only'] = options.award_max_only
+    score_function_options['award_max_and_conserved_only'] = options.award_max_and_conserved_only
+    score_function_options['use_factors'] = options.use_factors
+    score_function_options['subtract_non_match'] = options.subtract_non_match
 
     index = TemplateAbNNKIndex()
     if not os.path.exists(options.nnk_dir):
@@ -108,7 +139,7 @@ if __name__ == "__main__":
         for antibody in options.abs:
             print "\nLoading Germline enrichment data for score function: "+antibody+' '+options.gl_antigen+" "+sort
             enrichments = NNKEnrichments(options.nnk_dir, options.zeros, 'VRC01', 'gl'+antibody, options.gl_antigen, sort)
-            score = AntibodyNNKScoreFunction([enrichments], index)
+            score = AntibodyNNKScoreFunction([enrichments], index, **score_function_options )
             sort_index = NNKSortIndex('gl'+antibody, options.gl_antigen, sort)
 
             gl_scoring_functions[sort_index] = score
@@ -117,7 +148,8 @@ if __name__ == "__main__":
             es.append(enrichments)
         if len(options.abs) > 1:
             print "Combining Germline Antibodies"
-            combined_score = AntibodyNNKScoreFunction(es, index)
+            combined_score = AntibodyNNKScoreFunction(es, index, **score_function_options)
+
             sort_index = NNKSortIndex('glCombined', options.gl_antigen, sort)
             sort_index_order.append(sort_index)
             gl_scoring_functions[sort_index] = combined_score
@@ -170,17 +202,25 @@ if __name__ == "__main__":
                 mat_scoring_functions[sort_index] = score
 
             score = AntibodyNNKScoreFunction(all, index)
-            sort_index = NNKSortIndex('matCombined', 'AntigensUnion', sort)
+            sort_index = NNKSortIndex('matCombined', 'AntigensCombined', sort)
             mat_scoring_functions[sort_index] = score
 
     #For now, this is default HEAVY as we have none with LIGHT chains
-    SCOREOUT = open(options.out_dir+'/'+base_name+'_scores.tsv', 'w')
-    header = "#id\tzeros\tantibody\tantigen\tsort\tscore\n"
-    SCOREOUT.write(header)
+    score_outname = options.out_dir+'/'+base_name+'_scores.tsv'
+
+    how = 'w'
+    if os.path.exists(score_outname):
+        how = 'a'
+    SCOREOUT = open(score_outname, how)
+
+    header = "#exp\tid\tzeros\tantibody\tantigen\tsort\tscore\n"
+    if how == 'w':
+        SCOREOUT.write(header)
+
     print header
 
     GROUPS = open(options.out_dir+'/'+'score_function_info.tsv', 'w')
-    GROUPS.write('#zeros\tantibody\tantigen\tsort\tmin\tmin_sequence\tmax\tmax_sequence\n')
+    GROUPS.write('#exp\tzeros\tantibody\tantigen\tsort\tmin\tmin_sequence\tmax\tmax_sequence\n')
 
     all_scoring_functions = general.merge_dicts(gl_scoring_functions, mat_scoring_functions)
     test_data = TestAbNNKIndex(options.input)
@@ -193,12 +233,16 @@ if __name__ == "__main__":
             score = all_scoring_functions[score_index]
 
             s = score.relative_score_classified_ab(classified_ab)
-            out = "\t".join([ id, str(options.zeros), score_index.antibody, score_index.antigen, score_index.sort, "%.3f" % s])
-            print out
-            SCOREOUT.write(out+"\n")
 
-            out2 = [str(options.zeros), score_index.antibody, score_index.antigen, score_index.sort, "%.3f"%score.min_score, score.min_sequence, "%.3f"%score.max_score, score.max_sequence]
-            GROUPS.write("\t".join(out2)+"\n")
+            if re.search('gl', score_index.antibody) or options.output_individual or score_index.antigen == 'AntigensCombined':
+                out = "\t".join([ options.exp, id, str(options.zeros), score_index.antibody, score_index.antigen, score_index.sort, "%.3f" % s])
+                print out
+                SCOREOUT.write(out+"\n")
+
+
+                out2 = [options.exp, str(options.zeros), score_index.antibody, score_index.antigen, score_index.sort, "%.3f"%score.min_score, score.min_sequence, "%.3f"%score.max_score, score.max_sequence]
+                GROUPS.write("\t".join(out2)+"\n")
+
     SCOREOUT.close()
     GROUPS.close()
     print "Done"

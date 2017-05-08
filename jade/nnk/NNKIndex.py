@@ -32,25 +32,29 @@ class TemplateAbNNKIndex(object):
      and holds PyIgClassify identified chains types
 
     """
-    def __init__(self, class_ab = "VRC01", data_type = _heavy_):
+    def __init__(self, class_ab = "glCHA31", data_type = _heavy_, options = None):
 
         self.chainID = _chain_id_[data_type]
         self.class_ab_ = class_ab
         self.chain, self.res_info= self.__setup_from_class_directory(data_type)
 
-        opt = NumericalIndexOptions(['H3'], [], [],['FRAME', 'CDR']) #Default indexing options
-        self.set_numerical_index_options(opt)
+        if not options:
+            opt = NumericalIndexOptions(['H3'], [], [],['FRAME', 'CDR']) #Default indexing options
+            self.__set_numerical_index_options(opt)
+        else:
+            self.__set_numerical_index_options(options)
 
         self.index, self.reverse_index = self.__setup_indexing()
         #print repr(self.index)
 
-    def set_numerical_index_options(self, opt):
+    def __set_numerical_index_options(self, opt):
         """
-        Set a namedtuple with specific options for indexing.  This tells us
+        Set a namedtuple with specific options for indexing.
         :type options: NumericalIndexOptions
         :return:
         """
         self.index_options = opt
+        #self.index, self.reverse_index = self.__setup_indexing()
 
     def get_seq_up_to_h3(self):
         """
@@ -77,8 +81,8 @@ class TemplateAbNNKIndex(object):
         """
         germline_directory = defaultdict()
         inpath = jade.basic.path.get_nnk_database_path()
-        print "Reading "+inpath+"/germline_sequences.txt"
-        INFILE = open(inpath + "/germline_sequences.txt", 'r')
+        print "Reading "+inpath+"/sort_sequences.txt"
+        INFILE = open(inpath + "/sort_sequences.txt", 'r')
         for line in INFILE:
             line = line.strip()
             if not line or line[0] == '#': continue
