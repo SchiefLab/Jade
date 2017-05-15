@@ -13,8 +13,8 @@ class AntibodyNNKScoreFunction(object):
     A class that takes a list of NNKEnrichment instances to score a potential antibody.
     """
     def __init__(self, list_of_enrichments, template_index,
-                 award_max_only = False, use_factors = False, award_max_conservative_only = False,
-                 use_global_group_matches = False, additive_combine = False):
+                 award_max_only = False, use_factors = False, award_max_and_conserved_only = False,
+                 use_global_matches = False, use_group_matches = False, additive_combine = False, ):
         """
         For now, we calculate the score up to H3.  If we knew the length of H3 for each NNK,
           we could do the other side of the tail.
@@ -26,14 +26,17 @@ class AntibodyNNKScoreFunction(object):
         #Options:
         self.award_max_only = award_max_only
         self.use_factors = use_factors
-        self.award_max_conservative_only = award_max_conservative_only
-        self.use_global_group_matches = use_global_group_matches
+        self.award_max_conservative_only = award_max_and_conserved_only
+        self.use_global_matches = use_global_matches
+        self.use_group_matches = use_group_matches
 
         self.template_index = template_index
         self.enrichments = list_of_enrichments
+        self.additive_combine = additive_combine
         self.enrich = combine_enrichments(list_of_enrichments, additive_combine)
 
         if use_factors:
+            print "Calculating factors"
             self.factors = self.enrich.calculate_factors()
 
         self.res = RestypeDefinitions()
@@ -42,9 +45,10 @@ class AntibodyNNKScoreFunction(object):
         if not isinstance( self.enrich, NNKEnrichments ): sys.exit()
 
         #Calculate Min and Maxes based on the germline indexes.
+        self.global_matches, self.group_matches = self.__calculate_global_and_group_matches()
         self.__calculate_min_max()
 
-        self.global_matches, self.group_matches = self.__calculate_global_and_group_matches()
+
 
 
     def score_whole_antibody(self, antibody):
@@ -95,35 +99,53 @@ class AntibodyNNKScoreFunction(object):
         template_aa = self.res.get_three_letter_from_one(self.template_index.res_info.get_residue(position).get_aa())
 
         v = self.enrich.value(position, three_letter )
+        #print repr(v)
         v_template = self.enrich.value(position, template_aa)
+
+
         if self.use_factors:
-            v = self.factors.get_value(str(position), three_letter )
-            v_template = self.factors.get_value(str(position), template_aa)
+            v = self.factors.get_value( three_letter, str(position) )
+            #print "F: "+repr(v)
+            v_template = self.factors.get_value( template_aa, str(position))
 
         max_value, max_aa = self.enrich.max(position)
 
 
-        if not (self.award_max_only or self.award_max_conservative_only):
-            return v
 
-        elif self.award_max_only or self.award_max_conservative_only:
+
+        if self.award_max_only or self.award_max_conservative_only:
             if three_letter == max_aa:
                 return v
 
             elif self.award_max_conservative_only and self.res.is_conserved(three_letter, max_aa):
                 return v
 
-        elif self.use_global_group_matches:
-            if self.global_matches[position]:
+        elif self.use_global_matches or self.use_group_matches:
+            if self.use_global_matches and self.global_matches[position]:
+                #print "Global Match: "+str(position)+" "+repr(v)
                 if three_letter == max_aa:
                     return v
                 else:
                     #Subtract points for it being a global match, but not actually matching.
-                    return -v
+                    if v < 0:
+                        return v
+                    else:
+                        return -v
 
-            elif self.group_matches[position]:
+            elif self.use_group_matches and self.group_matches[position]:
+                #print repr(v)
+                if self.additive_combine:
+                    return v +v_template
+                else:
+                    v = (v + v_template)/2.0
+
+                #print "Group Match: " + str(position) + " " + repr(v)
                 #Return the mean of the grouped values.
-                return (v + v_template)/2.0
+                return v
+
+        else:
+            #print "None max"
+            return v
 
         return 0
 
@@ -202,7 +224,12 @@ class AntibodyNNKScoreFunction(object):
             self.min_sequence += self.res.get_one_letter_from_three(min_seq)
             self.max_sequence += self.res.get_one_letter_from_three(max_seq)
 
+            #print position, nnk_three_letter
+            #print repr(self.__score(position, nnk_three_letter))
+
             self.nnk_index_score += self.__score(position, nnk_three_letter)
+
+        print repr(self.nnk_index_score)
 
     def __calculate_global_and_group_matches(self):
         group_matches = defaultdict()
@@ -235,6 +262,12 @@ class MetaAntibodyNNKScoreFunction(object):
         self.scorefxns = list_of_scorefunctions
         self.additive_combine = additive_combine
 
+        #print repr(numpy.array([scorefxn.nnk_index_score for scorefxn in self.scorefxns]))
+
+        if self.additive_combine:
+            self.nnk_index_score = numpy.sum(numpy.array([scorefxn.nnk_index_score for scorefxn in self.scorefxns]))
+        else:
+            self.nnk_index_score = numpy.mean(numpy.array([scorefxn.nnk_index_score for scorefxn in self.scorefxns]))
 
     def relative_score_classified_ab(self, classified_ab):
         """
@@ -249,7 +282,9 @@ class MetaAntibodyNNKScoreFunction(object):
             totals = numpy.sum(numpy.array([scorefxn.nnk_index_score for scorefxn in self.scorefxns]))
             return linear_rescale(0, totals, s)
         else:
-            return numpy.mean(numpy.array([scorefxn.relative_score_classified_ab(classified_ab) for scorefxn in self.scorefxns]))
+            #print repr(numpy.array([scorefxn.nnk_index_score for scorefxn in self.scorefxns]))
+            #print repr(numpy.array([scorefxn.relative_score_classified_ab(classified_ab) for scorefxn in self.scorefxns]))
+            return linear_rescale(0, self.nnk_index_score, self.score_classified_ab(classified_ab))
 
     def score_classified_ab(self, classified_ab):
         scores = [scorefxn.score_classified_ab(classified_ab) for scorefxn in self.scorefxns]

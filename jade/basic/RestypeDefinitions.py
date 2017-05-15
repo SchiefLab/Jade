@@ -235,33 +235,34 @@ class ResTypeSergey(object):
     """
     Residue Types corresponding to Sergey Menis' definition of groups.  
     """
-    def __init__(self, ignore_groups = ['small']):
-        all_groups = \
-            """
-            A ALA small tiny hphobic
-            G GLY small tiny hphobic 
-            C CYS small tiny hphobic polar 
-            S SER small tiny polar 
-            P PRO small 
-            V VAL small aliph 
-            T THR small polar 
-            N ASN small polar 
-            D ASP small polar charged neg
-            Q GLN polar 
-            E GLU polar charged neg 
-            I ILE hphobic aliph
-            L LEU hphobic aliph
-            M MET hphobic 
-            F PHE hphobic aro
-            Y TYR hphobic aro polar
-            W TRP hphobic aro polar
-            K LYS polar charged pos
-            H HIS polar charged pos aro
-            R ARG polar charged pos 
-            """
+    def __init__(self, ignore_groups = []):
+        lines = []
+
+        lines.append('A ALA small tiny hphobic')
+        lines.append('G GLY small tiny hphobic')
+        lines.append('C CYS small tiny hphobic polar')
+        lines.append('S SER small tiny polar')
+        lines.append('P PRO small')
+        lines.append('V VAL small aliph')
+        lines.append('T THR small polar')
+        lines.append('N ASN small polar')
+        lines.append('D ASP small polar charged neg')
+        lines.append('Q GLN polar')
+        lines.append('E GLU polar charged neg')
+        lines.append('I ILE hphobic aliph')
+        lines.append('L LEU hphobic aliph')
+        lines.append('M MET hphobic')
+        lines.append('F PHE hphobic aro')
+        lines.append('Y TYR hphobic aro polar')
+        lines.append('W TRP hphobic aro polar')
+        lines.append('K LYS polar charged pos')
+        lines.append('H HIS polar charged pos aro')
+        lines.append('R ARG polar charged pos')
+
         self.three_to_groups = defaultdict()
 
-        for line in all_groups.split('\n'):
+        for line in lines:
+            if not line: continue
             lineSP = line.split()
 
             types = []

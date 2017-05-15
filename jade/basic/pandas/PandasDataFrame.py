@@ -105,8 +105,8 @@ def detect_numeric(df):
     """
     Detect numeric components
 
-    :param df: pandas.DataFrame
-    :rtype: pandas.DataFrame
+    :param df: pd.DataFrame
+    :rtype: pd.DataFrame
 
     """
     return df.convert_objects(convert_numeric=True)
@@ -117,7 +117,7 @@ def get_columns(df, columns):
 
     :param df: pandas.DataFrame
     :param columns: list
-    :rtype: pandas.DataFrame
+    :rtype: pd.DataFrame
     """
     return df[columns]
 
@@ -128,7 +128,7 @@ def get_matches(df, column, to_match):
     :param df: pandas.DataFrame
     :param column: str
     :param to_match: str
-    :rtype: pandas.DataFrame
+    :rtype: pd.DataFrame
     """
 
     return df[df[column] == to_match]
@@ -140,7 +140,7 @@ def get_multiple_matches(df, column, to_match_array):
     :param df: pandas.DataFrame
     :param column: str
     :param to_match_array: list
-    :rtype: pandas.DataFrame
+    :rtype: pd.DataFrame
     """
     return df[df[column].isin(to_match_array)]
 
@@ -151,10 +151,10 @@ def get_match_by_array(df, column, match_array):
     Note: This will result in a dataframe, but there may be strange issues when you go to plot the data in seaborn
             No idea why.
 
-    :param df: pandas.DataFrame
+    :param df: pd.DataFrame
     :param column: str
-    :param match_array: pandas.Series
-    :rtype: pandas.DataFrame
+    :param match_array: pd.Series
+    :rtype: pd.DataFrame
     """
 
     new_df = df[df[column].isin(match_array)]
@@ -164,11 +164,11 @@ def get_match_by_array(df, column, match_array):
 def get_row_matches(df, column1, to_match, column2):
     """
     Get the elements of the rows that match a particular column.  If one element, this can be converted easily enough
-    :param df: pandas.DataFrame
+    :param df: pd.DataFrame
     :param column1: str
     :param to_match: str
     :param column2: str
-    :rtype: pandas.Series
+    :rtype: pd.Series
     """
 
     return df[df[column1] == to_match][column2]
@@ -177,7 +177,7 @@ def get_value(df, column):
     """
     Get a single value from a one-row df.  THis is to help for implicit docs, since the syntax to Iloc is so fucking strange.
 
-    :param df: pandas.DataFrame
+    :param df: pd.DataFrame
     :param column: str
     :return: value
     """
@@ -186,9 +186,23 @@ def get_value(df, column):
 def get_n_matches(df, column, to_match):
     """
     Get the number of matches
-    :param df: pandas.DataFrame
+    :param df: pd.DataFrame
     :param column: str
     :param to_match:
     :rtype: int 
     """
     return len(get_matches(df, column, to_match))
+
+def sort_on_list(df, column, sort_order):
+    """
+    Given a list of values, and a column, create a new dataframe that is sorted like so. 
+    No idea why this is so difficult.
+    :param df: 
+    :param list_to_sort: 
+    :rtype: pd.DataFrame 
+    """
+    # Sort:
+    sep = []
+    for o in sort_order:
+        sep.append(df[df['id'].isin([o])])
+    return pd.concat(sep).reset_index()

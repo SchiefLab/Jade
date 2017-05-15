@@ -93,7 +93,10 @@ class NNKEnrichments(object):
         for pos in self.df.columns:
             m = self.df[pos].mean()
             mad = numpy.absolute(self.df[pos] - m).mean()
-            factors[pos] = ((self.df[pos] - m)/mad)**2
+            if mad == 0:
+                factors[pos] = 0
+
+
 
         return factors
 
