@@ -102,6 +102,9 @@ def show_hydrogens(polar_only=True, representation='sticks'):
     else:
         cmd.show(representation, 'elem H')
 
+def generate_symmetry_mates(selection = 'all', distance=6.0):
+    cmd.symexp("symm", selection, '('+selection+')', distance)
+
 ### Some glycan extensions ###
 
 
@@ -113,3 +116,4 @@ cmd.extend('show_hbonds', show_hbonds)
 cmd.extend('add_hydrogens', add_hydrogens)
 cmd.extend('show_hydrogens', show_hydrogens)
 cmd.extend('hide_hydrogens', hide_hydrogens)
+cmd.extend('generate_symmetry_mates', generate_symmetry_mates)
