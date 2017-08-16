@@ -47,7 +47,7 @@ def get_mask_for_alignment(pose, second_pose, overhang = 0):
     Get mask assuming they are both the same length!
     """
     id_map = AtomID_Map_AtomID()
-    rosetta.core.pose.initialize_atomid_map(id_map, pose, AtomID(0,0))
+    rosetta.core.pose.initialize_atomid_map_AtomID(id_map, pose, AtomID(0,0))
 
     start = 1 + overhang
     end = pose.total_residue() - overhang
@@ -70,7 +70,7 @@ def get_map_for_rmsd(pose, second_pose, overhang=3):
 
 def get_mask_for_stem_alignment(pose, second_pose, stem_size):
     id_map = AtomID_Map_AtomID()
-    rosetta.core.pose.initialize_atomid_map(id_map, pose, AtomID(0,0))
+    rosetta.core.pose.initialize_atomid_map_AtomID(id_map, pose, AtomID(0,0))
 
     start = 1
 

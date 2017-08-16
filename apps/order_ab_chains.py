@@ -36,7 +36,7 @@ if __name__ == "__main__":
                         default = "")
 
     parser.add_argument("--in_single", "-s",
-                        "Path to Input PDB File, instead of list.",
+                        help = "Path to Input PDB File, instead of list.",
                         default = "")
 
     parser.add_argument("--out_dir", "-d",
