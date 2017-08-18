@@ -40,7 +40,8 @@ if __name__ == "__main__":
                         default = "")
 
     parser.add_argument("--out_dir", "-d",
-                        help = "Output Directory. Resultant PDB files will go here.")
+                        help = "Output Directory. Resultant PDB files will go here.",
+                        default = "reordered")
 
     options = parser.parse_args()
 
