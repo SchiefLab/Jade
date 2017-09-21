@@ -169,6 +169,7 @@ class RunRosetta(object):
         self._setup_base_options()
 
         if self.options.json_run:
+            print "Setting JSON RUN"
             extra_options = SetupRosettaOptionsGeneral(self.options.json_run)
             self._set_extra_options(extra_options)
         else:
@@ -535,7 +536,7 @@ class RunRosetta(object):
         """
         log_path = self.base_options._get_make_log_root_dir() + "/queue"
         if not os.path.exists(log_path):
-            os.mkdir(log_path)
+            os.makedirs(log_path)
         return log_path
 
     def _set_outdir(self, outdir):
@@ -553,11 +554,11 @@ class RunRosetta(object):
         #name = self.get_out_prefix(*args, **kwargs)
         log_path = os.path.join(self.base_options._get_make_log_root_dir(), "mpi_tracer_logs")
         if not os.path.exists(log_path):
-            os.mkdir(log_path)
+            os.makedirs(log_path)
 
         log_path = log_path+"/"+self._get_job_name()
         if not os.path.exists(log_path):
-            os.mkdir(log_path)
+            os.makedirs(log_path)
         return log_path
 
     def _get_out_prefix(self, *args, **kwargs):
@@ -569,10 +570,10 @@ class RunRosetta(object):
         """
         s = self.base_options._get_root() + "/" + self.options.outdir
         if not os.path.exists(s):
-            os.mkdir(s)
+            os.makedirs(s)
         #s = s + "/"+self.get_out_prefix(*args, **kwargs)
         if not os.path.exists(s):
-            os.mkdir(s)
+            os.makedirs(s)
         return s
 
 
@@ -605,9 +606,8 @@ class RunRosetta(object):
             s = s + " -mpi_tracer_to_file "+ dir+"/tracer_logs_"
 
         #For these benchmarks, there are only a single root directory.
-        if self.extra_options:
+        if self.options.json_run:
             s = s + self.extra_options.get_base_rosetta_flag_string(self.base_options._get_root())
-
         #DB Mode
         if self.db_mode:
             if self.options.db_in:
