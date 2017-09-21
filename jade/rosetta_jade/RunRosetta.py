@@ -13,7 +13,7 @@ from jade.basic.general import get_platform
 from jade.basic.path import *
 from jade.basic.general import fix_input_args
 
-from rosetta_jade.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
+from jade.rosetta_jade.SetupRosettaOptionsGeneral import SetupRosettaOptionsGeneral
 
 #Fixes parser for extra rosetta opts.
 fix_input_args()
