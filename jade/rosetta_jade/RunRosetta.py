@@ -533,7 +533,7 @@ class RunRosetta(object):
             sys.exit("Please specify a program in the JSON run file")
 
         if self.options.jd3:
-            mode=".mpi-serialization."
+            mode=".mpiserialization."
         else:
             mode=".mpi."
 
