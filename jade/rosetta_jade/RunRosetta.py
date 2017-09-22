@@ -235,6 +235,10 @@ class RunRosetta(object):
                                        "Specify as you would in Rosetta. like: glycosylation=137A,136A",
                                 nargs = '*')
 
+        common_options.add_argument("--jd3", help = "Is this app JD3?  Must build with extras=mpi,serialization.",
+                                    default = False,
+                                    action="store_true")
+
         if not self.program:
             common_options.add_argument("--program",
                                  help = "Define the Rosetta program to use if not set in json_run")
@@ -528,7 +532,12 @@ class RunRosetta(object):
         elif not self.program:
             sys.exit("Please specify a program in the JSON run file")
 
-        return self.program +".mpi."+get_platform() + self.options.compiler+"release"
+        if self.options.jd3:
+            mode=".mpi-serialization."
+        else:
+            mode=".mpi."
+
+        return self.program +mode+get_platform() + self.options.compiler+"release"
 
     def _get_make_queue_dir(self, *args, **kwargs):
         """
