@@ -3,7 +3,7 @@ import os
 import sys
 import pandas
 from collections import defaultdict
-from antibody import outliers
+from jade.antibody import outliers
 #A Collection of functions to query the AbDb
 
 

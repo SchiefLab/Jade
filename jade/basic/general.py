@@ -3,6 +3,8 @@ import itertools
 import re
 import datetime
 
+from jade.basic.path import open_file
+
 def merge_dicts(*dict_args):
     """
     Given any number of dicts, shallow copy and merge into a new dict,
@@ -135,3 +137,28 @@ def strip_left(s, pattern):
 
 def get_today():
     return datetime.date.today().strftime("%Y/%m/%d")
+
+
+def extract_score_from_decoy( pdb_path ):
+    """
+    Extract total score from a rosetta decoy (gzipped or otherwise)
+    
+    If score is not found, it will return 0.
+    
+    :param pdb_path: 
+    :return: float
+    """
+
+    INFILE = open_file(pdb_path)
+
+    score = 0
+    for line in INFILE:
+        if line[0:4] == 'pose':
+            lineSP = line.split()
+            score =  float(lineSP[-1])
+            break
+        else:
+            continue
+
+    return score
+

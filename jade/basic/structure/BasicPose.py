@@ -11,6 +11,8 @@ import copy
 #Tkinter Imports
 import tkFileDialog
 
+from jade.basic.path import open_file
+
 #Toolkit Imports
 #import global_variables
 
@@ -143,7 +145,7 @@ class BasicPose:
         Reads PDB file path into a basic PDB map.  All data is held as strings.
         """
         
-        FILE = open(self.pdb_file_path, 'r')
+        FILE = open_file(self.pdb_file_path, 'r')
         i = 0
         for line in FILE:
             line = line.strip()

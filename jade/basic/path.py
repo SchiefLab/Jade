@@ -178,10 +178,29 @@ def get_make_get_dirs(root, dirs):
 
     return outpath
 
+
 def get_file_paths(pattern, dir, ext = ".pdb"):
+    """
+    Get file paths matching the exact pattern and extension.
+    :param pattern: 
+    :param dir: 
+    :param ext: 
+    :return: 
+    """
     files = glob.glob(dir+"/"+pattern+ext)
     file_paths = [dir+"/"+os.path.basename(x) for x in files]
     return file_paths
+
+def get_matching_pdbs(directory, pattern, ext='.pdb'):
+    """
+    Get pdbs in a directory matching a pattern.
+    :param directory: 
+    :param pattern: 
+    :param ext: 
+    :return: 
+    """
+    files = glob.glob(directory+"/"+'*'+pattern+'*'+ext)
+    return [os.path.basename(f) for f in files]
 
 def open_file(file, mode = 'r'):
     if file.split(".")[-1] =="gz":
