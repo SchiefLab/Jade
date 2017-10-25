@@ -4,7 +4,7 @@ import sys, os
 from jade.rosetta_jade.RunRosettaBenchmarks import RunRosettaBenchmarks
 from jade.rosetta_jade.RunRosetta import RunRosetta
 
-from overrides import overrides
+#from overrides import overrides
 
 
 class RunBenchmarksRAbD( RunRosettaBenchmarks ):
@@ -47,7 +47,7 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         if not os.path.exists(self.instructions_dir):
             os.mkdir(self.instructions_dir)
 
-    @overrides
+    #@overrides
     def run_benchmark(self, benchmark_names, benchmark_options):
         """
         Run a single benchmark with options.
@@ -76,7 +76,7 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
             RunRosettaBenchmarks.run_benchmark(self, benchmark_names, benchmark_options)
 
 
-    @overrides
+    #@overrides
     def _get_output_string(self):
 
         if not self.options.separate_job_per_pdb:
@@ -91,12 +91,12 @@ class RunBenchmarksRAbD( RunRosettaBenchmarks ):
         s = s + " -cdr_instructions " + self._create_instructions(self.instructions_dir+"/"+os.path.basename(self._get_make_out_path())+".instruct")
         return s
 
-    @overrides
+    #@overrides
     def _get_pdb_list_fname(self):
         return ".".join([self.pdblist_dir+"/"+self._current_settings["dataset"],
                         self._current_settings["l_chain"]+".PDBLIST.txt"])
 
-    @overrides
+    #@overrides
     def _get_job_name(self):
         return self.extra_options.get_exp()+"."+os.path.basename(self._get_make_out_path())+"."+self._current_settings["l_chain"]
 
