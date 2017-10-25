@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from RAbD_BM.RunBenchmarksRAbD import RunBenchmarksRAbD
+from jade.RAbD_BM.RunBenchmarksRAbD import RunBenchmarksRAbD
 
 
 if __name__ == "__main__":

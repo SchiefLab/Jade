@@ -10,8 +10,8 @@ from argparse import ArgumentParser
 
 import rosetta_jade.FeaturesJsonCreator as json_creator
 
-import RAbD_BM.tools as tools
-from rosetta_jade.BenchmarkInfo import *
+import jade.RAbD_BM.tools as tools
+from jade.rosetta_jade.BenchmarkInfo import *
 
 p = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append(p); #Allows all modules to use all other modules, without needing to update pythonpath
