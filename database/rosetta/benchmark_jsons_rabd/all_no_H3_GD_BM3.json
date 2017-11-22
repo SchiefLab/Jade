@@ -108,7 +108,6 @@
     ]
   }],
   "flags":[
-    "-add_graft_log_to_pdb",
-    "-restore_talaris_behavior"
+    "-add_graft_log_to_pdb"
   ]
 }
