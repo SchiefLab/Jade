@@ -193,7 +193,7 @@ class BasicPose:
             if not filename:return
             #global_variables.current_directory = os.path.dirname(filename)
 
-        FILE = open(filename, 'w')
+        FILE = open(filename.strip('.gz'), 'w')
         if output_remarks:
             for line in self.remarks:
                 FILE.write(line+"\n")

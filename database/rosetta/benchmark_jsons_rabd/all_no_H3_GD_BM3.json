@@ -65,7 +65,13 @@
     "use_for_prefix":false,
     "use_for_outdir":false
   },
-
+  "mc_optimize_dG":{
+    "rosetta_option":"-mc_optimize_dG",
+    "benchmarks": [
+      false,
+      true
+    ]
+  },
   "mintype": {
     "benchmarks": [
       "min"
