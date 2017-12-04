@@ -28,7 +28,7 @@
   "outer_cycles":{
     "rosetta_option":"-outer_cycle_rounds",
     "benchmarks":[
-      1
+      25
     ]
   },
   "inner_cycles":{
