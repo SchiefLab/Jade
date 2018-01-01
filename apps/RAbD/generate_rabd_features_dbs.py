@@ -10,12 +10,12 @@ from argparse import ArgumentParser
 
 #Module DB Imports
 
-from rosetta_jade.features import *
-from rosetta_jade.RunRosetta import RunRosetta
+from jade.rosetta_jade.features import *
+from jade.rosetta_jade.RunRosetta import RunRosetta
 
-from pymol_jade.PyMolScriptWriter import *
-from basic.general import *
-from basic import path
+from jade.pymol_jade.PyMolScriptWriter import *
+from jade.basic.general import *
+from jade.basic import path
 
 def main():
 
@@ -42,7 +42,7 @@ def main():
 
     analysis_options.add_argument("--analysis",
                         help = "Analysis to run on PDBs",
-                        default = "all",
+                        default = "cluster_features",
                         choices = ["all", "cluster_features", "antibody_features"])
 
     analysis_options.add_argument("--use_present_dbs",

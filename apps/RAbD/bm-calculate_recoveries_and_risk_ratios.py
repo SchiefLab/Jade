@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from argparse import ArgumentParser
-from RAbD_BM.AnalysisInfo import *
-from RAbD_BM.AnalyzeRecovery import *
+from jade.RAbD_BM.AnalysisInfo import *
+from jade.RAbD_BM.AnalyzeRecovery import *
 
 def main():
     parser = ArgumentParser(description= "Calculates and plots monte carlo acceptance values for antibody design benchmarking.")

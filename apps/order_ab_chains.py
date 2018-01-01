@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #Jared Adolf-Bryfogle
-#Reorders PDBFiles in a dirctory according to LH_A in order for Rosetta Antibody Design benchmarking. Removes HetAtm!!!
+#Reorders PDBFiles in a dirctory according to A_LH in order for Rosetta Antibody Design benchmarking. Removes HetAtm!!!
 
 import sys
 import os
@@ -25,7 +25,7 @@ def reorder_and_save_chains(in_path, out_path, remove_het = False):
 
 if __name__ == "__main__":
 
-    parser = ArgumentParser("Reorders PDBFiles in a dirctory according to LH_A in order for Rosetta Antibody Design benchmarking. Removes HetAtm")
+    parser = ArgumentParser("Reorders PDBFiles in a dirctory according to A_LH in order for Rosetta Antibody Design benchmarking. Removes HetAtm")
 
     parser.add_argument("--in_dir", "-i",
                         default = os.getcwd(),

@@ -8,11 +8,7 @@
                 	<StructureScoresFeatures/>
 			<CDRClusterFeatures input_ab_scheme="AHO_Scheme"/>
 			<AntibodyFeatures input_ab_scheme="AHO_Scheme" cdr_definition="North" interface="LH_A" pack_separated="True" pack_together="False"/>
-			<ResidueSecondaryStructureFeatures/>
 			<ResidueScoresFeatures/>
-			<HBondFeatures/>
-			<SaltBridgeFeatures/>
-			<ResidueBurialFeatures/>
 		</ReportToDB>
 	</MOVERS>
 	<PROTOCOLS>

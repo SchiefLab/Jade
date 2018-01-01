@@ -126,7 +126,7 @@ def get_decoy_path(decoy, alternate_paths = None):
         for ext in extensions:
             for comp in compressions:
                 search_path = f+ext+comp
-                print search_path
+                #print search_path
                 if os.path.exists(search_path):
                     return search_path
 
@@ -151,7 +151,7 @@ def get_decoy_extension(decoy):
     for ext in extensions:
         for comp in compressions:
             extension = ext+comp
-            print extension
+            #print extension
             if re.search(extension, decoy):
                 return extension
 
