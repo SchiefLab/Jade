@@ -141,7 +141,7 @@ def write_queue_file(cmd, queue_dir, name):
 
 
 class RunRosetta(object):
-    def __init__(self, program = None, parser = None, db_mode = False):
+    def __init__(self, program = None, parser = None, db_mode = False, json_run=None):
         """
         Base class for Running Rosetta through python.
         Mainly used for benchmarking experiments.
@@ -167,6 +167,9 @@ class RunRosetta(object):
         self._add_args(parser)
         self._parse_args()
         self._setup_base_options()
+
+        if json_run:
+            self.options.json_run = json_run
 
         if self.options.json_run:
             print "Setting JSON RUN"
@@ -360,6 +363,7 @@ class RunRosetta(object):
 
     def _set_json_run(self, json_run):
         print "JSON Run Set: "+json_run
+        self.options.json_run = json_run
         self._set_extra_options(SetupRosettaOptionsGeneral( json_run))
 
     def _set_extra_options(self, extra_options):
@@ -608,7 +612,6 @@ class RunRosetta(object):
         #Outpath
         s = s + " -out:path:all " + self._get_make_out_path(*args, **kwargs)
         s = s + self.base_options.get_base_rosetta_flag_string()
-
         #Log Dir:
         if not self.options.one_file_mpi:
             dir = self._get_make_mpi_tracer_dir(*args, **kwargs)
@@ -639,8 +642,10 @@ class RunRosetta(object):
                 s = s + " -inout:dbms:database_name " +self.options.db_name
 
 
+
             if re.search("features", self.base_options.get_xml_script() + self.extra_options.get_xml_script()):
 
+                print "Checking Features"
                 if self.options.db_name:
                     s = s +" -parser:script_vars name="+self.options.db_name
                 if self.options.db_batch:

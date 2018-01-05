@@ -35,7 +35,7 @@ pose = pose_from_pdb(sys.argv[1])
 
 for i in range(1, pose.total_residue() + 1):
     if (pose.residue_type(i).is_carbohydrate()):
-        #print "Residue: "+repr(i)+" "+pose.pdb_info().pose2pdb(i)
+        print "Residue: "+repr(i)+" "+pose.pdb_info().pose2pdb(i)
         n_torsions = get_n_glycosidic_torsions_in_res(pose, i)
         dih_angle = 5.0
         for torsion in range(1, n_torsions + 1):

@@ -19,11 +19,16 @@ class SetupRosettaOptionsGeneral(object):
             if not os.path.exists(cluster_json_file):
                 sys.exit("cluster json file not found")
 
+        self.json_file  = cluster_json_file
+        print "JSON: "+ self.json_file
         FILE = open(cluster_json_file, 'r')
         self.json_dict = json.load(FILE)
+        print "JSON1: "+repr(self.json_dict)
+
         FILE.close()
         self._setup_json_options()
 
+        print "JSON2: " +repr(self.json_dict)
     def get_nstruct(self):
         if self.json_dict.has_key("nstruct"):
             return self.json_dict["nstruct"]
@@ -50,10 +55,15 @@ class SetupRosettaOptionsGeneral(object):
         return self._get_indirs()
 
     def get_xml_script(self):
+
+        print "Getting XML Script!"
+
+        print self.json_dict
         if self.json_dict.has_key("xml_script"):
             script =  self.json_dict["xml_script"]
 
             #Attempt searching for xml script.  May be in in_paths:
+            print "SCRIPT: "+script
             if os.path.exists(get_xml_scripts_path()+"/"+script):
                 return get_xml_scripts_path()+"/"+script
             else:
@@ -80,6 +90,8 @@ class SetupRosettaOptionsGeneral(object):
 
         """
         s = " "
+
+        print "Getting flag file!!!"
 
         if self.get_xml_script():
             s = s + " -parser:protocol "+self.get_xml_script()

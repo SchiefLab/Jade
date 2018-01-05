@@ -42,7 +42,7 @@ def main():
 
     analysis_options.add_argument("--analysis",
                         help = "Analysis to run on PDBs",
-                        default = "cluster_features",
+                        default = "all",
                         choices = ["all", "cluster_features", "antibody_features"])
 
     analysis_options.add_argument("--use_present_dbs",

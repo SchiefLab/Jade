@@ -614,7 +614,7 @@ def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, o
     scripter.add_line("hide lines")
     scripter.add_line("group models, model*")
     if antibody:
-        color_cdrs_path = get_bin_path()+"/color_cdrs.pml"
+        color_cdrs_path = get_bin_path()+"/pymol_scripts/color_cdrs.pml"
         scripter.add_line("@"+color_cdrs_path)
 
     scripter.add_save_session(pse_path)

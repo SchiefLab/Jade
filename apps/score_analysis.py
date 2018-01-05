@@ -15,7 +15,7 @@ from jade.pymol_jade.PyMolScriptWriter import *
 from jade.rosetta_jade.ScoreFiles import ScoreFile
 from jade.basic.plotting.MakeFigure import *
 
-from shutil import copyfile
+import shutil
 
 ########################################################################
 
@@ -144,7 +144,11 @@ def main(argv):
         options.decoy_names = [x.replace("pre_model_1__", "pre_model_1_") for x in options.decoy_names]
         options.decoy_names = [os.path.basename(x) for x in options.decoy_names]
 
+
+
+
     s = 0
+    print "Decoy Names:"+ str(len(options.decoy_names))
     for filename in options.scorefiles:
         s += 1
         if filename != "":
@@ -154,7 +158,27 @@ def main(argv):
             print >> sys.stderr, "File not found:", filename
             continue
 
+
+
         sf = ScoreFile(filename)
+
+        # Update Decoys
+        if options.decoy_names:
+            decoy_dict = defaultdict()
+            new_decoy_list = []
+            #print sf.decoys
+
+            #Pre-organize data
+            for r in sf.decoys:
+                decoy_dict[r[sf.decoy_field_name]] = r
+
+
+            for name in options.decoy_names:
+                new_decoy_list.append(decoy_dict[name])
+
+            print "New Dict: "+str(len(new_decoy_list))
+            sf.decoys = new_decoy_list
+
         df = sf.get_Dataframe()
 
         printVerbose("  File Decoys: %d" % sf.get_decoy_count())
@@ -270,7 +294,11 @@ def main(argv):
                     pdb_dir = os.path.dirname(filename)
                     if not pdb_dir:
                         pdb_dir = os.getcwd()
-                print "PDB DIR: "+pdb_dir
+
+                else:
+                    pdb_dir = options.pdb_dir
+
+                print "PDB DIR: " + pdb_dir
 
                 if scoreterm == "top_n_by_10" and "top_n_by_10" in options.scoretypes and options.top_n_by_10_scoretype in scoreterms:
                     top_p = int(len(decoy_names) / 10)
@@ -343,15 +371,15 @@ def main(argv):
 
 
                     for i in range(0, options.top_n):
-                        print top_by_n_decoys[i][1]
-                        copyfile(top_by_n_decoys[i][1], options.outdir)
+                        print get_decoy_path(top_by_n_decoys[i][1])
+                        shutil.copy(get_decoy_path(top_by_n_decoys[i][1]), options.outdir)
                 else:
                     ordered = sf.get_ordered_decoy_list(scoreterm, top_n=int(options.top_n), decoy_names=decoy_names)
                     top_decoys = [[o[0], pdb_dir + "/" + o[1]] for o in ordered]
 
                     for i in range(0, options.top_n):
-                        print top_decoys[i][1]
-                        copyfile(top_decoys[i][1], options.outdir)
+                        print get_decoy_path(top_decoys[i][1])
+                        shutil.copy(get_decoy_path(top_decoys[i][1]), options.outdir)
 
 ########################################################################
 
