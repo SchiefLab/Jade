@@ -31,6 +31,7 @@ def get_cdr_cluster_df(db_path):
 
     con = sqlite3.connect(db_path)
     df = pandas.read_sql_query(query, con)
+    df.to_csv(os.path.basename(db_path)+".csv")
     con.close()
     return df
 
@@ -72,6 +73,7 @@ def get_length(df, pdbid, cdr):
     :rtype: int
     """
     d = df[(df['input_tag'].str.contains(pdbid)) & (df['CDR'] == cdr)]
+    #print d
     return d.iloc[0]['length']
 
 

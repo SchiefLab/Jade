@@ -45,12 +45,16 @@ class AnalyzeRecovery:
         Optionally pass in CDRs to control which CDRs are analyzed.
           Otherwise, we read the info from RUN_SETTINGS.txt (which is used for benchmarking), which either has ALL or a specific CDR.
 
-
+        
         :param pyig_design_dbpath: str
         :param analysis_info: AnalysisInfo
         :param native_info: NativeInfo
         :param cdrs: [str]
         """
+
+        cdrs = ["L1", "L2", "L3", "H1", "H2"]
+
+
         if not isinstance(analysis_info, AnalysisInfo): sys.exit()
         if not isinstance(native_info, NativeInfo): sys.exit()
 
@@ -113,6 +117,7 @@ class AnalyzeRecovery:
 
         :param db_path: str
         """
+        print "opening "+db_path
         db_con = sqlite3.connect(db_path)
 
 
@@ -145,6 +150,7 @@ class RecoveryCalculator(object):
         self.all_cdrs = cdr_names
         self.heavy_cdrs = heavy_cdr_names
         self.Antibody = AntibodyStructure()
+        print "Opening "+native_db_path
         self.native_df = feat_tools.get_cdr_cluster_df(native_db_path)
         #print "Native Dataframe: "
         #print self.native_df
@@ -187,11 +193,11 @@ class TopRecoveryCalculator(RecoveryCalculator):
 
         bm_df = feat_tools.get_cdr_cluster_df(bm_db_path)
 
-
+        #print self.native_df
         flat_dict = defaultdict(list)
         for pdbid in pdbids:
             for cdr in cdrs:
-                #print pdbid+" "+cdr
+                print pdbid+" "+cdr
 
                 native_length = feat_tools.get_length(self.native_df, pdbid, cdr)
                 native_cluster = feat_tools.get_cluster(self.native_df, pdbid, cdr)

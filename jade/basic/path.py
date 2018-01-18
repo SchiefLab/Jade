@@ -202,6 +202,13 @@ def get_matching_pdbs(directory, pattern, ext='.pdb'):
     files = glob.glob(directory+"/"+'*'+pattern+'*'+ext)
     return [os.path.basename(f) for f in files]
 
+def get_all_pdbs(directory, ext='.pdb'):
+    return get_matching_pdbs(directory, '', ext)
+
+def get_all_pdb_paths(directory, ext='.pdb'):
+    pdbs = get_all_pdbs(directory, ext)
+    return [directory+'/'+pdb for pdb in pdbs]
+
 def open_file(file, mode = 'r'):
     if file.split(".")[-1] =="gz":
         #print "opening gzipped file"
@@ -210,6 +217,14 @@ def open_file(file, mode = 'r'):
         INFILE = open(file, mode)
 
     return INFILE
+
+def parse_contents(file):
+    """
+    Return a list of (stripped) content, skipping empty lines and comments.
+    :param file: 
+    :return: 
+    """
+    return [x.strip() for x in open_file(file, 'r').readlines() if not x.startswith('#') and x]
 
 def get_directories_recursively(inpath):
     """

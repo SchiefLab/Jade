@@ -176,7 +176,6 @@ def main(argv):
             for name in options.decoy_names:
                 new_decoy_list.append(decoy_dict[name])
 
-            print "New Dict: "+str(len(new_decoy_list))
             sf.decoys = new_decoy_list
 
         df = sf.get_Dataframe()
@@ -207,7 +206,7 @@ def main(argv):
             stats = sf.get_stats(options.scoretypes, decoy_names)
             max_width = max([len(x) for x in stats.keys()])
             fmt = "%*s:  %4s  %10s  %10s  %10s  %10s  %10s"
-            print fmt % (max_width, "TERM", "n", "Min", "Max", "Mean", "Median", "StdDev")
+            print "SUMMARY:  " +options.prefix+ "  "+ fmt % (max_width, "TERM", "n", "Min", "Max", "Mean", "Median", "StdDev")
 
             for column in stats:
                 if column == "top_n_by_10": continue
@@ -215,7 +214,7 @@ def main(argv):
                 for f in ['min', 'max', 'mean', 'median', 'stddev']:
                     if not v[f] == None:
                         v[f] = "%.3f" % v[f]
-                print fmt % (max_width, column, v['n'], v['min'], v['max'], v['mean'], v['median'], v['stddev'])
+                print "SUMMARY:  " +options.prefix+ "  "+ fmt % (max_width, column, v['n'], v['min'], v['max'], v['mean'], v['median'], v['stddev'])
             continue
 
         ### Default score list handler
