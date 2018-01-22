@@ -55,11 +55,12 @@ class BioPose(object):
 
         path = path.strip()
         model_id = os.path.basename(path)
-        if os.path.basename(path).split('.')[-1] == 'gz':
-            GZ = gzip.open(path, 'rb')
-            GZ.close()
-        else :
-            structure = parser.get_structure(model_id, path)
+        #if os.path.basename(path).split('.')[-1] == 'gz':
+        #    GZ = gzip.open(path, 'rb')
+        #    GZ.close()
+        #else :
+
+        structure = parser.get_structure(model_id, open_file( path ))
         header = parser.get_header()
 
         return structure, header

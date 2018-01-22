@@ -135,7 +135,7 @@ if __name__ == "__main__":
         INFILE.close()
 
     for pdb in pdbs:
-        #print "#Reading "+pdb
+        #print "Reading "+pdb
         biopose = BioPose(pdb)
         biostructure = biopose.structure()
         ab_info = AntibodyStructure()
