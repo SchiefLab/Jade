@@ -50,6 +50,11 @@ if __name__ == "__main__":
                         default = False,
                         action = "store_true")
 
+    parser.add_argument("--dump_midpoints",
+                        help = "Dump midpoint PDBs?",
+                        default = False,
+                        action="store_true")
+
     options = parser.parse_args()
 
     print(options)
@@ -122,7 +127,9 @@ if __name__ == "__main__":
     #Trim the pose.
     print("Trimming Pose")
     pose.delete_residue_range_slow(rosetta_start+1, rosetta_end-1)
-    pose.dump_pdb(options.out_prefix+"deleted"+"_"+decoy_name+".pdb")
+
+    if options.dump_midpoints:
+        pose.dump_pdb(options.out_prefix+"deleted"+"_"+decoy_name+".pdb")
 
     rsd_set = pose.residue_type_set_for_pose()
 
@@ -145,7 +152,8 @@ if __name__ == "__main__":
 
         current_resnum+=1
 
-    pose.dump_pdb(options.out_prefix+"built"+"_"+decoy_name+".pdb")
+    if options.dump_midpoints:
+        pose.dump_pdb(options.out_prefix+"built"+"_"+decoy_name+".pdb")
 
 
     #Run CCD
