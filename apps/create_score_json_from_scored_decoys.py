@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     options = parser.parse_args()
 
-    print(options)
+    #print(options)
 
     if len(options.decoys) == 0:
         sys.exit("Please pass decoys to parse score.")
@@ -53,15 +53,20 @@ if __name__ == "__main__":
         OUTFILE = open(options.prefix + "score.json", 'w')
 
     scores = []
+    decoy_num = 1
+    print("Reading",len(decoys), "decoys")
     for decoy in decoys:
+        if decoy_num % 50 == 0:
+            print("Decoy",decoy_num)
         score_dict = parse_decoy_scores(decoy)
         if not score_dict:
             print("decoy", decoy, "has no score")
         if score_dict:
             OUTFILE.write(json.dumps(score_dict, sort_keys=True)+"\n")
 
-
+        decoy_num+=1
 
     #OUTFILE.write("\n".join(json.dumps(scores)))
 
     OUTFILE.close()
+    print("Done")

@@ -761,6 +761,7 @@ class RunRosetta(object):
 
             cmd = self._get_full_cmd()
             print_full_cmd(cmd)
+            print(cmd + "\n")
             os.system(cmd)
 
         elif self.options.job_manager == "qsub":
