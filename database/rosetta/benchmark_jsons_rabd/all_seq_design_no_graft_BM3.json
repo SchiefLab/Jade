@@ -53,7 +53,7 @@
   "paper_db":{
     "rosetta_option":"-paper_ab_db",
     "benchmarks":[
-      true
+      false
     ]
   },
   "l_chain": {
