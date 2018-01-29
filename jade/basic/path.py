@@ -209,22 +209,22 @@ def get_all_pdb_paths(directory, ext='.pdb'):
     pdbs = get_all_pdbs(directory, ext)
     return [directory+'/'+pdb for pdb in pdbs]
 
-def open_file(file, mode = 'r'):
-    if file.split(".")[-1] =="gz":
+def open_file(file_path, mode = 'r'):
+    if file_path.split(".")[-1] =="gz":
         #print "opening gzipped file"
-        INFILE = gzip.open(file, mode+'b')
+        INFILE = gzip.open(file_path, mode+'b')
     else:
-        INFILE = open(file, mode)
+        INFILE = open(file_path, mode)
 
     return INFILE
 
-def parse_contents(file):
+def parse_contents(file_path):
     """
     Return a list of (stripped) content, skipping empty lines and comments.
     :param file: 
     :return: 
     """
-    return [x.strip() for x in open_file(file, 'r').readlines() if not x.startswith('#') and x]
+    return [x.strip() for x in open_file(file_path, 'r').readlines() if not x.startswith('#') and x]
 
 def get_directories_recursively(inpath):
     """
