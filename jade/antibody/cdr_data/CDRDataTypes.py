@@ -1,14 +1,14 @@
 import copy
 
 #PyIgClassify
-from antibody.CDRClusterer import *
-from basic.sequence import fasta
+from jade.antibody.CDRClusterer import *
+from jade.basic.sequence import fasta
 
 #Modules
-from antibody.cdr_data.CDRData import *
-from basic.sequence.ClustalRunner import *
-from basic.structure.BioPose import *
-from basic.structure.Structure import AntibodyStructure
+from jade.antibody.cdr_data.CDRData import *
+from jade.basic.sequence.ClustalRunner import *
+from jade.basic.structure.BioPose import *
+from jade.basic.structure.Structure import AntibodyStructure
 
 class CDRLengthData(CDRData):
     def __init__(self, native_path, is_camelid = False):

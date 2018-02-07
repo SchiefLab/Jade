@@ -3,7 +3,7 @@ import os
 
 import pandas
 
-from basic.sql.StatementCreator import *
+from jade.basic.sql.StatementCreator import *
 
 
 ########################################################################################################################

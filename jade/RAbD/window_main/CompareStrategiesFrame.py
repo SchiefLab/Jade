@@ -1,8 +1,8 @@
 import tkFileDialog
 import tkSimpleDialog
 
-from basic.TKinter.Listbox import AutoListbox
-from RAbD.AnalyzeAntibodyDesigns import *
+from jade.basic.TKinter.Listbox import AutoListbox
+from jade.RAbD.AnalyzeAntibodyDesigns import *
 
 
 class CompareStrategiesFrame( Frame ):

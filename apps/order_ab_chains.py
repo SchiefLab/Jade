@@ -13,10 +13,10 @@ def reorder_and_save_chains(in_path, out_path, remove_het = False):
     blank_pdb = BasicPose()
     full_pdb = BasicPose(in_path)
 
-    blank_pdb.copy_chain_into_pdb_map(full_pdb, "A")
-    blank_pdb.copy_chain_into_pdb_map(full_pdb, "L")
-    blank_pdb.copy_all_but_chains_into_pdb_map(full_pdb, ["A", "L"])
 
+    blank_pdb.copy_all_but_chains_into_pdb_map(full_pdb, ["L", "H"])
+    blank_pdb.copy_chain_into_pdb_map(full_pdb, "L")
+    blank_pdb.copy_chain_into_pdb_map(full_pdb, "H")
     if remove_het:
         blank_pdb.remove_hetatm_atoms()
         blank_pdb.remove_waters()

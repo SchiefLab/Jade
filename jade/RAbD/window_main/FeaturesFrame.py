@@ -1,6 +1,6 @@
 import os
 from Tkinter import *
-from RAbD.AnalyzeAntibodyDesigns import *
+from jade.RAbD.AnalyzeAntibodyDesigns import *
 
 
 class FeaturesFrame(Frame):

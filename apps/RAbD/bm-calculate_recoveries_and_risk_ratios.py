@@ -50,9 +50,12 @@ def main():
 
 def get_ab_dir(benchmark_info):
 
-    if not benchmark_info.settings.has_key("paper_ab_db"):
+    print(benchmark_info.settings)
+
+    if not benchmark_info.settings.has_key("PAPER_DB"):
         return os.getenv("ROSETTA3_DB")+"/sampling/antibodies/antibody_database_rosetta_design.db"
-    else:
+
+    elif benchmark_info.settings["PAPER_DB"] == 'False':
         return os.getenv("ROSETTA3_DB") +"/sampling/antibodies/antibody_database_rosetta_design_north_paper.db"
 
 

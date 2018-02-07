@@ -1,5 +1,5 @@
 from Tkinter import *
-from basic.filters.FilterSettings import FilterSettings
+from jade.basic.filters.FilterSettings import FilterSettings
 
 
 

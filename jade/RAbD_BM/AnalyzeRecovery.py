@@ -6,9 +6,8 @@
 # Risk Ratio of each experiment for conclusive statistics.
 
 
-import gzip
-import os
-import sys
+import gzip,os,sys,re,glob,pandas
+
 
 try:
     import sqlite3
@@ -18,10 +17,6 @@ except ImportError:
 
 from collections import defaultdict
 from optparse import OptionParser
-import re
-import glob
-
-import pandas
 
 import jade.RAbD_BM.tools_ab_db as pyig_tools
 import jade.RAbD_BM.tools_features_db as feat_tools
@@ -190,6 +185,11 @@ class TopRecoveryCalculator(RecoveryCalculator):
 
         #Calculate
         exp_name = exp_name
+
+        print "Getting BM data: "+bm_db_path
+
+        if not os.path.exists(bm_db_path):
+            sys.exit("BM DB does not exist!")
 
         bm_df = feat_tools.get_cdr_cluster_df(bm_db_path)
 

@@ -15,22 +15,22 @@ p = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append(p);  # Allows all modules to use all other modules, without needing to update pythonpath
 
 # PyIgD
-from antibody.cdr_data.CDRDataTypes import *
-from basic.threading.Threader import *
-from RAbD_BM.AnalysisInfo import *
-from RAbD.AnalyzeAntibodyDesigns import CompareAntibodyDesignStrategies
+from jade.antibody.cdr_data.CDRDataTypes import *
+from jade.basic.threading.Threader import *
+from jade.RAbD_BM.AnalysisInfo import *
+from jade.RAbD.AnalyzeAntibodyDesigns import CompareAntibodyDesignStrategies
 
 ## Window Frames
-from RAbD.window_main.menu import AntibodyDesignAnalysisMenu
-from RAbD.window_main.CompareStrategiesFrame import CompareStrategiesFrame
-from RAbD.window_main.FeaturesFrame import FeaturesFrame
-from RAbD.window_main.AnalysisFrame import AnalysisFrame
+from jade.RAbD.window_main.menu import AntibodyDesignAnalysisMenu
+from jade.RAbD.window_main.CompareStrategiesFrame import CompareStrategiesFrame
+from jade.RAbD.window_main.FeaturesFrame import FeaturesFrame
+from jade.RAbD.window_main.AnalysisFrame import AnalysisFrame
 
 ## Window Modules
-from RAbD.window_modules.FilterSettingsWindow import *
+from jade.RAbD.window_modules.FilterSettingsWindow import *
 
-from basic.TKinter.ImageFrame import ImageFrame
-from basic import path
+from jade.basic.TKinter.ImageFrame import ImageFrame
+from jade.basic import path
 
 
 #DESCRIPTION

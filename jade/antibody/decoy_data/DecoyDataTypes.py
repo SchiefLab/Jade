@@ -1,7 +1,7 @@
 import numpy
 
-from antibody.decoy_data.DecoyData import *
-from basic.sql.StatementCreator import *
+from jade.antibody.decoy_data.DecoyData import *
+from jade.basic.sql.StatementCreator import *
 
 
 

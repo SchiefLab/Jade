@@ -3,7 +3,7 @@ from Tkinter import *
 import tkFileDialog
 import tkSimpleDialog
 
-from RAbD.AnalyzeAntibodyDesigns import *
+from jade.RAbD.AnalyzeAntibodyDesigns import *
 
 
 class AntibodyDesignAnalysisMenu(object):

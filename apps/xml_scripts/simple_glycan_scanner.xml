@@ -1,0 +1,19 @@
+<ROSETTASCRIPTS>
+    <SCOREFXNS>
+    </SCOREFXNS>
+    <RESIDUE_SELECTORS>
+        <Index name="select" resnums="%%resnum%%" />
+    </RESIDUE_SELECTORS>
+    <MOVERS>
+        <CreateGlycanSequonMover name="motif_creator" residue_selector="select" basic_enhanced_n_sequon="false" pack_neighbors="1"/>
+        <SimpleGlycosylateMover name="glycosylate1" positions="%%resnum%%" glycosylation="man9" idealize_glycosylation="0" strip_existing="1"/>
+        <GlycanTreeRelax name="GlycTree" layer_size="2" window_size="1" rounds="1" refine="false" glycan_relax_rounds="25" >
+        </GlycanTreeRelax>
+    </MOVERS>
+    <PROTOCOLS>
+        <Add mover="motif_creator"/>
+        <Add mover="glycosylate1"/>
+        <Add mover="GlycTree"/>
+    </PROTOCOLS>
+</ROSETTASCRIPTS>
+
