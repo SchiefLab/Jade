@@ -14,7 +14,7 @@ setup(name='jade',
       author='Jared Adolf-Bryfogle',
       author_email='jadolfbr@gmail.com',
       license='BSD',
-      packages=find_packages(),
+      packages=find_packages('jade'),
       install_requires=[
           'biopython',
           'numpy',
