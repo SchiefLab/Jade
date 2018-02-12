@@ -38,7 +38,9 @@ Nothing fancy yet.  A true python install via PIP is planned.  For now, you will
  
   ```export PATH=$PATH:/path/to/Jade/apps/RAbD```
  
- 
+ # Database
+
+ Any associated files for Jade go in jade/database.  Use the module path.py to get the path to the database.
  
 # Code Organization
 

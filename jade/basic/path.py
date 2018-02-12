@@ -37,7 +37,7 @@ def get_testing_path():
     Get the path to the Jade testing directory
     :rtype: str
     """
-    return get_Jade_root()+"/testing"
+    return get_Jade_root()+"/jade/tests"
 
 def get_testing_inputs_path():
     """
@@ -221,8 +221,8 @@ def open_file(file_path, mode = 'r'):
 def parse_contents(file_path):
     """
     Return a list of (stripped) content, skipping empty lines and comments.
-    :param file: 
-    :return: 
+    :param file: string
+    :rtype: list 
     """
     return [x.strip() for x in open_file(file_path, 'r').readlines() if not x.startswith('#') and x]
 
@@ -237,5 +237,15 @@ def get_directories_recursively(inpath):
     for root, dirs, files in os.walk(inpath):
         all_dirs.extend([root+"/"+d for d in dirs if d[0] != '.'])
     return all_dirs
+
+
+###############
+
+def get_database_testing_path():
+    """
+    Get the path to the database testing file.
+    :return: 
+    """
+    return get_database_path()+'/test_file.txt'
 
 
