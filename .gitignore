@@ -99,3 +99,10 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Etc
+*.DS_Store
+*.pyc
+*.idea
+*.ipynb_checkpoints
+clustal_omega
