@@ -5,7 +5,7 @@ import os,glob
 
 
 def readme():
-    with open('README.md') as f:
+    with open('README.rst') as f:
         return f.read()
 
 def get_all_scripts_to_install_user(public_dir='apps/public', pilot_dir='apps/pilot'):
