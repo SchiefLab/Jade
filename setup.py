@@ -121,7 +121,5 @@ setup(name='jade',
       zip_safe=False,
       include_package_data=True,
       test_suite='tests',
-      tests_require=test_requirements,
-      setup_requires=setup_requirements,
       scripts = get_all_scripts_to_install(),
 )
