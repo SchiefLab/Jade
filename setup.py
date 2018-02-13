@@ -1,13 +1,24 @@
+
 from setuptools import setup, find_packages
 import os,glob
 
-if hasattr(__builtins__, 'raw_input'): input = raw_input
+
 
 def readme():
     with open('README.md') as f:
         return f.read()
 
-def get_all_scripts_to_install(public_dir='apps/public', pilot_dir='apps/pilot'):
+def get_all_scripts_to_install_user(public_dir='apps/public', pilot_dir='apps/pilot'):
+    """
+    An attempt at user-level control of the install.  Does not work.  Pip hangs.
+    The function itself has been tested outside of this.
+    :param public_dir: 
+    :param pilot_dir: 
+    :return: 
+    """
+    if hasattr(__builtins__, 'raw_input'): input = raw_input
+
+    print "Gathering scripts to install...\n"
 
     #Public Apps
 
@@ -57,6 +68,28 @@ def get_all_scripts_to_install(public_dir='apps/public', pilot_dir='apps/pilot')
         all_app_paths.extend(apps)
     return all_app_paths
 
+def get_all_scripts_to_install(public_dir='apps/public', pilot_dir='apps/pilot'):
+    all_scripts = []
+    for outer in [public_dir, pilot_dir]:
+        for app_dir in (sorted([ d for d in glob.glob(os.path.join(outer, "*")) if os.path.isdir(d)])):
+            #print "reading " + app_dir
+            f = glob.glob(app_dir+"/"+"*.py")
+            #print(f)
+
+            all_scripts.extend(f)
+
+    #print all_scripts
+    #print "Installing scripts:"
+    #print "\n\t".join(all_scripts)
+
+    return all_scripts
+
+def find_all_packages():
+    #print "Finding Packages."
+    p = ['jade/'+ sub for sub in find_packages('jade')]
+    #print repr(p)
+    return p
+
 setup(name='jade',
       long_description=readme(),
       version='1.0',
@@ -67,7 +100,7 @@ setup(name='jade',
       author='Jared Adolf-Bryfogle',
       author_email='jadolfbr@gmail.com',
       license='BSD',
-      packages=find_packages('jade'),
+      packages= find_all_packages(),
       install_requires=[
           'biopython',
           'numpy',
