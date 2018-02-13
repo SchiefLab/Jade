@@ -79,9 +79,9 @@ def get_all_scripts_to_install(public_dir='apps/public', pilot_dir='apps/pilot')
             all_scripts.extend(f)
 
     #print all_scripts
-    #print "Installing scripts:"
-    #print "\n\t".join(all_scripts)
-
+    print "Found scripts:"
+    print "\n\t".join(all_scripts)
+    print "\n\n"
     return all_scripts
 
 def find_all_packages():
