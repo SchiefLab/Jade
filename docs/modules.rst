@@ -1,4 +1,4 @@
-jade
+API Documentation
 ====
 
 .. toctree::

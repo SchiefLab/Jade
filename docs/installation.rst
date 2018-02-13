@@ -44,8 +44,17 @@ Once you have a copy of the source, you can install it with:
 
 .. code-block:: console
 
-    $ python setup.py install
+    $ pip install -e . 
+
+This will symlink your cloned code instead of copying it - very useful for development. 
+
+Don't forget to source your bashrc/bash_profile or whatever other shell profile you have. 
+
+Scripts
+=======
+
+All scripts and applications in jade/apps will be installed in your bin directory and available for use.
 
 
-.. _Github repo: https://github.com/jadolfbr/jade
-.. _tarball: https://github.com/jadolfbr/jade/tarball/master
+.. _Github repo: https://github.com/SchiefLab/Jade
+.. _tarball: https://github.com/SchiefLab/Jade/tarball/master
