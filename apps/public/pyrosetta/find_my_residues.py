@@ -4,9 +4,10 @@ import os
 import sys
 from argparse import ArgumentParser
 
-from rosetta import *
-from pyrosetta import *
-init("-include_sugars -ignore_unrecognized_res -ignore_zero_occupancy false")
+import rosetta
+import pyrosetta
+
+pyrosetta.init("-include_sugars -ignore_unrecognized_res -ignore_zero_occupancy false")
 
 
 def get_parser():
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     options = parser.parse_args()
 
 
-    pose = pose_from_pdb(options.pdb_file)
+    pose = pyrosetta.pose_from_pdb(options.pdb_file)
 
     print "#resnum chain_num pdb_num chain "
     for i in range(1, pose.total_residue() +1 ):

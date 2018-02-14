@@ -15,3 +15,4 @@ sphinxcontrib-websupport==1.0.1
 statsmodels==0.8.0
 weblogo>=3.4
 xmltodict>=0.10.2
+mock>=2.0.0

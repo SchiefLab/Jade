@@ -8,8 +8,9 @@
 
 #Instructions: Look at the input options.  Set at least --pdb and --region. (python get_mutation_energy.py --pdb mypdbfile.pdb --region 1:10:B)
 
-from rosetta import *
-from pyrosetta import *
+import pyrosetta
+import rosetta
+
 from argparse import ArgumentParser
 import os
 import sys
@@ -21,7 +22,7 @@ from jade.basic.RestypeDefinitions import *
 
 opts = [ '-ex1' , '-ex2', '-ignore_unrecognized_res', '-use_input_sc']
 
-init(" ".join(opts))
+pyrosetta.init(" ".join(opts))
 
 
 ##Setup Options and Script Inputs:
@@ -67,7 +68,7 @@ if __name__ == "__main__":
 
     ##Check that options are set.
     parser = get_parser()
-    (options, args) = parser.parse_args()
+    options = parser.parse_args()
 
     if not options.pdb:
         sys.exit("Input PDB Required")
@@ -93,16 +94,16 @@ if __name__ == "__main__":
     OUTFILE = open(options.outpath+"/"+options.filename, 'w')
 
     #Load the PDB
-    pose = Pose()
-    pose_from_pdb(pose, options.pdb)
+    pose = pyrosetta.Pose()
+    pyrosetta.pose_from_pdb(pose, options.pdb)
 
     #Create the Scorefunction
-    scorefxn = create_score_function("talaris2014")
-    scorefxn.set_weight(chainbreak, 100)
+    scorefxn = pyrosetta.get_fa_scorefxn()
+    scorefxn.set_weight(rosetta.core.scoring.chainbreak, 100)
 
 
     #Create the objects we need
-    rel = FastRelax(scorefxn)
+    rel = rosetta.protocols.relax.FastRelax(scorefxn)
     codes = RestypeDefinitions()
 
     if options.alanine_scan:
@@ -114,7 +115,7 @@ if __name__ == "__main__":
     #Set movemap if nessessary
     if not options.relax_whole_structure:
         print "\nSetting backbone movement for chain "+chain+" only.\n"
-        mm = MoveMap()
+        mm = pyrosetta.MoveMap()
         for i in range(1, pose.total_residue()+1):
             if pose.pdb_info().chain(i) == chain:
                 mm.set_bb(i, True)
@@ -134,7 +135,7 @@ if __name__ == "__main__":
         rosetta_end = pose.total_residue();
 
 
-    pose_copy = Pose()
+    pose_copy = pyrosetta.Pose()
     pose_copy.assign(pose)
 
 
@@ -170,7 +171,7 @@ if __name__ == "__main__":
             print "\n Starting mutant "+pdbSP[0]+"_"+pdbSP[1]+"_"+residue+".pdb\n"
             #Start at the same structure.
             pose.assign(pose_copy)
-            mutate_residue(pose, i, residue)
+            pyrosetta.toolbox.mutate_residue(pose, i, residue)
 
 
 

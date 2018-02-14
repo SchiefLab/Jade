@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from rosetta import *
-from pyrosetta import *
+import pyrosetta
+import rosetta
 
 import sys
 import os
@@ -20,7 +20,7 @@ def get_parser():
 
 if __name__ == "__main__":
 
-    init("-include_sugars -write_pdb_link_records")
+    pyrosetta.init("-include_sugars -write_pdb_link_records")
     if len(sys.argv) == 1:
         sys.exit("Please specify a PDB on the command line as the only argument")
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         print "Please specifiy a PDB as the only argument to this script.\n"
         sys.exit()
 
-    pose = pose_from_pdb(sys.argv[1])
+    pose = pyrosetta.pose_from_pdb(sys.argv[1])
 
     for resnum in range(1, pose.total_residue() +1 ):
         if pose.residue( resnum ).is_carbohydrate():

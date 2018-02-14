@@ -52,7 +52,7 @@ extensions = [
 # Skip non-pip-installable dependencies
 #Python3.3 only:
 
-autodoc_mock_imports = ["rosetta", 'pyrosetta']
+autodoc_mock_imports = ["rosetta", 'pyrosetta'] #This did not work.
 
 """
 from unittest.mock import MagicMock
@@ -72,6 +72,26 @@ MOCK_MODULES = ['pyrosetta', 'rosetta', 'pyigclassify']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 """
+
+import mock
+ 
+MOCK_MODULES = ['rosetta', 
+                'pyrosetta', 
+                'pyrosetta.toolbox',
+                'rosetta.protocols.carbohydrates', 
+                'rosetta.core.pose',
+                'rosetta.core.conformation',
+                'rosetta.protocols.loops',
+                'rosetta.protocols.antibody',
+                'rosetta.protocols.carbohydrates',
+                'rosetta.core.kinematics',
+                'rosetta.protocols.loops.loop_closure.ccd',
+                'rosetta.core.chemical',
+                'rosetta.protocols.relax']
+
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
+
 
 
 # Get the project root dir, which is the parent dir of this

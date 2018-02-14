@@ -3,13 +3,10 @@
 import os,sys
 from argparse import ArgumentParser
 
-from rosetta import *
-from pyrosetta import *
-from rosetta.protocols.carbohydrates import LinkageConformerMover
-from rosetta.protocols.carbohydrates import SimpleGlycosylateMover
-from rosetta.core.pose import parse_resnum
+import rosetta
+import pyrosetta
 
-init("-include_sugars -write_pdb_link_records")
+pyrosetta.init("-include_sugars -write_pdb_link_records")
 
 
 def get_parser():
@@ -47,24 +44,24 @@ if __name__ == "__main__":
 
 
 
-    p = pose_from_file(options.infile)
-    scorefxn = get_score_function()
+    p = pyrosetta.pose_from_pdb(options.infile)
+    scorefxn = pyrosetta.get_score_function()
     KT = 1.0
 
 
 
 
-    LCM = LinkageConformerMover()
+    LCM = rosetta.protocols.carbohydrates.LinkageConformerMover()
     LCM.set_x_standard_deviations(2)
-    SGM = SimpleGlycosylateMover()
+    SGM = rosetta.protocols.carbohydrates.SimpleGlycosylateMover()
 
-    resnum = parse_resnum(options.glycosylation_position, p)
+    resnum = rosetta.core.pose.parse_resnum(options.glycosylation_position, p)
     SGM.set_position(resnum)
     SGM.set_glycosylation(options.glycosylation_name)
     SGM.apply(p)
 
     ### This will be unnessessary very soon!
-    mm = MoveMap()
+    mm = pyrosetta.MoveMap()
     for i in range(1, p.total_residue() + 1):
         if (p.residue_type(i).is_carbohydrate()):
             mm.set_bb(i, True)
@@ -73,9 +70,9 @@ if __name__ == "__main__":
 
 
     for i in range(1, int(options.nstruct) + 1 ):
-        p_copy = Pose(p)
+        p_copy = pyrosetta.Pose(p)
 
-        MC = MonteCarlo(p_copy, scorefxn, KT)
+        MC = pyrosetta.MonteCarlo(p_copy, scorefxn, KT)
         outname = os.path.basename(options.infile).replace(".pdb", "")+"_out_"+repr(i)+".pdb"
         for x in range(1, int(options.cycles)+1):
             print "LCM Round "+repr(x)

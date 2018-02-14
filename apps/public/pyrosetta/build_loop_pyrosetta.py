@@ -7,10 +7,10 @@ from argparse import ArgumentParser
 from jade.rosetta_jade.flag_util import get_common_flags_string_for_init
 from jade.basic.path import get_decoy_name
 
-from rosetta import *
-from pyrosetta import *
+import pyrosetta
+import rosetta
 
-init( get_common_flags_string_for_init() )
+pyrosetta.init( get_common_flags_string_for_init() )
 
 
 def get_parser():
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     options = parser.parse_args()
 
     print(options)
-    pose = pose_from_pdb(options.pdb)
+    pose = pyrosetta.pose_from_pdb(options.pdb)
 
     refpose_name = "starting_model_refpose"
     pose.reference_pose_from_current(refpose_name, True)
