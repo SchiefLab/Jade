@@ -66,7 +66,10 @@ def get_all_clusters_for_length(db, cdr, length, limit_to_known = True, res_cuto
     return clusters
 
 def get_center_for_cluster_and_length(db, cdr, length, cluster, data_names_array):
-
+    """
+    Get the center for a particular cluster and length
+    
+    """
     sele = ", ".join(data_names_array)
 
     #print sele
@@ -114,6 +117,9 @@ def get_center_dih_degrees_for_cluster_and_length(db, cdr, length, cluster):
     return result
 
 def get_dihedral_string_for_centers(db, limit_to_known = True):
+    """
+    Get a string of the dihedral angles for all centers
+    """
     sele = "SELECT fullcluster, length_type, ss, dihedrals from cdr_data where center=1"
 
     data = defaultdict()

@@ -9,7 +9,7 @@ import glob
 import copy
 
 from jade.basic.structure.BasicPose import BasicPose
-from antibody import ab_db
+from jade.antibody import ab_db
 
 
 def run_main(ab_dir, output_dir, only_dimer=True):

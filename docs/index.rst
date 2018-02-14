@@ -1,17 +1,16 @@
-Welcome to Jade's documentation!
+Bio Jade Project Documentation
 ======================================
+
+Contents:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
    readme
    installation
-   usage
-   modules
-   contributing
-   authors
-   history
+   apps_public_api/public
+   apps_pilot_api/pilot
+   api/modules
 
 Indices and tables
 ==================

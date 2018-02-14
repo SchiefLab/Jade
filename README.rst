@@ -10,7 +10,7 @@ Jade
         :target: https://travis-ci.org/jadolfbr/jade
 
 .. image:: https://readthedocs.org/projects/jade/badge/?version=latest
-        :target: https://jade.readthedocs.io/en/latest/?badge=latest
+        :target: https://bio-jade.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 
@@ -20,7 +20,7 @@ A repository for modules and applications to aid in the design and analysis of B
 
 
 * Free software: BSD license
-* Documentation: https://jade.readthedocs.io.
+* Documentation: https://bio-jade.readthedocs.io.
 
 
 Features

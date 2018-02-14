@@ -3,10 +3,10 @@ from collections import defaultdict
 import os
 import sys
 from collections import defaultdict
-from RAbD_BM import tools as bm_tools
-from RAbD_BM.AnalysisInfo import AnalysisInfo
+from jade.RAbD_BM import tools as bm_tools
+from jade.RAbD_BM.AnalysisInfo import AnalysisInfo
 
-from basic import path as path_tools
+from jade.basic import path as path_tools
 import re
 
 class MCData:

@@ -22,10 +22,8 @@ import shutil
 def printVerbose(s):
     print >> sys.stderr, s
 
+def get_parser():
 
-########################################################################
-
-def main(argv):
     parser = ArgumentParser(
         "This utility parses and extracts data from score files in JSON format")
 
@@ -135,6 +133,12 @@ def main(argv):
     pymol_opts.add_argument("--super",
                             help="Super this selection instead of align all to.")
 
+    return parser
+########################################################################
+
+def main():
+
+    parser = get_parser()
     global options
     options = parser.parse_args()
 
@@ -383,4 +387,4 @@ def main(argv):
 ########################################################################
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())

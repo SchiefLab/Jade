@@ -1,8 +1,8 @@
 
 from collections import defaultdict
-from basic import path as path_tools
+from jade.basic import path as path_tools
 import numpy
-from basic.plotting.MakeFigure import MakeFigure
+from jade.basic.plotting.MakeFigure import MakeFigure
 
 
 
