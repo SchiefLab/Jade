@@ -5,8 +5,11 @@ import os,glob,re
 
 
 def readme():
-    with open('README.md') as f:
-        return f.read()
+    try:
+        with open('README.md') as f:
+            return f.read()
+    except IOError:
+        return ''
 
 def get_all_scripts_to_install_user(public_dir='apps/public', pilot_dir='apps/pilot'):
     """
