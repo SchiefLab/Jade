@@ -9,7 +9,6 @@ overrides>=1.6
 pandas==0.22.0
 prettyplotlib==0.1.7
 scikit-learn>=0.19.1
-scipy>=1.0.0
 seaborn>=0.8.1
 SimpleHMMER==0.2.3
 Sphinx==1.7.0
