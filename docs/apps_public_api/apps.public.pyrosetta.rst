@@ -1,7 +1,7 @@
 public.pyrosetta Apps
 =====================
 
-.. automodule:: public.pyrosetta
+.. automodule:: apps.public.pyrosetta
     :members:
     :undoc-members:
     :show-inheritance:

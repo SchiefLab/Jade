@@ -24,7 +24,7 @@ def reorder_and_save_chains(in_path, out_path, remove_het = False):
     blank_pdb.save_PDB(out_path)
 
 def get_parser():
-    parser = ArgumentParser("Reorders PDBFiles in a dirctory according to A_LH in order for Rosetta Antibody Design benchmarking. Removes HetAtm")
+    parser = ArgumentParser(description="Reorders PDBFiles in a dirctory according to A_LH in order for Rosetta Antibody Design benchmarking. Removes HetAtm")
 
     parser.add_argument("--in_dir", "-i",
                         default = os.getcwd(),

@@ -15,12 +15,4 @@ jade.pymol\_jade.PyMolScriptWriter module
     :undoc-members:
     :show-inheritance:
 
-jade.pymol\_jade.pymol\_extensions module
------------------------------------------
-
-.. automodule:: jade.pymol_jade.pymol_extensions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 

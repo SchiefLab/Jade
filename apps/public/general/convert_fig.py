@@ -6,7 +6,7 @@ import sys
 from argparse import ArgumentParser
 
 def get_parser():
-    parser = ArgumentParser("Converts images to TIFF figures at 300 DPI for publication using sips. "
+    parser = ArgumentParser(description="Converts images to TIFF figures at 300 DPI for publication using sips. "
                             "Arguments: INFILE OUTFILE")
 
     return parser

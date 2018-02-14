@@ -1,7 +1,7 @@
 public.general Apps
 ===================
 
-.. automodule:: public.general
+.. automodule:: apps.public.general
     :members:
     :undoc-members:
     :show-inheritance:

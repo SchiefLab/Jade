@@ -1,5 +1,5 @@
 Jade API
-============
+========
 
 .. automodule:: jade
     :members:

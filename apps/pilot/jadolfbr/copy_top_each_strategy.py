@@ -3,8 +3,8 @@
 #Copies the top N of a particular directory to a new directory.  Used in conjunction with RabD BM.  Got sick of doing this by hand.
 
 from argparse import ArgumentParser
-from basic import path
-from basic import general
+from jade.basic import path
+from jade.basic import general
 import glob
 import os
 import sys

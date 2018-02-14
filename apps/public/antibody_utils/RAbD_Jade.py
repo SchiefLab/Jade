@@ -11,9 +11,6 @@ from argparse import ArgumentParser
 from Tkinter import *
 import tkMessageBox
 
-p = os.path.split(os.path.abspath(__file__))[0]
-sys.path.append(p);  # Allows all modules to use all other modules, without needing to update pythonpath
-
 # PyIgD
 from jade.antibody.cdr_data.CDRDataTypes import *
 from jade.basic.threading.Threader import *
@@ -51,7 +48,7 @@ from jade.basic import path
 #      --pyigclassify_dir /Users/jadolfbr/Documents/projects/PyIgClassify --analysis_name testing
 
 def get_parser():
-    parser = ArgumentParser("GUI application to analyze designs output by RosettaAntibodyDesign.  "
+    parser = ArgumentParser(description="GUI application to analyze designs output by RosettaAntibodyDesign.  "
                             "Designs should first be analyzed by both the AntibodyFeatures and CDRClusterFeatures reporters "
                             "into sqlite3 databases.")
 

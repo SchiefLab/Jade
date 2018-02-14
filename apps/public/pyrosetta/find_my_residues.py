@@ -13,7 +13,7 @@ def get_parser():
 
 
 
-    parser = ArgumentParser("Simple app to scan a PDB file and print PDB info and Rosetta understood chains and resnums.")
+    parser = ArgumentParser(description="Simple app to scan a PDB file and print PDB info and Rosetta understood chains and resnums.")
 
     parser.add_argument("pdb_file", help = "The PDB file to scan.")
 

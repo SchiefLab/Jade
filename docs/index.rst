@@ -8,7 +8,6 @@ Contents:
 
    readme
    installation
-   apps_public_api/public
    apps_pilot_api/pilot
    api/modules
 

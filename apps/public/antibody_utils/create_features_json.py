@@ -10,7 +10,7 @@ from jade.rosetta_jade.FeaturesJsonCreator import *
 from argparse import ArgumentParser
 
 def get_parser():
-    parser = ArgumentParser("This script will create either cluster features or antibody features json for use in Features R script.\n"
+    parser = ArgumentParser(description="This script will create either cluster features or antibody features json for use in Features R script.\n"
                             "Example Cmd-line:  python create_features_json.py --database databases/baseline_comparison.txt --scripts cluster")
 
     parser.add_argument("--databases", "-l",

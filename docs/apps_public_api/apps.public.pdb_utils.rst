@@ -1,7 +1,7 @@
 public.pdb\_utils Apps
 ======================
 
-.. automodule:: public.pdb_utils
+.. automodule:: apps.public.pdb_utils
     :members:
     :undoc-members:
     :show-inheritance:

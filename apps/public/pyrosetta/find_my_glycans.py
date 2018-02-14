@@ -12,7 +12,7 @@ from argparse import ArgumentParser
 #Useful while we figure out this PDBInfo problem...
 
 def get_parser():
-    parser = ArgumentParser("This app is the PyRosetta equivalent of GlycanInfo.  "
+    parser = ArgumentParser(description="This app is the PyRosetta equivalent of GlycanInfo.  "
                             "Print carbohydrate info about the pose. Pass the pose in as an argument")
 
     return parser

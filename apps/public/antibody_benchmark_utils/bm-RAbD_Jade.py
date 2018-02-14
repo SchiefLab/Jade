@@ -13,13 +13,12 @@ import jade.rosetta_jade.FeaturesJsonCreator as json_creator
 import jade.RAbD_BM.tools as tools
 from jade.rosetta_jade.BenchmarkInfo import *
 
-p = os.path.split(os.path.abspath(__file__))[0]
-sys.path.append(p); #Allows all modules to use all other modules, without needing to update pythonpath
+
 
 #Runs all analysis of a particular benchmarking experiment.
 
 def get_parser():
-    parser = ArgumentParser("This program is a GUI used for benchmarking Rosetta Antibody Design."
+    parser = ArgumentParser(description="This program is a GUI used for benchmarking Rosetta Antibody Design."
                             "Before running this application, you will probably want to run 'run_rabd_features_for_benchmarks.py to create the databases required.")
 
     parser.add_argument("--main_dir",
@@ -39,7 +38,6 @@ def get_parser():
     return parser
 
 def main():
-
 
     parser = get_parser()
     options = parser.parse_args()

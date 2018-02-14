@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Author: Jared Adolf-Bryfogle
 # Description: Script for splitting AHO renumbered antibodies into FAB, Fv, Fc, and linker regions
 
@@ -5,7 +7,7 @@ from jade.antibody.split_structure import *
 from argparse import ArgumentParser
 
 def get_parser():
-    parser = ArgumentParser("Script for splitting AHO renumbered antibodies into Fv, Fc, and linker regions")
+    parser = ArgumentParser(description="Script for splitting AHO renumbered antibodies into Fv, Fc, and linker regions")
 
     parser.add_argument("--any_structure",
                         default=False,

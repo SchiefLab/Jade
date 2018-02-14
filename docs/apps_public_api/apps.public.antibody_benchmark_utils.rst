@@ -1,7 +1,7 @@
 public.antibody\_benchmark\_utils Apps
 ======================================
 
-.. automodule:: public.antibody_benchmark_utils
+.. automodule:: apps.public.antibody_benchmark_utils
     :members:
     :undoc-members:
     :show-inheritance:

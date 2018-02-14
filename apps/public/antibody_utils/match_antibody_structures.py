@@ -11,7 +11,7 @@ import re
 from jade.pymol_jade.PyMolScriptWriter import PyMolScriptWriter
 
 def get_parser():
-    parser = ArgumentParser("This App aims to make pymol alignments using the PyIgClassify database and structures, matching specific criterion.")
+    parser = ArgumentParser(description="This App aims to make pymol alignments using the PyIgClassify database and structures, matching specific criterion.")
 
     required = parser.add_argument_group("Required Arguments")
 

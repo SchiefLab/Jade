@@ -1,7 +1,7 @@
 public.rosetta Apps
 ===================
 
-.. automodule:: public.rosetta
+.. automodule:: apps.public.rosetta
     :members:
     :undoc-members:
     :show-inheritance:
@@ -45,10 +45,10 @@ create_score_json_from_scored_decoys.py
     :func: get_parser
     :prog: create_score_json_from_scored_decoys.py
 
-insert_native_table_into_features_db.py
----------------------------------------
+insert_natives_table_into_features_db.py
+----------------------------------------
 .. argparse::
-    :filename: ../apps/public/rosetta/insert_native_table_into_features_db.py
+    :filename: ../apps/public/rosetta/insert_natives_table_into_features_db.py
     :func: get_parser
     :prog: insert_native_table_into_features_db.py
 

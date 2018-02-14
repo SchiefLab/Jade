@@ -19,7 +19,7 @@ from argparse import ArgumentParser
 #Sequence number	Sequence ID	Functionality	V-GENE and allele	J-GENE and allele	D-GENE and allele	V-D-J-REGION	V-J-REGION	V-REGION	FR1-IMGT	CDR1-IMGT	FR2-IMGT	CDR2-IMGT	FR3-IMGT	CDR3-IMGT	JUNCTION	J-REGION	FR4-IMGT
 
 def get_parser():
-    parser = ArgumentParser("#This script converts an IMGT output file (5_AA-seqs.csv) to a FASTA.  All Framework and CDRs are concatonated.  * is skipped.\n"
+    parser = ArgumentParser(description="This script converts an IMGT output file (5_AA-seqs.csv) to a FASTA.  All Framework and CDRs are concatonated.  * is skipped.\n"
                             "The FASTA file can then be used by PyIgClassify.")
 
     parser.add_argument("--inpath", "-i",

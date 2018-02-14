@@ -14,7 +14,7 @@ cdrs = ["L1", "L2", "L3", "H1", "H2", "H3"]
 
 
 def get_parser():
-    parser = ArgumentParser("Calculate the frequence of graft closures.")
+    parser = ArgumentParser(description="Calculate the frequence of graft closures.")
 
     ############################
     ## Required Options

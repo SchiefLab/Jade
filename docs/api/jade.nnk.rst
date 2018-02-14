@@ -25,20 +25,5 @@ jade.nnk.NNKEnrichments module
     :undoc-members:
     :show-inheritance:
 
-jade.nnk.NNKIndex module
-------------------------
-
-.. automodule:: jade.nnk.NNKIndex
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-jade.nnk.NNKScoreFunction module
---------------------------------
-
-.. automodule:: jade.nnk.NNKScoreFunction
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 

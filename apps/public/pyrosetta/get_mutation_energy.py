@@ -26,7 +26,7 @@ init(" ".join(opts))
 
 ##Setup Options and Script Inputs:
 def get_parser():
-    parser = ArgumentParser()
+    parser = ArgumentParser(description= "Basic app to get mutation energy of each residue in a particular region using PyRosetta")
 
     parser.add_argument("--pdb", "-s",
 

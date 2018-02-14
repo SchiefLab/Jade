@@ -1,4 +1,4 @@
-from antibody import ab_db
+from jade.antibody import ab_db
 import jade.basic.structure.Structure as Structure
 import os
 import sys

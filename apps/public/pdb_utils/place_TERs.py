@@ -5,7 +5,7 @@ import os,sys,re
 from argparse import ArgumentParser
 
 def get_parser():
-    parser = ArgumentParser("This script places ters between ATOM/HETATM columns.  This is currently needed to reload symmetrized glycan poses"
+    parser = ArgumentParser(description= "This script places ters between ATOM/HETATM columns.  This is currently needed to reload symmetrized glycan poses"
                             "created by the god aweful make_symm_file.pl Rosetta script. USE: place_TERs.py my_pdb - Does it in place. ")
 
     parser.add_argument("pdb_files", help="Path to PDB files we will be stripping.", nargs="*")

@@ -1,7 +1,7 @@
 public.antibody\_utils Apps
 ===========================
 
-.. automodule:: public.antibody_utils
+.. automodule:: apps.public.antibody_utils
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,7 +1,7 @@
 Pilot Apps
 =============
 
-.. automodule:: pilot
+.. automodule:: apps.pilot
     :members:
     :undoc-members:
     :show-inheritance:
@@ -10,4 +10,4 @@ Apps
 ----
 
 .. toctree::
-    pilot.jadolfbr
+    apps.pilot.jadolfbr

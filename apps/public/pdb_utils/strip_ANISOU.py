@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 import re
 
 def get_parser():
-    parser = ArgumentParser(" Strips ANISOU lines out of PDBs.")
+    parser = ArgumentParser(description=" Strips ANISOU lines out of PDBs.")
 
     parser.add_argument("pdb_files", help = "Path to PDB file we will be stripping.", nargs="*")
 

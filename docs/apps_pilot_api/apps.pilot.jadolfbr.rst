@@ -1,7 +1,7 @@
-pilot.jadolfbr Apps
-======================
+apps.pilot.jadolfbr Apps
+========================
 
-.. automodule:: pilot.jadolfbr
+.. automodule:: apps.pilot.jadolfbr
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,12 +23,5 @@ glycan_basic_LCM_protocol.py
     :func: get_parser
     :prog: glycan_basic_LCM_protocol.py
 
-nnk_scorefxn.py
----------------
-
-.. argparse::
-    :filename: ../apps/pilot/jadolfbr/nnk_scorefxn.py
-    :func: get_parser
-    :prog: nnk_scorefxn.py
 
 

@@ -50,6 +50,33 @@ extensions = [
     'sphinxarg.ext',
 ]
 
+# Skip non-pip-installable dependencies
+#Python3.3 only:
+
+autodoc_mock_imports = ["rosetta", 'pyrosetta']
+
+"""
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return MagicMock()
+
+
+class DumbThing():
+    def __init__(self):
+        self.__all__ = []
+
+
+MOCK_MODULES = ['pyrosetta', 'rosetta', 'pyigclassify']
+
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+"""
+
+#sys.modules.update({'rif.geom.ray_hash': DumbThing(), 'rif.hash': DumbThing()})
+
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

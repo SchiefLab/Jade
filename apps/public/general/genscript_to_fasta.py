@@ -43,7 +43,7 @@ def write_fasta(sequence, label, HANDLE):
     HANDLE.write(sequence + "\n")
 
 def get_parser():
-    parser = ArgumentParser("This script outputs fasta files from a genscript format.  Pass the --format option to control which genscript format as input"
+    parser = ArgumentParser(description="This script outputs fasta files from a genscript format.  Pass the --format option to control which genscript format as input"
                             "  ~~~ Ex: python genscript_mut_to_fasta.py --format mutagenesis MutagenesisFormatU68  ~~~")
 
     parser.add_argument("infile", help = "The mutagenesis format file.")

@@ -14,7 +14,7 @@ init( get_common_flags_string_for_init() )
 
 
 def get_parser():
-    parser = ArgumentParser( "This script builds a loop between two places in a structure with the given sequence, and closes the loop."
+    parser = ArgumentParser( description="This script builds a loop between two places in a structure with the given sequence, and closes the loop."
                     "It is not meant to be the last modeling step, just to create missing density or to prepare for loop modeling.")
 
 

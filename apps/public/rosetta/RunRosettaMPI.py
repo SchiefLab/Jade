@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 from jade.rosetta_jade.RunRosetta import *
+from argparse import ArgumentParser
 
 def get_parser():
-    run_rosetta = RunRosetta()
-    return run_rosetta.parser
+    parser = ArgumentParser("This program runs Rosetta MPI locally or on a cluster using slurm or qsub.  "
+                                        "Relative paths are accepted.")
+    return parser
 
 ##Main to RunRosetta.
 

@@ -5,7 +5,7 @@ import os
 from argparse import ArgumentParser
 
 def get_parser():
-    parser = ArgumentParser("Call scancel to cancel a consecutive set of cluster job numbers")
+    parser = ArgumentParser(description="Call scancel to cancel a consecutive set of cluster job numbers")
     return parser
 
 

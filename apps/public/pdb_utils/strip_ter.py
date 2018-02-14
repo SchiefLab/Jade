@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 
 def get_parser():
-    parser = ArgumentParser(" This simple script strips ters out of a PDB file and overwrites the input.  PyMol places ters "
+    parser = ArgumentParser(description=" This simple script strips ters out of a PDB file and overwrites the input.  PyMol places ters "
                             "when th numbering is not 1-1.  And then Rosetta will F your Shit up.")
 
     parser.add_argument("pdb_files", help = "Path to PDB file we will be stripping.", nargs="*")
