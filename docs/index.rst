@@ -8,7 +8,8 @@ Contents:
 
    readme
    installation
-   apps_pilot_api/pilot
+   apps_public_api/apps.public
+   apps_pilot_api/apps.pilot
    api/modules
 
 Indices and tables
