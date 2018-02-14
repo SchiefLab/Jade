@@ -35,14 +35,13 @@ GCACTTGTCACGAATTCG--[Antibody-Lambda-FV]—-CTAGGTCAGCCCAAGGCTGCCCC translates t
 ###################################################################################################################
 """
 
+igg_types = ["IgG_order", "IgG_order_lambda", "IgG_order_kappa", "IgG_order_heavy"]
+format_types = ["basic", "fasta", "general_order"]
+format_types.extend(igg_types)
+
+def get_parser():
 
 
-if __name__ == "__main__":
-
-
-    igg_types = ["IgG_order", "IgG_order_lambda", "IgG_order_kappa", "IgG_order_heavy"]
-    format_types = ["basic", "fasta", "general_order"]
-    format_types.extend(igg_types)
 
     parser = argparse.ArgumentParser(description="Uses Biopython to print sequence information.  Example:\n"
                                                  "get_seq.py --pdb 2j88_A.pdb --format fasta --outpath test.txt")
@@ -93,6 +92,14 @@ if __name__ == "__main__":
                         action = "store_true",
                         help = "Output the original sequence and the striped seqeunce if stripped.  Default FALSE.")
 
+
+    return parser
+
+if __name__ == "__main__":
+
+
+
+    parser = get_parser()
     options = parser.parse_args()
 
     if options.format in igg_types:

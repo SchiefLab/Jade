@@ -15,13 +15,6 @@ RunRosettaBenchmarksMPI.py
     :func: get_parser
     :prog: RunRosettaBenchmarksMPI.py
 
-analyze_native_dataset.py
--------------------------
-
-.. argparse::
-    :filename: ../apps/public/antibody_benchmark_utils/analyze_native_dataset.py
-    :func: get_parser
-    :prog: analyze_native_dataset.py
 
 bm-RAbD_Jade.py
 ---------------

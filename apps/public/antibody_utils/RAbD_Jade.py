@@ -50,8 +50,7 @@ from jade.basic import path
 #    RAbD_Jade.py --native input_pdbs/pareto_2j88_renum_0002.pdb --cdrs L1
 #      --pyigclassify_dir /Users/jadolfbr/Documents/projects/PyIgClassify --analysis_name testing
 
-
-def main():
+def get_parser():
     parser = ArgumentParser("GUI application to analyze designs output by RosettaAntibodyDesign.  "
                             "Designs should first be analyzed by both the AntibodyFeatures and CDRClusterFeatures reporters "
                             "into sqlite3 databases.")
@@ -86,6 +85,11 @@ def main():
                                "The JSON allows us to specify the final name, decoy directory, and features db associated with the benchmark as well as all options that went into it.",
                         nargs = "*")
 
+    return parser
+
+def main():
+
+    parser = get_parser()
     options = parser.parse_args()
 
     if options.root_dir != os.getcwd():

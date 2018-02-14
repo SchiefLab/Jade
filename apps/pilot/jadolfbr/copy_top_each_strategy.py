@@ -12,9 +12,7 @@ import sys
 
 
 
-
-
-if __name__ == "__main__":
+def get_parser():
     parser = ArgumentParser()
     parser.add_argument("-n",
                         help = "Number of models to copy. DEFAULT = 2",
@@ -32,7 +30,11 @@ if __name__ == "__main__":
                         help = "The type of strategies we are interested in",
                         default = ["delta_unsats_per_1000_dSASA", "dG_top_Ptotal"],
                         nargs = '*')
+    return parser
 
+if __name__ == "__main__":
+
+    parser = get_parser()
     options = parser.parse_args()
 
 

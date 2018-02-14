@@ -4,9 +4,7 @@
 from jade.antibody.split_structure import *
 from argparse import ArgumentParser
 
-
-
-if __name__ == '__main__':
+def get_parser():
     parser = ArgumentParser("Script for splitting AHO renumbered antibodies into Fv, Fc, and linker regions")
 
     parser.add_argument("--any_structure",
@@ -21,7 +19,11 @@ if __name__ == '__main__':
     parser.add_argument("--output_dir", "-o",
                         help = "Output Directory for antibody structures.",
                         required = True)
+    return parser
 
+if __name__ == '__main__':
+
+    parser = get_parser()
     options = parser.parse_args()
 
     run_main(options.ab_dir, options.output_dir, not options.any_structure)

@@ -8,9 +8,7 @@ from argparse import ArgumentParser
 from jade.basic.path import *
 from collections import defaultdict
 
-
-if __name__ == "__main__":
-
+def get_parser():
     parser = ArgumentParser("This extremely simple script checks nstruct of the input files and outputs which nstruct number is missing.")
 
 
@@ -21,6 +19,12 @@ if __name__ == "__main__":
     parser.add_argument("--pdblist", "-l", help = "Optional INPUT PDBLIST (without 00s, etc. for which to check")
     parser.add_argument("--dir", help = "The Directory to check. As opposed to a list of pdb files.")
 
+    return parser
+
+if __name__ == "__main__":
+
+
+    parser = get_parser()
     options = parser.parse_args()
 
     print(options)

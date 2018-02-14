@@ -2,6 +2,9 @@
 
 from jade.rosetta_jade.RunRosetta import *
 
+def get_parser():
+    run_rosetta = RunRosetta()
+    return run_rosetta.parser
 
 ##Main to RunRosetta.
 

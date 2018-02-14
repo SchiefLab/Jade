@@ -10,8 +10,7 @@ import re
 
 from jade.pymol_jade.PyMolScriptWriter import PyMolScriptWriter
 
-
-if __name__ == "__main__":
+def get_parser():
     parser = ArgumentParser("This App aims to make pymol alignments using the PyIgClassify database and structures, matching specific criterion.")
 
     required = parser.add_argument_group("Required Arguments")
@@ -43,8 +42,13 @@ if __name__ == "__main__":
     optional.add_argument("--native", "-n",
                           help = "Align everything to this PDB, the native or something you are interested in. ")
 
+    return parser
+
+if __name__ == "__main__":
 
 
+
+    parser = get_parser()
     options = parser.parse_args()
 
 

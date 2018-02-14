@@ -9,9 +9,7 @@
 from jade.rosetta_jade.FeaturesJsonCreator import *
 from argparse import ArgumentParser
 
-if __name__ == "__main__":
-
-
+def get_parser():
     parser = ArgumentParser("This script will create either cluster features or antibody features json for use in Features R script.\n"
                             "Example Cmd-line:  python create_features_json.py --database databases/baseline_comparison.txt --scripts cluster")
 
@@ -48,6 +46,13 @@ if __name__ == "__main__":
         help = "Go ahead and run compare_sample_sources.R.  Must be in path!!",
         default = False,
         action = "store_true")
+
+    return parser
+
+if __name__ == "__main__":
+
+
+    parser = get_parser()
 
     options = parser.parse_args()
 

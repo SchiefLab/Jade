@@ -6,7 +6,7 @@ from jade.RAbD_BM.AnalysisInfo import *
 
 from jade.RAbD_BM import tools_features_db
 
-def main():
+def get_parser():
     parser = ArgumentParser(description= "Calculates and plots monte carlo acceptance values for antibody design benchmarking.")
 
 
@@ -23,11 +23,17 @@ def main():
                         help = "Path to outfile. DEFAULT = data",
                         default = "data")
 
+    return parser
+
+def main():
+
+
 
     #parser.add_argument("--root_dataset_dir",
     #                    help = "List of PDBIds to use for individual PDB output. DEFAULT = datasets/pdblists",
     #                    default = "datasets/pdblists")
 
+    parser = get_parser()
     options = parser.parse_args()
 
     if not os.path.exists(options.data_outdir): os.mkdir(options.data_outdir)

@@ -4,12 +4,17 @@ from __future__ import print_function
 import os,sys,re
 from argparse import ArgumentParser
 
-if __name__ == "__main__":
+def get_parser():
     parser = ArgumentParser("This script places ters between ATOM/HETATM columns.  This is currently needed to reload symmetrized glycan poses"
                             "created by the god aweful make_symm_file.pl Rosetta script. USE: place_TERs.py my_pdb - Does it in place. ")
 
     parser.add_argument("pdb_files", help="Path to PDB files we will be stripping.", nargs="*")
 
+    return parser
+
+if __name__ == "__main__":
+
+    parser = get_parser()
     options = parser.parse_args()
 
 

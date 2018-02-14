@@ -42,7 +42,7 @@ def write_fasta(sequence, label, HANDLE):
     HANDLE.write(">"+label+"\n")
     HANDLE.write(sequence + "\n")
 
-if __name__ == "__main__":
+def get_parser():
     parser = ArgumentParser("This script outputs fasta files from a genscript format.  Pass the --format option to control which genscript format as input"
                             "  ~~~ Ex: python genscript_mut_to_fasta.py --format mutagenesis MutagenesisFormatU68  ~~~")
 
@@ -51,6 +51,12 @@ if __name__ == "__main__":
     parser.add_argument("--format", help = "The genscript file format",
                         choices = ["mutagenesis", "GeneSynth"],
                         required = True)
+
+    return parser
+
+if __name__ == "__main__":
+
+    parser = get_parser()
     options = parser.parse_args()
 
     INFILE = open(options.infile, 'r')

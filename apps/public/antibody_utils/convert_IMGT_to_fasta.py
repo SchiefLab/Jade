@@ -18,8 +18,7 @@ from argparse import ArgumentParser
 #IMGT HEADER:
 #Sequence number	Sequence ID	Functionality	V-GENE and allele	J-GENE and allele	D-GENE and allele	V-D-J-REGION	V-J-REGION	V-REGION	FR1-IMGT	CDR1-IMGT	FR2-IMGT	CDR2-IMGT	FR3-IMGT	CDR3-IMGT	JUNCTION	J-REGION	FR4-IMGT
 
-
-if __name__ == "__main__":
+def get_parser():
     parser = ArgumentParser("#This script converts an IMGT output file (5_AA-seqs.csv) to a FASTA.  All Framework and CDRs are concatonated.  * is skipped.\n"
                             "The FASTA file can then be used by PyIgClassify.")
 
@@ -31,6 +30,11 @@ if __name__ == "__main__":
                         help = "Output Fasta outfile path.",
                         required = True)
 
+    return parser
+
+if __name__ == "__main__":
+
+    parser = get_parser()
     options = parser.parse_args()
 
     inpath = options.inpath

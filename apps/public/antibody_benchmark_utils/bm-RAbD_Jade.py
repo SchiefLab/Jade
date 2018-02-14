@@ -8,7 +8,7 @@ from Tkinter import *
 from tkFont import *
 from argparse import ArgumentParser
 
-import rosetta_jade.FeaturesJsonCreator as json_creator
+import jade.rosetta_jade.FeaturesJsonCreator as json_creator
 
 import jade.RAbD_BM.tools as tools
 from jade.rosetta_jade.BenchmarkInfo import *
@@ -18,7 +18,7 @@ sys.path.append(p); #Allows all modules to use all other modules, without needin
 
 #Runs all analysis of a particular benchmarking experiment.
 
-def main():
+def get_parser():
     parser = ArgumentParser("This program is a GUI used for benchmarking Rosetta Antibody Design."
                             "Before running this application, you will probably want to run 'run_rabd_features_for_benchmarks.py to create the databases required.")
 
@@ -36,7 +36,12 @@ def main():
                         nargs = "*",
                         required = True)
 
+    return parser
 
+def main():
+
+
+    parser = get_parser()
     options = parser.parse_args()
 
     GUI = CompareBenchmarks_GUI(Tk(), options.main_dir, options.out_dir, options.benchmarks)

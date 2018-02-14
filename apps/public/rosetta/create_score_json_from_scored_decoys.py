@@ -17,8 +17,7 @@ def get_pdbs(argu):
         return [argu]
 
 
-
-if __name__ == "__main__":
+def get_parser():
     parser = ArgumentParser("This script creates a Rosetta score file from a set of structures - by parsing the score from them. Pass a directory, a PDBLIST, and/or a list of filenames")
 
 
@@ -30,7 +29,11 @@ if __name__ == "__main__":
                         help = "A directory, a PDBLIST, and/or a list of filenames",
                         default = [],
                         nargs="*")
+    return parser
 
+if __name__ == "__main__":
+
+    parser = get_parser()
     options = parser.parse_args()
 
     #print(options)

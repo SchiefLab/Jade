@@ -13,8 +13,7 @@ from pyrosetta import *
 init( get_common_flags_string_for_init() )
 
 
-
-if __name__ == "__main__":
+def get_parser():
     parser = ArgumentParser( "This script builds a loop between two places in a structure with the given sequence, and closes the loop."
                     "It is not meant to be the last modeling step, just to create missing density or to prepare for loop modeling.")
 
@@ -54,7 +53,12 @@ if __name__ == "__main__":
                         help = "Dump midpoint PDBs?",
                         default = False,
                         action="store_true")
+    return parser
 
+if __name__ == "__main__":
+
+
+    parser = get_parser()
     options = parser.parse_args()
 
     print(options)

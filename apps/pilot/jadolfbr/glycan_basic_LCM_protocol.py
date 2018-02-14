@@ -4,15 +4,15 @@ import os,sys
 from argparse import ArgumentParser
 
 from rosetta import *
+from pyrosetta import *
 from rosetta.protocols.carbohydrates import LinkageConformerMover
 from rosetta.protocols.carbohydrates import SimpleGlycosylateMover
 from rosetta.core.pose import parse_resnum
 
-rosetta.init("-include_sugars -write_pdb_link_records")
+init("-include_sugars -write_pdb_link_records")
 
 
-
-if __name__ == "__main__":
+def get_parser():
     parser = ArgumentParser("This is a sample demonstration of the LinkageConformerMover in PyRosetta.  "
                             "For more, use GlycanRelax, which uses the LCM. ")
 
@@ -36,7 +36,12 @@ if __name__ == "__main__":
                         default = 75,
                         help = "Total number of cycles to attempt using the LCM")
 
+    return parser
 
+if __name__ == "__main__":
+
+
+    parser = get_parser()
     options = parser.parse_args()
 
 

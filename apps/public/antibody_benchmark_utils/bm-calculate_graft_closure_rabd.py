@@ -5,13 +5,36 @@ import sys
 from collections import defaultdict
 import re
 import glob
-from optparse import OptionParser
+from argparse import ArgumentParser
 import re
 import gzip
-from RAbD_BM import tools as bm_tools
+from jade.RAbD_BM import tools as bm_tools
 
 cdrs = ["L1", "L2", "L3", "H1", "H2", "H3"]
 
+
+def get_parser():
+    parser = ArgumentParser("Calculate the frequence of graft closures.")
+
+    ############################
+    ## Required Options
+    ############################
+    parser.add_argument("--dir", "-i",
+                        help="Input directory"
+                        )
+
+    parser.add_argument("--outfile", "-o",
+                        help="Path to outfile"
+                        )
+
+    parser.add_argument("--use_ensemble",
+                        default=False,
+                        action="store_true",
+                        help="Use ensembles in calculation")
+
+    parser.add_argument("--match_name",
+                        help="Match a subexperiment in the file name such as relax")
+    return parser
 
 class CalculateGraftClosure:
     def __init__(self, parse_args = True):
@@ -29,29 +52,10 @@ class CalculateGraftClosure:
 
     def _parse_args(self):
 
-        parser = OptionParser()
 
-        ############################
-        ## Required Options
-        ############################
-        parser.add_option("--dir","-i",
-                    help = "Input directory"
-                    )
+        parser = get_parser()
 
-        parser.add_option("--outfile","-o",
-                    help = "Path to outfile"
-                    )
-
-        parser.add_option("--use_ensemble",
-                    default = False,
-                    action = "store_true",
-                    help = "Use ensembles in calculation")
-
-        parser.add_option("--match_name",
-                    help = "Match a subexperiment in the file name such as relax")
-
-
-        options, args = parser.parse_args(sys.argv)
+        options, args = parser.parse_args()
 
         self.options = options
 

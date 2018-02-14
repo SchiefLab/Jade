@@ -14,8 +14,7 @@ from jade.basic import general
 NNKSortIndex = namedtuple('NNKSortIndex', 'antibody antigen sort')
 _sorts_ = ['S1', 'S2', 'S3']
 
-if __name__ == "__main__":
-
+def get_parser():
     parser = ArgumentParser("This app scores putitative broadly neutralizing antibodies based on pre-processed NNK sorting data")
 
     parser.add_argument('--nnk_dir', '-d', default = "sort_data",         help = "Full or relative path to pre-processed NNK data")
@@ -60,6 +59,12 @@ if __name__ == "__main__":
     parser.add_argument('--prefix', default = "", help = "Any prefix for output data.")
 
     parser.add_argument('--include_cdrs', default = ['L1','L2','L3','H1','H2'], nargs="*", help = "CDRs to include.  By default we skip H3")
+
+    return parser
+
+if __name__ == "__main__":
+
+    parser = get_parser()
     options = parser.parse_args()
 
 

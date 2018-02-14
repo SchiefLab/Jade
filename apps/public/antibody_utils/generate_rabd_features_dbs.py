@@ -17,13 +17,7 @@ from jade.pymol_jade.PyMolScriptWriter import *
 from jade.basic.general import *
 from jade.basic import path
 
-def main():
-
-    ####################################################################################################################
-    ##                                                  OPTIONS
-    ####################################################################################################################
-
-
+def get_run_rosetta():
     parser = ArgumentParser("Creates Features Databases for antibody design using MPI.  "
                             "This uses RunRosettaMPI, so that it can be run locally or on a cluster.")
 
@@ -58,6 +52,22 @@ def main():
                       help = "Indicate that this is a set of native structures",
                       default = False,
                       action = "store_true")
+
+    run_mpi_rosetta = RunRosetta(program="rosetta_scripts", parser=parser, db_mode=True)
+
+    return run_mpi_rosetta
+
+def get_parser():
+    return get_run_rosetta().parser
+
+def main():
+
+    ####################################################################################################################
+    ##                                                  OPTIONS
+    ####################################################################################################################
+
+
+    run_mpi_rosetta = get_run_rosetta()
 
     run_mpi_rosetta = RunRosetta(program = "rosetta_scripts", parser = parser, db_mode=True)
 

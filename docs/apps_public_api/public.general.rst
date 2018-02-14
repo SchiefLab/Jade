@@ -39,14 +39,6 @@ get_seq.py
     :func: get_parser
     :prog: get_seq.py
 
-make_pdblist.py
----------------
-
-.. argparse::
-    :filename: ../apps/public/general/make_pdblist.py
-    :func: get_parser
-    :prog: make_pdblist.py
-
 rename_designs.py
 -----------------
 
