@@ -1,6 +1,6 @@
 
 from setuptools import setup, find_packages
-import os,glob
+import os,glob,re
 
 
 
@@ -75,8 +75,9 @@ def get_all_scripts_to_install(public_dir='apps/public', pilot_dir='apps/pilot')
             #print "reading " + app_dir
             f = glob.glob(app_dir+"/"+"*.py")
             #print(f)
-
-            all_scripts.extend(f)
+            for script in f:
+                if not re.search("__init__", script):
+                    all_scripts.append(script)
 
     #print all_scripts
     print "Found scripts:"

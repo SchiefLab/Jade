@@ -22,7 +22,6 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-import jade
 
 # -- General configuration ---------------------------------------------
 
@@ -73,6 +72,18 @@ MOCK_MODULES = ['pyrosetta', 'rosetta', 'pyigclassify']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 """
+
+
+# Get the project root dir, which is the parent dir of this
+cwd = os.getcwd()
+project_root = os.path.dirname(cwd)
+
+# Insert the project root dir as the first element in the PYTHONPATH.
+# This lets us ensure that the source package is imported, and that its
+# version is used.
+sys.path.insert(0, project_root)
+
+import jade
 
 #sys.modules.update({'rif.geom.ray_hash': DumbThing(), 'rif.hash': DumbThing()})
 
