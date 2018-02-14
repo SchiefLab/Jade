@@ -6,9 +6,6 @@ Public Apps
     :undoc-members:
     :show-inheritance:
 
-Apps
-----
-
 .. toctree::
     :maxdepth: 2
 

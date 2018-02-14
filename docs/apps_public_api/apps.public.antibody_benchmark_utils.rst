@@ -1,5 +1,5 @@
-public.antibody\_benchmark\_utils Apps
-======================================
+public.antibody\_benchmark\_utils
+=================================
 
 .. automodule:: apps.public.antibody_benchmark_utils
     :members:

@@ -6,8 +6,7 @@ Pilot Apps
     :undoc-members:
     :show-inheritance:
 
-Apps
-----
-
 .. toctree::
+    :maxdepth: 2
+    
     apps.pilot.jadolfbr

@@ -8,9 +8,10 @@ Contents:
 
    readme
    installation
+   api/modules
    apps_public_api/apps.public
    apps_pilot_api/apps.pilot
-   api/modules
+   
 
 Indices and tables
 ==================

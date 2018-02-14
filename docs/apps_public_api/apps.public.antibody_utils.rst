@@ -1,5 +1,5 @@
-public.antibody\_utils Apps
-===========================
+public.antibody\_utils
+======================
 
 .. automodule:: apps.public.antibody_utils
     :members:

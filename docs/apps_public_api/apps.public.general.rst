@@ -1,5 +1,5 @@
-public.general Apps
-===================
+public.general
+==============
 
 .. automodule:: apps.public.general
     :members:

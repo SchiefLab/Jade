@@ -1,5 +1,5 @@
-apps.pilot.jadolfbr Apps
-========================
+apps.pilot.jadolfbr
+===================
 
 .. automodule:: apps.pilot.jadolfbr
     :members:

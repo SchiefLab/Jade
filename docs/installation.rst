@@ -32,7 +32,7 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/jadolfbr/jade
+    $ git clone git://github.com/SchiefLab/jade
 
 Or download the `tarball`_:
 
@@ -53,7 +53,7 @@ Don't forget to source your bashrc/bash_profile or whatever other shell profile 
 Scripts
 =======
 
-All scripts and applications in jade/apps will be installed in your bin directory and available for use.
+All scripts and applications in jade/apps will be installed in your bin directory and available for use. 
 
 
 .. _Github repo: https://github.com/SchiefLab/Jade

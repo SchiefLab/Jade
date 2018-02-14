@@ -1,5 +1,5 @@
-public.pdb\_utils Apps
-======================
+public.pdb\_utils
+=================
 
 .. automodule:: apps.public.pdb_utils
     :members:

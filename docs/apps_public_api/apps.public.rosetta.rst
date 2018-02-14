@@ -1,5 +1,5 @@
-public.rosetta Apps
-===================
+public.rosetta
+==============
 
 .. automodule:: apps.public.rosetta
     :members:

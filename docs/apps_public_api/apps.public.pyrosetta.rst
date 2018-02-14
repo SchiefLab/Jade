@@ -1,6 +1,5 @@
-public.pyrosetta Apps
-=====================
-
+public.pyrosetta
+================
 .. automodule:: apps.public.pyrosetta
     :members:
     :undoc-members:
