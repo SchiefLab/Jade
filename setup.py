@@ -6,7 +6,7 @@ import os,glob,re
 
 def readme():
     try:
-        with open('README.md') as f:
+        with open('README.rst') as f:
             return f.read()
     except IOError:
         return ''

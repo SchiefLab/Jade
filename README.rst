@@ -18,7 +18,6 @@ Jade
 
 A repository for modules and applications to aid in the design and analysis of Biological molecules, especially when working with Rosetta or PyRosetta.
 
-
 * Free software: BSD license
 * Documentation: https://bio-jade.readthedocs.io.
 
