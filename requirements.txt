@@ -17,7 +17,4 @@ sphinx-autobuild==0.7.1
 sphinxcontrib-websupport==1.0.1
 statsmodels==0.8.0
 weblogo>=3.4
-wxmplot>=0.9.27
-wxPython>=3.0.2.0
-wxPython-common>=3.0.2.0
 xmltodict>=0.10.2

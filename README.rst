@@ -25,7 +25,8 @@ A repository for modules and applications to aid in the design and analysis of B
 Features
 --------
 
-* TODO
+* A suite of modules for working with biological modules in python.
+* A suite of public and pilot pplications to make day-to-day tasks easier.
 
 Credits
 -------
