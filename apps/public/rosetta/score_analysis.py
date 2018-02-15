@@ -192,6 +192,13 @@ def main():
         if options.outdir and not os.path.exists(options.outdir):
             os.mkdir(options.outdir)
 
+        if not options.pdb_dir:
+            pdb_dir = os.path.dirname(filename)
+            if not pdb_dir:
+                pdb_dir = os.getcwd()
+
+        else:
+            pdb_dir = options.pdb_dir
 
         ### Info handlers
 
@@ -293,13 +300,7 @@ def main():
 
                 outdir = options.outdir
 
-                if not options.pdb_dir:
-                    pdb_dir = os.path.dirname(filename)
-                    if not pdb_dir:
-                        pdb_dir = os.getcwd()
 
-                else:
-                    pdb_dir = options.pdb_dir
 
                 print "PDB DIR: " + pdb_dir
 

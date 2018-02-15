@@ -1,0 +1,7 @@
+{ "program": "snugdock",
+  "flags": [
+    "-pdb_comments",
+    "-antibody:auto_generate_kink_constraint",
+    "-antibody:all_atom_mode_kink_constraint"
+  ]
+}

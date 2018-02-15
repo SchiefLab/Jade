@@ -14,7 +14,8 @@ from jade.utility.string_util import *
 
 ##Original Author: Luki Goldschmidt <lugo@uw.edu>
 ##Forked by Jared Adolf-Bryfogle.
-##Needs to be completely refactored to hold and access its info via Pandas Dataframe.
+##Has been completely refactored to work with pandas Dataframes
+
 class ScoreFile:
   def __init__(self, filename):
     self.filename = filename
@@ -195,7 +196,7 @@ class ScoreFile:
     print self.name
     df = pandas.DataFrame.from_dict(self.decoys)
     df = detect_numeric(df)
-    df = df.sort(order_by, ascending=reverse)[0:top_n]
+    df = df.sort_values(order_by, ascending=reverse)[0:top_n]
     if scoreterms:
       df = get_columns(df, scoreterms)
     df.name = self.name
