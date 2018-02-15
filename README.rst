@@ -7,7 +7,7 @@ Jade
         :target: https://pypi.python.org/pypi/jade
 
 .. image:: https://img.shields.io/travis/jadolfbr/jade.svg
-        :target: https://travis-ci.org/SchiefLab/jade
+        :target: https://travis-ci.org/SchiefLab/Jade
 
 .. image:: https://readthedocs.org/projects/jade/badge/?version=latest
         :target: https://bio-jade.readthedocs.io/en/latest/?badge=latest
