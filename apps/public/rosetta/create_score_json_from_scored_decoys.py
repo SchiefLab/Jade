@@ -18,7 +18,7 @@ def get_pdbs(argu):
 
 
 def get_parser():
-    parser = ArgumentParser("This script creates a Rosetta score file from a set of structures - by parsing the score from them. Pass a directory, a PDBLIST, and/or a list of filenames")
+    parser = ArgumentParser(description="This script creates a Rosetta score file from a set of structures - by parsing the score from them. Pass a directory, a PDBLIST, and/or a list of filenames")
 
 
     parser.add_argument("--prefix",

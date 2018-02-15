@@ -25,7 +25,7 @@ def printVerbose(s):
 def get_parser():
 
     parser = ArgumentParser(
-        "This utility parses and extracts data from score files in JSON format")
+        description="This utility parses and extracts data from score files in JSON format")
 
     parser.add_argument("scorefiles", nargs='*', help="A list of scorefiles")
 

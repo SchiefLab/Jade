@@ -9,7 +9,7 @@ from jade.basic.path import *
 from collections import defaultdict
 
 def get_parser():
-    parser = ArgumentParser("This extremely simple script checks nstruct of the input files and outputs which nstruct number is missing.")
+    parser = ArgumentParser(description="This extremely simple script checks nstruct of the input files and outputs which nstruct number is missing.")
 
 
     parser.add_argument('-n', "--nstruct", default=1000)

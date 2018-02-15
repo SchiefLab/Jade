@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 
 
 def get_parser():
-    parser = ArgumentParser("This script takes a PDBLIST of natives and then adds a new table to the database with "
+    parser = ArgumentParser(description="This script takes a PDBLIST of natives and then adds a new table to the database with "
                             "struct_id as proper foreign primary key and the native structure based solely on a search of the name tag. ")
 
     parser.add_argument("--pdblist", help = "PDBLIST of native structures used.")
