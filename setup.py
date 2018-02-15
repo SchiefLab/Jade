@@ -94,7 +94,7 @@ def find_all_packages():
     #print repr(p)
     return p
 
-setup(name='jade',
+setup(name='bio-jade',
       long_description=readme(),
       version='1.0',
       description='A repository for modules and applications to aid '

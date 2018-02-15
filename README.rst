@@ -1,10 +1,10 @@
-====
-Jade
-====
+========
+Bio-Jade
+========
 
 
 .. image:: https://img.shields.io/pypi/v/jade.svg
-        :target: https://pypi.python.org/pypi/jade
+        :target: https://pypi.python.org/pypi/bio-jade
 
 .. image:: https://img.shields.io/travis/jadolfbr/jade.svg
         :target: https://travis-ci.org/SchiefLab/Jade
@@ -26,8 +26,8 @@ Features
 --------
 
 * A suite of modules for working with biological modules in python.
-* A suite of public and pilot pplications to make day-to-day tasks easier.
-
+* A suite of public and pilot applications to make day-to-day tasks easier.
+  * Commonly used ones include score_analysis.py, get_seq.py, and RunRosettaMPI.py
 Credits
 -------
 
