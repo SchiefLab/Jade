@@ -9,14 +9,20 @@ import os
 from jade.basic.structure.BasicPose import *
 from argparse import ArgumentParser
 
-def reorder_and_save_chains(in_path, out_path, remove_het = False):
+def reorder_and_save_chains(in_path, out_path, reverse = False, remove_het = False):
     blank_pdb = BasicPose()
     full_pdb = BasicPose(in_path)
 
+    if reverse:
 
-    blank_pdb.copy_all_but_chains_into_pdb_map(full_pdb, ["L", "H"])
-    blank_pdb.copy_chain_into_pdb_map(full_pdb, "L")
-    blank_pdb.copy_chain_into_pdb_map(full_pdb, "H")
+        blank_pdb.copy_chain_into_pdb_map(full_pdb, "L")
+        blank_pdb.copy_chain_into_pdb_map(full_pdb, "H")
+        blank_pdb.copy_all_but_chains_into_pdb_map(full_pdb, ["L", "H"])
+
+    else:
+        blank_pdb.copy_all_but_chains_into_pdb_map(full_pdb, ["L", "H"])
+        blank_pdb.copy_chain_into_pdb_map(full_pdb, "L")
+        blank_pdb.copy_chain_into_pdb_map(full_pdb, "H")
     if remove_het:
         blank_pdb.remove_hetatm_atoms()
         blank_pdb.remove_waters()
@@ -42,6 +48,11 @@ def get_parser():
                         help = "Output Directory. Resultant PDB files will go here.",
                         default = "reordered")
 
+    parser.add_argument("--reverse", "-r",
+                        help = "Reverse order (LH_A instead of A_LH). Used for snugdock",
+                        default = False,
+                        action="store_true")
+
     return parser
 if __name__ == "__main__":
 
@@ -65,12 +76,12 @@ if __name__ == "__main__":
 
             print "Reordering "+line
             outpath = out_dir+"/"+os.path.basename(line)
-            reorder_and_save_chains(line, outpath)
+            reorder_and_save_chains(line, outpath, options.reverse)
         PDBLIST.close()
 
     elif in_single:
         outpath = os.path.join(out_dir, in_single)
-        reorder_and_save_chains(in_single, outpath)
+        reorder_and_save_chains(in_single, outpath, options.reverse)
     else:
         sys.exit("Must pass either -s or -l ")
 

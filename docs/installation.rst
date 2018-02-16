@@ -56,5 +56,19 @@ Scripts
 All scripts and applications in jade/apps will be installed in your bin directory and available for use. 
 
 
+Rosetta
+-------
+
+
+.. image:: https://www.rosettacommons.org/sites/all/themes/rosettacommons/logo.png
+
+* Rosetta can be obtained from: http://www.rosettacommons.org
+
+.. image:: http://www.pyrosetta.org/_/rsrc/1468874538909/config/customLogo.gif?revision=2
+
+* PyRosetta can be obtained from: http://www.pyrosetta.org
+
+
+
 .. _Github repo: https://github.com/SchiefLab/Jade
 .. _tarball: https://github.com/SchiefLab/Jade/tarball/master
