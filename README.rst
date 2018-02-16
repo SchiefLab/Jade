@@ -27,6 +27,7 @@ Features
 
 * A suite of modules for working with biological modules in python.
 * A suite of public and pilot applications to make day-to-day tasks easier.
+
   * Commonly used ones include score_analysis.py, get_seq.py, and RunRosettaMPI.py
 
 Rosetta
@@ -35,11 +36,11 @@ Rosetta
 
 .. image:: https://www.rosettacommons.org/sites/all/themes/rosettacommons/logo.png
 
-* Rosetta can be obtained from: http://www.rosettacommons.org
-
 .. image:: http://www.pyrosetta.org/_/rsrc/1468874538909/config/customLogo.gif?revision=2
 
-* PyRosetta can be obtained from: http://www.pyrosetta.org
+
+* Rosetta  : http://www.rosettacommons.org
+* PyRosetta: http://www.pyrosetta.org
 
 Caveats
 -------
