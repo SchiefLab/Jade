@@ -12,7 +12,7 @@ To install Jade, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install jade
+    $ pip install bio-jade
 
 This is the preferred method to install Jade, as it will always install the most recent stable release.
 
@@ -32,13 +32,13 @@ You can either clone the public repository:
 
 .. code-block:: console
 
-    $ git clone git://github.com/SchiefLab/jade
+    $ git clone git://github.com/SchiefLab/Jade
 
 Or download the `tarball`_:
 
 .. code-block:: console
 
-    $ curl  -OL https://github.com/jadolfbr/jade/tarball/master
+    $ curl  -OL https://github.com/SchiefLab/Jade/tarball/master
 
 Once you have a copy of the source, you can install it with:
 
