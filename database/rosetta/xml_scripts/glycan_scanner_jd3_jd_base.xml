@@ -1,0 +1,14 @@
+<JobDefinitionFile>
+   <Job>
+      <Input>
+         <PDB filename="{fname}"/>
+      </Input>
+      <Output>
+         <PDB filename_pattern="glycan-scan_{start_pdb}_$"/>
+      </Output>
+      <Options>
+         <parser__protocol value="xmls/simple_glycan_scanner_manual.xml"/>
+         <parser__script_vars value="start={start} end={end} motif={motif}" />
+      </Options>
+   </Job>
+</JobDefinitionFile>

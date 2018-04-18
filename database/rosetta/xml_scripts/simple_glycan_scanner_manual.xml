@@ -14,21 +14,23 @@
         <SequenceMetric name="sequence" residue_selector="motif" />
         <SasaMetric name="sasa" residue_selector="motif" />
     </SIMPLE_METRICS>
+        <CreateSequenceMotifMover name="motif_creator" residue_selector="select" motif="%%motif%%" pack_neighbors="1"/>
     <MOVERS>
-        <CreateGlycanSequonMover name="motif_creator" residue_selector="select" basic_enhanced_n_sequon="false" pack_neighbors="1"/>
         <SimpleGlycosylateMover name="glycosylate" positions="%%resnum%%" glycosylation="man5" idealize_glycosylation="0" strip_existing="1"/>
         <GlycanTreeRelax name="model" layer_size="2" window_size="1" rounds="1" refine="false" glycan_relax_rounds="25" />
-        <RunSimpleMetrics name="selections" metrics="selection,rosetta_sele,pymol_selection,sequence,sasa" prefix="pre_" />
-        <RunSimpleMetrics name="metrics1" metrics="total_energy_delta,composite_energy,sequence,sasa" prefix="post_" />
-        <RunSimpleMetrics name="metrics2" metrics="total_energy_delta,composite_energy" prefix="post-model_" />
+        <RunSimpleMetrics name="selections" metrics="rosetta_sele,pymol_selection,sequence" />
+        <RunSimpleMetrics name="pre_metrics" metrics="sasa" prefix="pre_" />
+        <RunSimpleMetrics name="post_sequon_metrics" metrics="total_energy_delta,composite_energy,sequence,sasa" prefix="post-sequon_" />
+        <RunSimpleMetrics name="pose_modeling_metrics" metrics="total_energy_delta,composite_energy" prefix="post-model_" />
     </MOVERS>
     <PROTOCOLS>
         <Add mover="selections" />
+        <Add mover="pre_metrics"
         <Add mover="motif_creator"/>
-        <Add mover="metrics1"/>
+        <Add mover="pose_sequon_metrics"/>
         <Add mover="glycosylate"/>
         <Add mover="model"/>
-        <Add mover="metrics2"/>
+        <Add mover="post_modeling_metrics"/>
     </PROTOCOLS>
 </ROSETTASCRIPTS>
 

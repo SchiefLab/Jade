@@ -1,77 +1,58 @@
-{ "exp": "all_no_H3_GD",
-  "nstruct":100,
+{
+  "exp": "all_no_H3_GD",
+  "nstruct": 100,
   "dataset": {
-    "benchmarks":[
+    "benchmarks": [
       "bm3"
     ],
-    "use_for_prefix":false,
-    "use_for_outdir":false
+    "use_for_prefix": false,
+    "use_for_outdir": false
   },
-  "input_pdb_type": {
-    "benchmarks":[
-      "pareto"
-    ]
-  },
-  "remove_antigen":{
-    "rosetta_option":"-remove_antigen",
-    "benchmarks":[
+  "remove_antigen": {
+    "rosetta_option": "-remove_antigen",
+    "benchmarks": [
       false,
       true
     ]
   },
-  "protocol":{
-    "rosetta_option":"-design_protocol",
-    "benchmarks":[
+  "protocol": {
+    "rosetta_option": "-design_protocol",
+    "benchmarks": [
       "even_cluster_mc"
     ]
   },
-  "outer_cycles":{
-    "rosetta_option":"-outer_cycle_rounds",
-    "benchmarks":[
+  "outer_cycles": {
+    "rosetta_option": "-outer_cycle_rounds",
+    "benchmarks": [
+      50,
       100
     ]
   },
-  "inner_cycles":{
-    "rosetta_option":"-inner_cycle_rounds",
-    "benchmarks":[
-      1
-    ]
-  },
-  "randomize":{
-    "rosetta_option":"-random_start",
-    "benchmarks":[
-      true
-    ]
-  },
-  "dock":{
-    "rosetta_option":"-do_dock",
-    "benchmarks":[
-      false
-    ]
-  },
 
-  "paper_db":{
-    "rosetta_option":"-paper_ab_db",
-    "benchmarks":[
+  "dock": {
+    "rosetta_option": "-do_dock",
+    "benchmarks": [
+      true,
       false
     ]
   },
   "l_chain": {
-    "rosetta_option":"-light_chain",
+    "rosetta_option": "-light_chain",
     "benchmarks": [
       "kappa",
       "lambda"
     ],
-    "use_for_prefix":false,
-    "use_for_outdir":false
+    "use_for_prefix": false,
+    "use_for_outdir": false
   },
-  "mc_optimize_dG":{
-    "rosetta_option":"-mc_optimize_dG",
+  "mc_optimize_dG": {
+    "rosetta_option": "-mc_optimize_dG",
     "benchmarks": [
       false,
       true
     ]
-  },
+  }
+}
   "mintype": {
     "benchmarks": [
       "min"

@@ -18,4 +18,4 @@
 #-score:patch occ_Hbond_sol_fitted
 
 #Has chainbreak and constraint terms.  Perhaps the chainbreak is not doing anything or we already add them in somewhere else.
--score:patch occ_Hbond_sol_fitted_tal
+#-score:patch occ_Hbond_sol_fitted_tal

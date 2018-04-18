@@ -102,7 +102,7 @@ def plot_general_pandas(df, title, outpath, plot_type, x, y = None, z = None, to
     print "Plotting "+plot_type+" For X: "+x +" and y: "+repr(y)
 
     df = detect_numeric(df)
-    df = df.sort(x, ascending=reverse)
+    df = df.sort_values(x, ascending=reverse)
     slice_top = df[0:int(len(df)*float(top_p))]
 
     if y:

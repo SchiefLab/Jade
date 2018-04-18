@@ -11,6 +11,7 @@
     "-scorefile_format json",
     "-flip_HNQ",
     "-delete_old_poses",
-    "-load_PDB_components false"
+    "-load_PDB_components false",
+    "-nblist_autoupdate"
   ]
 }
