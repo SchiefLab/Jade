@@ -4,7 +4,10 @@
 
 #Purpose:
 #  Create a JD3 Job Definition file in to scan compatible surface residues for glycosylation.
-#  Skips Disulfides, prolines, sets up glycan scan for 3 contiguous surface residue positions.
+#  By default Skips Disulfides, prolines, glycines, makes sure +2 is not buried and not boundary and hydrophobic.
+#  Also, by default designs +2 as Threonine as this is shown to increase occupancy of glycan.
+#
+# This is a very conservative SugarCoat application, but all options can be changed.
 #
 #  Optionally takes a ResidueSelector to further limit scan.
 #
