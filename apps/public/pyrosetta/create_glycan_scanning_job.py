@@ -77,6 +77,9 @@ if __name__ == "__main__":
     parser.add_argument('--include_boundary_hydrophobics', default = False,
                         help = "Include hydrophobic boundary residues (for +2 design)?  By default we leave these out to maintain foldability" )
 
+    parser.add_argument('--glycan_relax_rounds', default=100,
+                        help = "Number of glycan relax rounds (which is multiplied by n glycans.  Default is 25, but since this is per-position, 100 is reasonable.")
+
     options = parser.parse_args()
 
     pose = pose_from_pdb(options.s)
@@ -301,7 +304,7 @@ if __name__ == "__main__":
     if options.design_plus_1:
         motif+="[^P]"
     else:
-        motif+="-"
+        motif+="[-]"
 
 
     if options.enable_T_and_S:
@@ -318,6 +321,7 @@ if __name__ == "__main__":
         job['end'] = str( res + 2)
         job['motif'] = motif
         job['start_pdb'] = pose.pdb_info().pose2pdb(res).replace(' ', '')
+        job['rounds'] = options.glycan_relax_rounds
         jobs.append(job)
 
     print( "Total Residues:", pose.size())
@@ -338,3 +342,14 @@ if __name__ == "__main__":
     print("Copied "+xml_scanner +" to /xmls")
 
     create_substituted_jd_string(jd_scanner, jobs)
+
+    #Create Directories so we do not have 100k+ files in a single directory, which the kernal cannot deal with properly.
+    if not os.path.exists('decoys'):
+        os.mkdir('decoys')
+    for res in range(1, pose.size() +1):
+        if not selection[res]: continue
+        outpath = "decoys/glycan-scan_"+pose.pdb_info().pose2pdb(res).replace(' ', '')
+        if not os.path.exists(outpath):
+            os.mkdir(outpath)
+            os.system('touch '+outpath+'/.gitignore')
+

@@ -6,28 +6,29 @@
         <Index name="motif" resnums="%%start%%-%%end%%" />
     </RESIDUE_SELECTORS>
     <SIMPLE_METRICS>
+        <TimingProfileMetric name="timing"/>
         <TotalEnergyMetric name="total_energy_delta" use_native="1"/>
         <CompositeEnergyMetric name="composite_energy" use_native="1"/>
         <SelectedResiduesMetric name="selection" residue_selector="select"/>
 		<SelectedResiduesMetric name="rosetta_sele" residue_selector="select" rosetta_numbering="1"/>
 		<SelectedResiduesPyMOLMetric name="pymol_selection" residue_selector="select" />
         <SequenceMetric name="sequence" residue_selector="motif" />
-        <SasaMetric name="sasa" residue_selector="motif" />
+        <SasaMetric name="sasa" residue_selector="select" />
     </SIMPLE_METRICS>
-        <CreateSequenceMotifMover name="motif_creator" residue_selector="select" motif="%%motif%%" pack_neighbors="1"/>
     <MOVERS>
-        <SimpleGlycosylateMover name="glycosylate" positions="%%resnum%%" glycosylation="man5" idealize_glycosylation="0" strip_existing="1"/>
-        <GlycanTreeRelax name="model" layer_size="2" window_size="1" rounds="1" refine="false" glycan_relax_rounds="25" />
+        <CreateSequenceMotifMover name="motif_creator" residue_selector="select" motif="%%motif%%" pack_neighbors="1"/>
+        <SimpleGlycosylateMover name="glycosylate" positions="%%start%%" glycosylation="man5" idealize_glycosylation="0" strip_existing="1"/>
+        <GlycanTreeRelax name="model" layer_size="2" window_size="1" rounds="1" refine="false" glycan_relax_rounds="%%rounds%%" />
         <RunSimpleMetrics name="selections" metrics="rosetta_sele,pymol_selection,sequence" />
         <RunSimpleMetrics name="pre_metrics" metrics="sasa" prefix="pre_" />
         <RunSimpleMetrics name="post_sequon_metrics" metrics="total_energy_delta,composite_energy,sequence,sasa" prefix="post-sequon_" />
-        <RunSimpleMetrics name="pose_modeling_metrics" metrics="total_energy_delta,composite_energy" prefix="post-model_" />
+        <RunSimpleMetrics name="post_modeling_metrics" metrics="total_energy_delta,composite_energy,timing" prefix="post-model_" />
     </MOVERS>
     <PROTOCOLS>
         <Add mover="selections" />
-        <Add mover="pre_metrics"
+        <Add mover="pre_metrics" />
         <Add mover="motif_creator"/>
-        <Add mover="pose_sequon_metrics"/>
+        <Add mover="post_sequon_metrics"/>
         <Add mover="glycosylate"/>
         <Add mover="model"/>
         <Add mover="post_modeling_metrics"/>

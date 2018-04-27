@@ -210,6 +210,13 @@ def get_all_pdb_paths(directory, ext='.pdb'):
     return [directory+'/'+pdb for pdb in pdbs]
 
 def open_file(file_path, mode = 'r'):
+    """
+    Open a file which can be gzipped.
+    
+    :param file_path: 
+    :param mode: 
+    :return: 
+    """
     if file_path.split(".")[-1] =="gz":
         #print "opening gzipped file"
         INFILE = gzip.open(file_path, mode+'b')
