@@ -40,15 +40,14 @@ class ScoreFile:
     #print repr(headerSP)
     for line in lines:
       try:
-        o = json.loads(line)
+        o = json.loads(line.replace("nan", "NaN"))
         # print o[self.decoy_field_name]
         # print repr(o)
-        if not re.search("initial_benchmark_perturbation", o[self.decoy_field_name]):
-          self.decoys.append(o)
-        #self.decoys.append(o)
-      except Exception:
+        self.decoys.append(o)
+      except Exception as e:
         ##Store as defaultdict instead of JSON.
-        #
+
+        #print "Cannot load as regular JSON file!  Parsing as old-school scorefile instead: "+ str(e)
         d = defaultdict()
         values = line.split()
         if len(values) != len(headerSP):
@@ -194,8 +193,11 @@ class ScoreFile:
     :rtype: pandas.DataFrame
     """
     print self.name
+    #print self.decoys
     df = pandas.DataFrame.from_dict(self.decoys)
     df = detect_numeric(df)
+    #df.to_csv("debugging.csv", sep=",")
+
     df = df.sort_values(order_by, ascending=reverse)[0:top_n]
     if scoreterms:
       df = get_columns(df, scoreterms)

@@ -9,6 +9,7 @@ import pandas
 import matplotlib.pyplot as plot
 import matplotlib as mpl
 import matplotlib.axes
+from matplotlib import cm
 
 from matplotlib.dates import YearLocator, MonthLocator, DateFormatter, WeekdayLocator
 
@@ -48,6 +49,7 @@ Title size of 18 and x/y label size of 16 seems to look ok.
 '''
 
 
+#Quick Plotting
 
 def plot_x_vs_y_sea_with_regression(df, title, outpath, x, y, top_p = .95, reverse = True):
     """
@@ -110,8 +112,12 @@ def plot_general_pandas(df, title, outpath, plot_type, x, y = None, z = None, to
     elif plot_type=="kde":
         #Y=X is not an error.  For KDE plots, pandas uses y instead of X.  Super stupid.
         ax = slice_top.plot(y=x, kind=plot_type, figsize=[11, 8], title = title)
+    elif plot_type == "hist":
+        ax = slice_top.plot(y=x, kind=plot_type, figsize=[11, 8], title=title)
     else:
         ax = slice_top.plot(x=x, kind=plot_type, figsize=[11, 8], title = title)
+
+
     pad_single_title(ax)
     ax.set_axis_bgcolor('white')
     fig = ax.get_figure()

@@ -19,7 +19,7 @@ class GeneralPandasDataFrame(pd.DataFrame):
         self = self.T.groupby(level=0).first().T
 
     def detect_numeric(self):
-        self = self.convert_objects(convert_numeric=True)
+        self = self.infer_objects()
 
     def get_columns(self, columns):
         return self[columns]
@@ -109,7 +109,8 @@ def detect_numeric(df):
     :rtype: pd.DataFrame
 
     """
-    return df.convert_objects(convert_numeric=True)
+    #return df.convert_objects(convert_numeric=True)
+    return df.infer_objects()
 
 def get_columns(df, columns):
     """

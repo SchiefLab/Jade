@@ -367,6 +367,12 @@ class PyMolScriptWriter:
         """
         run_pymol_script(self.save_script(script_outname), delete_script = delete_script, parellel_process=parellel_process)
 
+
+
+
+
+
+
 ########################################################################################################################
 ## Helper Functions
 ########################################################################################################################
@@ -554,9 +560,13 @@ def make_pymol_session_on_top_ab_include_native_cdrs(pdb_path_list, load_as_list
 def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, out_name, top_num = -1, native_path = None, antibody=True,
                                      parellel = True,
                                      super = "",
-                                     run_pymol = True):
+                                     run_pymol = True,
+                                     model_names=[]):
     """
     Make a pymol session on a set of decoys with a tuple of [[score, pdb], ... ]
+    Optionally, it can be a 3 length tupple with model name to use as last:
+          [[score, pdb, model_name], ... ]
+    
 
     if run_pymol is False, will not run pymol.
 
@@ -565,17 +575,22 @@ def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, o
 
     Returns configured PyMol Scripter for extra use.
 
-    :param top_dir: DIR with decoys
-    :param pdb_path_list: List of PDB Paths
-    :param load_as_list: Scores of the PDBs.
-    :param outdir: Outdir of PyMol Session
-    :param out_name: Output name.  NO extension
-    :param top_num: Numer of top decoys to output.
-    :param native_path:
+    :param pdbpaths_scores: tuple of [[score, pdb], ... ]
+    :param script_dir:   Path to output PyMol script
+    :param session_dir:  Path to output Session
+    :param out_name:     name of the Pymol session
+    :param top_num:      Optional - Only output TOP N models
+    :param native_path:  Optional - Path to any input native to add to pymol session
+    :param parellel:     Optional - Run in parellel (so many pymol sessions can be created at once)
+    :param super:        Optional - Super to THIS particular selection instead of align_all to.
+    :param run_pymol:    Optional - Run Pymol using script?  Default true
     :rtype: PyMolScriptWriter
     """
 
     out_name = out_name.replace(".pse", "")
+    if not os.path.exists(session_dir):
+        os.mkdir(session_dir)
+
     if top_num != -1:
         pse_path = session_dir+"/"+out_name+"_top_"+str(top_num)+".pse"
     else:
@@ -601,7 +616,11 @@ def make_pymol_session_on_top_scored(pdbpaths_scores, script_dir, session_dir, o
         print repr(score_pdb)
         decoy = get_decoy_path(score_pdb[1])
         print repr(decoy)
-        scripter.add_load_pdb(decoy, "model_"+repr(i)+"_"+score_pdb[1].split("_")[-1]+"_%.2f"%(score_pdb[0]))
+
+        model_name = score_pdb[1].split("_")[-1]
+        if len(score_pdb) == 3:
+            model_name = score_pdb[2]
+        scripter.add_load_pdb(decoy, "model_"+repr(i)+"_"+model_name+"_%.2f"%(score_pdb[0]))
         i+=1
 
     if super:
