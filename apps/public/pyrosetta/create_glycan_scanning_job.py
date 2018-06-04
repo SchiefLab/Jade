@@ -78,7 +78,11 @@ if __name__ == "__main__":
                         help = "Include hydrophobic boundary residues (for +2 design)?  By default we leave these out to maintain foldability" )
 
     parser.add_argument('--glycan_relax_rounds', default=100,
-                        help = "Number of glycan relax rounds (which is multiplied by n glycans.  Default is 25, but since this is per-position, 100 is reasonable.")
+                        help = "Number of glycan relax rounds (which is multiplied by n glycans.  Default is 100 (25 in app), but since this is per-position, 100 is reasonable.")
+
+    parser.add_argument('--skip_functional_sites',
+                        help="Comma-separated List of residues (PDBnumbering -ex 286A) to skip as including as a potential sequon.  "
+                             "This means we skip any potential sequon that includes these residues.")
 
     options = parser.parse_args()
 
@@ -163,6 +167,12 @@ if __name__ == "__main__":
     disulfides = 0
     prolines = 0
 
+    skip_functional_sites = []
+    if options.skip_functional_sites:
+        for site in options.skip_functional_sites.split(','):
+            print("Skipping Functional Site:",site)
+            skip_functional_sites.append(rosetta.core.pose.parse_resnum(site, pose))
+
 
     for i in range(1, pose.size() + 1 ):
 
@@ -211,7 +221,20 @@ if __name__ == "__main__":
             if not options.include_glycines_if_D:
                 selection[i] = False
             else:
-                sys.exit("Contingient inclusion of glycine is not yet implemented.")
+                sys.exit("Contingent inclusion of glycine is not yet implemented.")
+
+        ### Functional Sites ##
+        if len(skip_functional_sites) > 0:
+            if i in skip_functional_sites:
+                selection[ i ] = False
+                selection[ i + 1 ] = False
+                selection[ i + 2 ] = False
+
+                if i >= 2 :
+                    selection[ i - 1 ] = False
+
+                if i >= 3 :
+                    selection[ i - 2 ] = False
 
         ### Plus 2 Contingencies ###
         if surface_selection[i+2]:
