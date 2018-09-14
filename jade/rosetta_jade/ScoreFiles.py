@@ -16,8 +16,21 @@ from jade.utility.string_util import *
 ##Forked by Jared Adolf-Bryfogle.
 ##Has been completely refactored to work with pandas Dataframes
 
+def get_dataframe(filename, match=""):
+    """
+    Convert a Rosetta Score file directly to a dataframe.
+    
+    :param filename: path to file
+    :return: pandas.DataFrame
+    """
+    sc = ScoreFile(filename, match)
+    df = sc.get_Dataframe()
+    df = df.set_index('decoy')
+    df = df.reindex(sorted(df.columns), axis=1)
+    return df
+
 class ScoreFile:
-  def __init__(self, filename):
+  def __init__(self, filename, match=""):
     self.filename = filename
 
     if re.search("score_", filename):
@@ -36,34 +49,42 @@ class ScoreFile:
       lines = file(filename).readlines()
 
     header = lines[0]
-    headerSP = lines[1].split()
+    headerSP = ""
+    if len(lines) > 1:
+        headerSP = lines[1].split()
+
     #print repr(headerSP)
     for line in lines:
-      try:
-        o = json.loads(line.replace("nan", "NaN"))
-        # print o[self.decoy_field_name]
-        # print repr(o)
-        self.decoys.append(o)
-      except Exception as e:
-        ##Store as defaultdict instead of JSON.
+        if (match):
+            if re.search(match, line):
+                pass
+            else:
+                continue
+        try:
+            o = json.loads(line.replace("nan", "NaN"))
+            # print o[self.decoy_field_name]
+            # print repr(o)
+            self.decoys.append(o)
+        except Exception as e:
+            ##Store as defaultdict instead of JSON.
 
-        #print "Cannot load as regular JSON file!  Parsing as old-school scorefile instead: "+ str(e)
-        d = defaultdict()
-        values = line.split()
-        if len(values) != len(headerSP):
-            if len(values) == 1 and values[0] =="SEQUENCE:": continue
-            print >> sys.stderr, "Failed to parse JSON object or as regular score file; skipping line:\n", line
-        else:
-            for i in range(0, len(values)):
-                k = headerSP[ i ]
-                if  k == "description":
-                    k = "decoy"
+            #print "Cannot load as regular JSON file!  Parsing as old-school scorefile instead: "+ str(e)
+            d = defaultdict()
+            values = line.split()
+            if len(values) != len(headerSP):
+                if len(values) == 1 and values[0] =="SEQUENCE:": continue
+                print >> sys.stderr, "Failed to parse JSON object or as regular score file; skipping line:\n", line
+            else:
+                for i in range(0, len(values)):
+                    k = headerSP[ i ]
+                    if  k == "description":
+                        k = "decoy"
 
-                if values[i] == "SCORE:": continue
+                    if values[i] == "SCORE:": continue
 
-                d[ k ] = deduce_str_type(values[i])
+                    d[ k ] = deduce_str_type(values[i])
 
-            self.decoys.append(d)
+                self.decoys.append(d)
 
     #print repr(self.decoys)
 
@@ -198,7 +219,11 @@ class ScoreFile:
     df = detect_numeric(df)
     #df.to_csv("debugging.csv", sep=",")
 
-    df = df.sort_values(order_by, ascending=reverse)[0:top_n]
+    df = df.sort_values(order_by, ascending=reverse)
+
+    if (top_n!=-1):
+        df = df.head(top_n)
+
     if scoreterms:
       df = get_columns(df, scoreterms)
     df.name = self.name

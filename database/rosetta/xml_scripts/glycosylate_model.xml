@@ -1,0 +1,19 @@
+<ROSETTASCRIPTS>
+    <RESIDUE_SELECTORS>
+        <Glycan name="all_glycans"/>
+    </RESIDUE_SELECTORS>
+    <SIMPLE_METRICS>
+        <TimingProfileMetric name="timing"/>
+    </SIMPLE_METRICS>
+    <MOVERS>
+        <SimpleGlycosylateMover name="glycosylate" positions="88A,295A,362A,448A,625B,130C,160C,289C,295C,301C,362C,88E,130E,295E,356E,392E,448E,406C,411C,463C,611D,616D,637D,160E,186E,339E,396E,406E,411E,463E,611F,616F,637F" glycosylation="man5" />
+        <GlycanTreeRelax name="model" layer_size="2" window_size="1" rounds="1" refine="false" />
+        <RunSimpleMetrics name="post_modeling_metrics" metrics="timing" prefix="post-model_"/>
+    </MOVERS>
+    <PROTOCOLS>
+        <Add mover="glycosylate"/>
+        <Add mover="model_glycans" />
+        <Add mover="post_modeling_metrics" />
+    </PROTOCOLS>
+</ROSETTASCRIPTS>
+

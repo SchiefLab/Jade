@@ -75,23 +75,23 @@ def get_all_scripts_to_install(public_dir='apps/public', pilot_dir='apps/pilot')
     all_scripts = []
     for outer in [public_dir, pilot_dir]:
         for app_dir in (sorted([ d for d in glob.glob(os.path.join(outer, "*")) if os.path.isdir(d)])):
-            #print "reading " + app_dir
+            print "reading " + app_dir
             f = glob.glob(app_dir+"/"+"*.py")
-            #print(f)
+            print(f)
             for script in f:
                 if not re.search("__init__", script):
                     all_scripts.append(script)
 
-    #print all_scripts
+    print all_scripts
     print "Found scripts:"
     print "\n\t".join(all_scripts)
     print "\n\n"
     return all_scripts
 
 def find_all_packages():
-    #print "Finding Packages."
+    print "Finding Packages."
     p = ['jade/'+ sub for sub in find_packages('jade')]
-    #print repr(p)
+    print repr(p)
     return p
 
 setup(name='bio-jade',

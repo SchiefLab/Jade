@@ -119,7 +119,6 @@ def plot_general_pandas(df, title, outpath, plot_type, x, y = None, z = None, to
 
 
     pad_single_title(ax)
-    ax.set_axis_bgcolor('white')
     fig = ax.get_figure()
     fig.savefig(outpath, dpi=300)
     return ax

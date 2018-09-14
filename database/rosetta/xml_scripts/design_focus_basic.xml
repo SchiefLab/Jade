@@ -1,0 +1,54 @@
+<ROSETTASCRIPTS>
+	<SCOREFXNS>
+	</SCOREFXNS>
+	<RESIDUE_SELECTORS>
+		<Index name="design_positions" resnums="%%positions%%"/>
+        	<Neighborhood name="nbrhood" selector="design_positions" include_focus_in_subset="0"/>
+        	<Neighborhood name="all_focus" selector="design_positions"/>
+        	<Not name="others" selector="all_focus" />
+
+	</RESIDUE_SELECTORS>
+	<TASKOPERATIONS>
+        	<OperateOnResidueSubset name="turn_off_others" selector="others"><PreventRepackingRLT/> </OperateOnResidueSubset>
+
+        	<OperateOnResidueSubset name="rtrp" selector="nbrhood" ><RestrictToRepackingRLT /></OperateOnResidueSubset>
+        	<OperateOnResidueSubset name="rtrp_all" selector="all_focus"><RestrictToRepackingRLT/> </OperateOnResidueSubset>
+	</TASKOPERATIONS>
+	<MOVE_MAP_FACTORIES>
+	</MOVE_MAP_FACTORIES>
+	<SIMPLE_METRICS>
+        	<TimingProfileMetric name="timing"/>
+        	<TotalEnergyMetric name="total_energy_delta" reference_name="pre_design_pose" custom_type="delta"/>
+        	<TotalEnergyMetric name="total_energy_delta_native" use_native="1" custom_type="delta-native"/>
+        	<SelectedResiduesMetric name="selection" residue_selector="design_positions"/>
+		<SelectedResiduesMetric name="rosetta_sele" residue_selector="design_positions" rosetta_numbering="1"/>
+		<SelectedResiduesPyMOLMetric name="pymol_selection" residue_selector="design_positions" />
+        	<SelectedResiduesPyMOLMetric name="region" residue_selector="all_focus" custom_type="region"/>
+        	<SequenceMetric name="sequence" residue_selector="design_positions" />
+        	<ProtocolSettingsMetric name="settings" limit_to_options="positions,protocol"/>
+	</SIMPLE_METRICS>
+	<FILTERS>
+	</FILTERS>
+	<MOVERS>
+		<PackRotamersMover name="pack_focus" task_operations="rtrp_all,turn_off_others" />
+		<PackRotamersMover name="pack_focus_design" task_operations="rtrp,turn_off_others" />
+        	<RunSimpleMetrics name="post_design_metrics" metrics="total_energy_delta,timing,selection,rosetta_sele,pymol_selection,region,sequence,total_energy_delta_native,settings" />
+        	<SavePoseMover name="store_pre_design_pose" restore_pose="0" reference_name="pre_design_pose" />
+        	<SavePoseMover name="store_current" restore_pose="0" reference_name="current"/>
+
+        	<SavePoseMover name="get_current" restore_pose="1" reference_name="current"/>
+	</MOVERS>
+	<PROTOCOLS>
+
+		Run Packer on input as a CONTROL for score comparisons
+		<Add mover="store_current"/>
+		<Add mover="pack_focus"/>
+		<Add mover="store_pre_design_pose"/>
+
+		Run Packer to do design
+		<Add mover="get_current"/>
+		<Add mover="pack_focus_design" />
+		<Add mover="post_design_metrics" />
+	</PROTOCOLS>
+	<OUTPUT />
+</ROSETTASCRIPTS>

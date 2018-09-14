@@ -15,7 +15,7 @@ from jade.pymol_jade.PyMolScriptWriter import *
 from jade.rosetta_jade.ScoreFiles import ScoreFile
 from jade.basic.plotting.MakeFigure import *
 
-import shutil
+import os
 
 ########################################################################
 
@@ -27,10 +27,15 @@ def get_parser():
     parser = ArgumentParser(
         description="This utility parses and extracts data from score files in JSON format")
 
-    parser.add_argument("scorefiles", nargs='*', help="A list of scorefiles")
+    #parser.add_argument("scorefiles", nargs='*', help="A list of scorefiles")
 
-    parser.add_argument("-s", "--scoretypes",
-                        default=["dSASA_int", "delta_unsatHbonds", "hbonds_int", "total_score", "dG_separated", "top_n_by_10"],
+    parser.add_argument("-s", "--scorefiles",
+                        help = "Scorefiles to use",
+                        nargs="*",
+                        required = True)
+
+    parser.add_argument("--scoretypes",
+                        default=["total_score"],
                         help="List of score terms to extract",
                         nargs='*')
 
@@ -376,14 +381,14 @@ def main():
 
                     for i in range(0, options.top_n):
                         print get_decoy_path(top_by_n_decoys[i][1])
-                        shutil.copy(get_decoy_path(top_by_n_decoys[i][1]), options.outdir)
+                        os.system("cp " +get_decoy_path(top_by_n_decoys[i][1]) +" "+options.outdir)
                 else:
                     ordered = sf.get_ordered_decoy_list(scoreterm, top_n=int(options.top_n), decoy_names=decoy_names)
                     top_decoys = [[o[0], pdb_dir + "/" + o[1]] for o in ordered]
 
                     for i in range(0, options.top_n):
                         print get_decoy_path(top_decoys[i][1])
-                        shutil.copy(get_decoy_path(top_decoys[i][1]), options.outdir)
+                        os.system("cp "+ get_decoy_path(top_decoys[i][1])+" "+ options.outdir)
 
 ########################################################################
 

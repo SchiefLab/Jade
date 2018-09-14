@@ -1,0 +1,24 @@
+<ROSETTASCRIPTS>
+	<SCOREFXNS>
+	</SCOREFXNS>
+	<RESIDUE_SELECTORS>
+	</RESIDUE_SELECTORS>
+	<TASKOPERATIONS>
+	</TASKOPERATIONS>
+	<MOVE_MAP_FACTORIES>
+	</MOVE_MAP_FACTORIES>
+	<SIMPLE_METRICS>
+		<RMSDMetric name="rmsd" use_native="1" rmsd_type="rmsd_all_heavy" />
+	</SIMPLE_METRICS>
+	<FILTERS>
+	</FILTERS>
+	<MOVERS>
+		<InterfaceAnalyzerMover name="iam" pack_separated="1" interface="LH_A" packstat="0" />
+		<RunSimpleMetrics name="metrics" metrics="rmsd" />
+	</MOVERS>
+	<PROTOCOLS>
+		<Add mover="iam" />
+		<Add mover="metrics" />
+	</PROTOCOLS>
+	<OUTPUT />
+</ROSETTASCRIPTS>

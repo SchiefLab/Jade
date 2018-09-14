@@ -1,0 +1,27 @@
+<ROSETTASCRIPTS>
+	<RESIDUE_SELECTORS>
+		<CDR name="H2" cdrs="h2" />
+		<CDR name="H1" cdrs="h1"/>
+	</RESIDUE_SELECTORS>
+	<SIMPLE_METRICS>
+		<TimingProfileMetric name="timing" />
+		<SequenceMetric name="seq" residue_selector="H2" />
+		<SasaMetric name="sasa" residue_selector="H2" />
+		<TotalEnergyMetric name="total_overall_diff" use_native="1"/>
+		<TotalEnergyMetric name="total_cdr_diff" residue_selector="H2" use_native="1"/>
+		<TotalEnergyMetric name="total_h1_diff" residue_selector="H1" use_native="1"/>
+		<CompositeEnergyMetric name="composite_cdr_diff" residue_selector="H2" use_native="1"/>
+	</SIMPLE_METRICS>
+	<MOVERS>
+		<AntibodyDesignProtocol name="rabd" />
+		<RunSimpleMetrics name="metrics" metrics="timing,total_overall_diff"/>
+		<RunSimpleMetrics name="metrics_H2" metrics="seq,sasa,total_cdr_diff,composite_cdr_diff" suffix="_cdr_h2" />
+		<RunSimpleMetrics name="metrics_H1" metrics="total_h1_diff" suffix="_cdr_h1" />
+	</MOVERS>
+	<PROTOCOLS>
+		<Add mover_name="rabd" />
+		<Add mover_name="metrics"/>
+		<Add mover_name="metrics_H2" />
+		<Add mover_name="metrics_H1" />
+	</PROTOCOLS>
+</ROSETTASCRIPTS>

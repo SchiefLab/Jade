@@ -1,0 +1,20 @@
+<ROSETTASCRIPTS>
+    <MOVERS>
+    	<CDRDihedralConstraintMover name=L1_cst cdr=L1 use_cluster_csts=false />
+    	<CDRDihedralConstraintMover name=L2_cst cdr=L2 use_cluster_csts=false />
+    	<CDRDihedralConstraintMover name=L3_cst cdr=L3 use_cluster_csts=false />
+    	<CDRDihedralConstraintMover name=H1_cst cdr=H1 use_cluster_csts=false />
+    	<CDRDihedralConstraintMover name=H2_cst cdr=H2 use_cluster_csts=false />
+    	<CDRDihedralConstraintMover name=H3_cst cdr=H3 use_cluster_csts=false />
+        <FastRelax name=rel />
+    </MOVERS>
+    <PROTOCOLS>
+    	<Add mover_name=L1_cst />
+    	<Add mover_name=L2_cst />
+    	<Add mover_name=L3_cst />
+    	<Add mover_name=H1_cst />
+    	<Add mover_name=H2_cst />
+    	<Add mover_name=H3_cst />
+        <Add mover_name=rel />
+    </PROTOCOLS>
+</ROSETTASCRIPTS>

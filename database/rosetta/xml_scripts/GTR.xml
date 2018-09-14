@@ -1,0 +1,14 @@
+<ROSETTASCRIPTS>
+    <RESIDUE_SELECTORS>
+        <Glycan name="all_glycans"/>
+    </RESIDUE_SELECTORS>
+    <SIMPLE_METRICS>
+        <TimingProfileMetric name="timing"/>
+    </SIMPLE_METRICS>
+    <MOVERS>
+        <GlycanTreeRelax name="model" layer_size="2" window_size="1" rounds="1" refine="false" />
+    </MOVERS>
+    <PROTOCOLS>
+        <Add mover="model" />
+    </PROTOCOLS>
+</ROSETTASCRIPTS>

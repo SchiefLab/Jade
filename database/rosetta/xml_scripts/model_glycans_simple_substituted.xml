@@ -1,0 +1,11 @@
+<ROSETTASCRIPTS>
+	<MOVERS>
+		<SimpleGlycosylateMover name="glycosylate" positions="10A" glycosylation="man9" strip_existing="1" />
+		<GlycanRelaxMover name="model_glycans" />
+		<DumpPdb name="dump_pdb" fname="model.pdb" />
+	</MOVERS>
+	<PROTOCOLS>
+		<Add mover_name="glycosylate" />
+		<Add mover_name="model_glycans" />
+	</PROTOCOLS>
+</ROSETTASCRIPTS>
